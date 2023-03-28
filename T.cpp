@@ -10,8 +10,7 @@ class T {
       : dims(dimensions), data(calculate_size(dimensions)) {}
 
   float &at(std::initializer_list<size_t> indices) {
-    size_t index = calculate_index(indices);
-    return data[index];
+    return const_cast<float &>(static_cast<const T &>(*this).at(indices));
   }
 
   const float &at(std::initializer_list<size_t> indices) const {
