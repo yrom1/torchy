@@ -1,23 +1,24 @@
 CXXFLAGS=-std=c++14 -Wall -Wextra -Wpedantic -fsanitize=address
-LINT=cpplint
-FORMAT=clang-format
 
 all: build
-	./T
+	./program
 
-T: T.cpp
-	g++ -o T T.cpp $(CXXFLAGS)
+program: main.o
+	g++ -o program main.o $(CXXFLAGS)
+
+main.o: main.cpp T.h
+	g++ -c main.cpp -o main.o $(CXXFLAGS)
 
 clean:
-	rm -f T
+	rm -f program *.o
 
 lint:
-	$(LINT) --recursive .
+	cpplint --recursive main.cpp T.h
 
 format:
-	$(FORMAT) -i -style=Google T.cpp
+	clang-format -i -style=Google main.cpp T.h
 
-build: T format lint
+build: program format lint
 
 .PHONY: all clean lint format build
 .DEFAULT_GOAL := all
