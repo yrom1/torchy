@@ -11,12 +11,12 @@ class T {
   T(std::initializer_list<size_t> dimensions)
       : dims(dimensions), data(calculate_size(dimensions)) {}
 
-  float &at(std::initializer_list<size_t> indices) {
+  float &operator[](const std::initializer_list<size_t> &indices) {
     size_t index = calculate_index(indices);
     return data[index];
   }
 
-  const float &at(std::initializer_list<size_t> indices) const {
+  const float &operator[](const std::initializer_list<size_t> &indices) const {
     size_t index = calculate_index(indices);
     return data[index];
   }
