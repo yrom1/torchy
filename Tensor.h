@@ -1,23 +1,24 @@
 // Copyright 2023 Ryan Moore
-// T.h
+// Tensor.h
 
-#ifndef T_H_
-#define T_H_
+#ifndef TENSOR_H_
+#define TENSOR_H_
 
 #include <stdexcept>
 #include <vector>
 
-class T {
+template <typename T>
+class Tensor {
  public:
-  T(std::initializer_list<size_t> dimensions)
+  Tensor(std::initializer_list<size_t> dimensions)
       : dims(dimensions), data(calculate_size(dimensions)) {}
 
-  float &operator[](const std::initializer_list<size_t> &indices) {
+  T &operator[](const std::initializer_list<size_t> &indices) {
     size_t index = calculate_index(indices);
     return data[index];
   }
 
-  const float &operator[](const std::initializer_list<size_t> &indices) const {
+  const T &operator[](const std::initializer_list<size_t> &indices) const {
     size_t index = calculate_index(indices);
     return data[index];
   }
@@ -26,7 +27,7 @@ class T {
 
  private:
   std::vector<size_t> dims;
-  std::vector<float> data;
+  std::vector<T> data;
 
   size_t calculate_size(const std::initializer_list<size_t> &dimensions) const {
     size_t size = 1;
@@ -59,4 +60,4 @@ class T {
   }
 };
 
-#endif  // T_H_
+#endif  // TENSOR_H_

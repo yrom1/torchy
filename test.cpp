@@ -1,12 +1,12 @@
 // Copyright 2023 Ryan Moore
-// main.cpp
-
-#include "T.h"
+// test.cpp
 
 #include <cmath>
 #include <iostream>
 
-bool test_tensor_dimensions(const T &tensor,
+#include "Tensor.h"
+
+bool test_tensor_dimensions(const Tensor<float> &tensor,
                             const std::vector<size_t> &expected_dims) {
   const std::vector<size_t> &actual_dims = tensor.size();
   if (actual_dims != expected_dims) {
@@ -17,7 +17,7 @@ bool test_tensor_dimensions(const T &tensor,
   return true;
 }
 
-bool test_tensor_assignment(const T &tensor) {
+bool test_tensor_assignment(const Tensor<float> &tensor) {
   const float epsilon = 1e-6f;
   if (std::abs(tensor[{0, 0, 0}] - 1.0f) > epsilon ||
       std::abs(tensor[{1, 1, 1}] - 2.0f) > epsilon) {
@@ -28,7 +28,7 @@ bool test_tensor_assignment(const T &tensor) {
 }
 
 int main() {
-  T t{3, 4, 2};
+  Tensor<float> t{3, 4, 2};
 
   t[{0, 0, 0}] = 1.0f;
   t[{1, 1, 1}] = 2.0f;
