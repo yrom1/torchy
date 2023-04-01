@@ -15,6 +15,17 @@ class Tensor {
   Tensor(std::initializer_list<size_t> dimensions)
       : dims(dimensions), data(calculate_size(dimensions)) {}
 
+  // Tensor(const std::vector<size_t> &dimensions, const std::vector<T> &values)
+  //     : dims(dimensions), data(values) {}
+
+  friend bool operator==(const Tensor<T> &lhs, const Tensor<T> &rhs) {
+    return lhs.dims == rhs.dims && lhs.data == rhs.data;
+  }
+
+  friend bool operator!=(const Tensor<T> &lhs, const Tensor<T> &rhs) {
+    return !(lhs == rhs);
+  }
+
   T &operator[](const std::initializer_list<size_t> &indices) {
     size_t index = calculate_index(indices);
     return data[index];
@@ -24,6 +35,69 @@ class Tensor {
     size_t index = calculate_index(indices);
     return data[index];
   }
+
+  // Tensor<T> operator+(const Tensor<T> &other) const {
+  //   if (dims != other.size()) {
+  //     throw std::invalid_argument(
+  //         "Tensors must have the same dimensions for element-wise
+  //         addition.");
+  //   }
+
+  //   Tensor<T> result(dims);
+  //   for (size_t i = 0; i < data.size(); ++i) {
+  //     result.data[i] = data[i] + other.data[i];
+  //   }
+
+  //   return result;
+  // }
+
+  // Tensor<T> operator-(const Tensor<T> &other) const {
+  //   if (dims != other.size()) {
+  //     throw std::invalid_argument(
+  //         "Tensors must have the same dimensions for element-wise "
+  //         "subtraction.");
+  //   }
+
+  //   Tensor<T> result(dims);
+  //   for (size_t i = 0; i < data.size(); ++i) {
+  //     result.data[i] = data[i] - other.data[i];
+  //   }
+
+  //   return result;
+  // }
+
+  // Tensor<T> operator*(const Tensor<T> &other) const {
+  //   if (dims != other.size()) {
+  //     throw std::invalid_argument(
+  //         "Tensors must have the same dimensions for element-wise "
+  //         "multiplication.");
+  //   }
+
+  //   Tensor<T> result(dims);
+  //   for (size_t i = 0; i < data.size(); ++i) {
+  //     result.data[i] = data[i] * other.data[i];
+  //   }
+
+  //   return result;
+  // }
+
+  // Tensor<T> operator/(const Tensor<T> &other) const {
+  //   if (dims != other.size()) {
+  //     throw std::invalid_argument(
+  //         "Tensors must have the same dimensions for element-wise
+  //         division.");
+  //   }
+
+  //   Tensor<T> result(dims);
+  //   for (size_t i = 0; i < data.size(); ++i) {
+  //     if (other.data[i] == 0) {
+  //       throw std::runtime_error("Division by zero.");
+  //     }
+  //     result.data[i] = data[i] / other.data[i];
+  //   }
+
+  //   return result;
+  // }
 
   const std::vector<size_t> &size() const { return dims; }
 

@@ -36,6 +36,120 @@ bool test_tensor_default_constructor(const Tensor<float> &tensor) {
   return true;
 }
 
+bool test_tensor_equality() {
+  Tensor<float> t1{3, 4, 2};
+  t1[{0, 0, 0}] = 1.0f;
+  t1[{1, 1, 1}] = 2.0f;
+
+  Tensor<float> t2{3, 4, 2};
+  t2[{0, 0, 0}] = 1.0f;
+  t2[{1, 1, 1}] = 2.0f;
+
+  if (!(t1 == t2)) {
+    std::cerr << "Failed: Tensor equality check is incorrect" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool test_tensor_inequality() {
+  Tensor<float> t1{3, 4, 2};
+  t1[{0, 0, 0}] = 1.0f;
+  t1[{1, 1, 1}] = 2.0f;
+
+  Tensor<float> t2{3, 4, 2};
+  t2[{0, 0, 0}] = 1.0f;
+  t2[{1, 1, 1}] = 3.0f;
+
+  if (!(t1 != t2)) {
+    std::cerr << "Failed: Tensor inequality check is incorrect" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+// bool test_tensor_constructor_with_values() {
+//   std::vector<size_t> dimensions = {2, 2, 2};
+//   std::vector<float> values =
+//   {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f}; Tensor<float>
+//   tensor(dimensions, values);
+
+//   if (tensor.size() != dimensions) {
+//     std::cerr << "Failed: Tensor dimensions don't match the expected "
+//                  "dimensions in constructor with values."
+//               << std::endl;
+//     return false;
+//   }
+
+//   if (tensor.numel() != values.size()) {
+//     std::cerr << "Failed: Tensor number of elements don't match the expected
+//     "
+//                  "number of elements in constructor with values."
+//               << std::endl;
+//     return false;
+//   }
+
+//   const float epsilon = 1e-6f;
+//   for (size_t i = 0; i < values.size(); ++i) {
+//     size_t x = i / 4;
+//     size_t y = (i % 4) / 2;
+//     size_t z = i % 2;
+//     std::cout << tensor[{x, y, z}] << std::endl;
+//     if (std::abs(tensor[{x, y, z}] - values[i]) > epsilon) {
+//       std::cerr << "Failed: Tensor values don't match the expected values in
+//       "
+//                    "constructor with values."
+//                 << std::endl;
+//       return false;
+//     }
+//   }
+
+//   return true;
+// }
+
+// bool test_tensor_arithmetic_operations(const Tensor<int> &a, const
+// Tensor<int> &b) {
+//   const Tensor<int> c = a + b;
+//   const Tensor<int> d = a - b;
+//   const Tensor<int> e = a * b;
+//   const Tensor<int> f = a / b;
+
+//   if (c.size() != a.size() || d.size() != a.size() || e.size() != a.size() ||
+//   f.size() != a.size()) {
+//     std::cerr << "Failed: Tensor arithmetic operation dimensions are
+//     incorrect." << std::endl; return false;
+//   }
+
+//   const Tensor<int> expected_c({2, 2}, {2, 2, 2, 2});
+//   const Tensor<int> expected_d({2, 2}, {0, 0, 0, 0});
+//   const Tensor<int> expected_e({2, 2}, {1, 4, 9, 16});
+//   const Tensor<int> expected_f({2, 2}, {1, 1, 1, 1});
+
+//   if (c != expected_c) {
+//     std::cerr << "Failed: Tensor addition is incorrect." << std::endl;
+//     return false;
+//   }
+
+//   if (d != expected_d) {
+//     std::cerr << "Failed: Tensor subtraction is incorrect." << std::endl;
+//     return false;
+//   }
+
+//   if (e != expected_e) {
+//     std::cerr << "Failed: Tensor multiplication is incorrect." << std::endl;
+//     return false;
+//   }
+
+//   if (f != expected_f) {
+//     std::cerr << "Failed: Tensor division is incorrect." << std::endl;
+//     return false;
+//   }
+
+//   return true;
+// }
+
 int main() {
   Tensor<float> t{3, 4, 2};
   Tensor<float> empty_tensor;
@@ -63,6 +177,29 @@ int main() {
   if (test_tensor_default_constructor(empty_tensor)) {
     std::cout << "Passed: Default constructor creates an empty tensor."
               << std::endl;
+  } else {
+    all_tests_passed = false;
+  }
+
+  // // Test the constructor with dimensions and values
+  // if (test_tensor_constructor_with_values()) {
+  //   std::cout
+  //       << "Passed: Tensor constructor with dimensions and values is
+  //       correct."
+  //       << std::endl;
+  // } else {
+  //   all_tests_passed = false;
+  // }
+
+  // Test tensor equality
+  if (test_tensor_equality()) {
+    std::cout << "Passed: Tensor equality check is correct." << std::endl;
+  } else {
+    all_tests_passed = false;
+  }
+
+  if (test_tensor_inequality()) {
+    std::cout << "Passed: Tensor inequality check is correct." << std::endl;
   } else {
     all_tests_passed = false;
   }
