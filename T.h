@@ -22,6 +22,8 @@ class T {
     return data[index];
   }
 
+  const std::vector<size_t> &size() const { return dims; }
+
  private:
   std::vector<size_t> dims;
   std::vector<float> data;
