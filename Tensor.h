@@ -10,6 +10,8 @@
 template <typename T>
 class Tensor {
  public:
+  Tensor() {}
+
   Tensor(std::initializer_list<size_t> dimensions)
       : dims(dimensions), data(calculate_size(dimensions)) {}
 
@@ -24,6 +26,8 @@ class Tensor {
   }
 
   const std::vector<size_t> &size() const { return dims; }
+
+  size_t numel() const { return data.size(); }
 
  private:
   std::vector<size_t> dims;

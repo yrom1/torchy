@@ -27,8 +27,18 @@ bool test_tensor_assignment(const Tensor<float> &tensor) {
   return true;
 }
 
+bool test_tensor_default_constructor(const Tensor<float> &tensor) {
+  if (tensor.numel() != 0) {
+    std::cerr << "Failed: Default constructor does not create an empty tensor"
+              << std::endl;
+    return false;
+  }
+  return true;
+}
+
 int main() {
   Tensor<float> t{3, 4, 2};
+  Tensor<float> empty_tensor;
 
   t[{0, 0, 0}] = 1.0f;
   t[{1, 1, 1}] = 2.0f;
@@ -45,6 +55,14 @@ int main() {
   // Test tensor assignment
   if (test_tensor_assignment(t)) {
     std::cout << "Passed: Tensor element assignment is correct." << std::endl;
+  } else {
+    all_tests_passed = false;
+  }
+
+  // Test the default constructor
+  if (test_tensor_default_constructor(empty_tensor)) {
+    std::cout << "Passed: Default constructor creates an empty tensor."
+              << std::endl;
   } else {
     all_tests_passed = false;
   }
