@@ -1,10 +1,10 @@
 // Copyright 2023 Ryan Moore
 // main.cpp
 
+#include "T.h"
+
 #include <cmath>
 #include <iostream>
-
-#include "T.h"
 
 bool test_tensor_dimensions(const T &tensor,
                             const std::vector<size_t> &expected_dims) {

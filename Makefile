@@ -3,20 +3,20 @@ CXXFLAGS=-std=c++14 -Wall -Wextra -Wpedantic -fsanitize=address
 all: build
 	./program
 
-program: main.o
-	g++ -o program main.o $(CXXFLAGS)
+program: test.o
+	g++ -o program test.o $(CXXFLAGS)
 
-main.o: main.cpp T.h
-	g++ -c main.cpp -o main.o $(CXXFLAGS)
+test.o: test.cpp T.h
+	g++ -c test.cpp -o test.o $(CXXFLAGS)
 
 clean:
 	rm -f program *.o
 
 lint:
-	cpplint --recursive main.cpp T.h
+	cpplint --recursive test.cpp T.h
 
 format:
-	clang-format -i -style=Google main.cpp T.h
+	clang-format -i -style=Google test.cpp T.h
 
 build: program format lint
 
