@@ -14,5 +14,7 @@ int main() {
   bool whole_tensor_comparison = at::equal(a, b);
   std::cout << "Whole tensor comparison: " << std::boolalpha << whole_tensor_comparison << std::endl;
 
+  std::cout << "HUH " << (a == b) << std::endl;
+
   return 0;
 }
