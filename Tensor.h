@@ -82,69 +82,6 @@ class Tensor {
 
   typename std::vector<T>::const_iterator end() const { return data.end(); }
 
-  // Tensor<T> operator+(const Tensor<T> &other) const {
-  //   if (dims != other.size()) {
-  //     throw std::invalid_argument(
-  //         "Tensors must have the same dimensions for element-wise
-  //         addition.");
-  //   }
-
-  //   Tensor<T> result(dims);
-  //   for (size_t i = 0; i < data.size(); ++i) {
-  //     result.data[i] = data[i] + other.data[i];
-  //   }
-
-  //   return result;
-  // }
-
-  // Tensor<T> operator-(const Tensor<T> &other) const {
-  //   if (dims != other.size()) {
-  //     throw std::invalid_argument(
-  //         "Tensors must have the same dimensions for element-wise "
-  //         "subtraction.");
-  //   }
-
-  //   Tensor<T> result(dims);
-  //   for (size_t i = 0; i < data.size(); ++i) {
-  //     result.data[i] = data[i] - other.data[i];
-  //   }
-
-  //   return result;
-  // }
-
-  // Tensor<T> operator*(const Tensor<T> &other) const {
-  //   if (dims != other.size()) {
-  //     throw std::invalid_argument(
-  //         "Tensors must have the same dimensions for element-wise "
-  //         "multiplication.");
-  //   }
-
-  //   Tensor<T> result(dims);
-  //   for (size_t i = 0; i < data.size(); ++i) {
-  //     result.data[i] = data[i] * other.data[i];
-  //   }
-
-  //   return result;
-  // }
-
-  // Tensor<T> operator/(const Tensor<T> &other) const {
-  //   if (dims != other.size()) {
-  //     throw std::invalid_argument(
-  //         "Tensors must have the same dimensions for element-wise
-  //         division.");
-  //   }
-
-  //   Tensor<T> result(dims);
-  //   for (size_t i = 0; i < data.size(); ++i) {
-  //     if (other.data[i] == 0) {
-  //       throw std::runtime_error("Division by zero.");
-  //     }
-  //     result.data[i] = data[i] / other.data[i];
-  //   }
-
-  //   return result;
-  // }
-
   const std::vector<size_t> &size() const { return dims; }
 
   size_t numel() const { return data.size(); }

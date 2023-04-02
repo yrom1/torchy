@@ -115,47 +115,6 @@ bool test_copy_constructor_and_assignment() {
   return true;
 }
 
-// bool test_tensor_arithmetic_operations(const Tensor<int> &a, const
-// Tensor<int> &b) {
-//   const Tensor<int> c = a + b;
-//   const Tensor<int> d = a - b;
-//   const Tensor<int> e = a * b;
-//   const Tensor<int> f = a / b;
-
-//   if (c.size() != a.size() || d.size() != a.size() || e.size() != a.size() ||
-//   f.size() != a.size()) {
-//     std::cerr << "Failed: Tensor arithmetic operation dimensions are
-//     incorrect." << std::endl; return false;
-//   }
-
-//   const Tensor<int> expected_c({2, 2}, {2, 2, 2, 2});
-//   const Tensor<int> expected_d({2, 2}, {0, 0, 0, 0});
-//   const Tensor<int> expected_e({2, 2}, {1, 4, 9, 16});
-//   const Tensor<int> expected_f({2, 2}, {1, 1, 1, 1});
-
-//   if (c != expected_c) {
-//     std::cerr << "Failed: Tensor addition is incorrect." << std::endl;
-//     return false;
-//   }
-
-//   if (d != expected_d) {
-//     std::cerr << "Failed: Tensor subtraction is incorrect." << std::endl;
-//     return false;
-//   }
-
-//   if (e != expected_e) {
-//     std::cerr << "Failed: Tensor multiplication is incorrect." << std::endl;
-//     return false;
-//   }
-
-//   if (f != expected_f) {
-//     std::cerr << "Failed: Tensor division is incorrect." << std::endl;
-//     return false;
-//   }
-
-//   return true;
-// }
-
 int main() {
   Tensor<float> t{3, 4, 2};
   Tensor<float> empty_tensor;
