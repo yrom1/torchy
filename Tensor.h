@@ -4,91 +4,105 @@
 #ifndef TENSOR_H_
 #define TENSOR_H_
 
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
 template <typename T>
 class Tensor {
  public:
-  Tensor() = default;
+  Tensor() : storage_(std::make_shared<std::vector<T>>()) {}
   ~Tensor() = default;
 
   Tensor(std::initializer_list<size_t> dimensions)
-      : dims(dimensions), data(calculate_size(dimensions)) {}
+      : dims(dimensions),
+        storage_(std::make_shared<std::vector<T>>(calculate_size(dimensions))) {
+  }
 
   Tensor(const std::vector<size_t> &dimensions, const std::vector<T> &values)
-      : dims(dimensions), data(values) {}
+      : dims(dimensions), storage_(std::make_shared<std::vector<T>>(values)) {}
 
-  Tensor(const Tensor<T> &other) : dims(other.dims), data(other.data) {}
+  Tensor(const Tensor<T> &other)
+      : dims(other.dims), storage_(other.storage_), offset_(other.offset_) {}
 
   Tensor<T> &operator=(const Tensor<T> &other) {
-    // scott meyers can stuff it
     dims = other.dims;
-    data = other.data;
+    storage_ = other.storage_;
+    offset_ = other.offset_;
     return *this;
   }
 
   friend bool operator==(const Tensor<T> &lhs, const Tensor<T> &rhs) {
-    return lhs.dims == rhs.dims && lhs.data == rhs.data;
+    return lhs.dims == rhs.dims && *(lhs.storage_) == *(rhs.storage_) &&
+           lhs.offset_ == rhs.offset_;
   }
 
   friend bool operator!=(const Tensor<T> &lhs, const Tensor<T> &rhs) {
     return !(lhs == rhs);
   }
 
-  T &operator[](const std::initializer_list<size_t> &indices) {
-    size_t index = calculate_index(indices);
-    return data[index];
+  Tensor<T> operator[](size_t index) {
+    if (dims.empty()) {
+      throw std::out_of_range("Cannot index a scalar tensor.");
+    }
+    if (index >= dims[0]) {
+      throw std::out_of_range("Index out of range.");
+    }
+    std::vector<size_t> new_dims(dims.begin() + 1, dims.end());
+    size_t new_offset = offset_ + index * strides()[0];
+    return Tensor<T>(new_dims, storage_, new_offset);
   }
 
-  const T &operator[](const std::initializer_list<size_t> &indices) const {
-    size_t index = calculate_index(indices);
-    return data[index];
+  const Tensor<T> operator[](size_t index) const {
+    if (dims.empty()) {
+      throw std::out_of_range("Cannot index a scalar tensor.");
+    }
+    if (index >= dims[0]) {
+      throw std::out_of_range("Index out of range.");
+    }
+    std::vector<size_t> new_dims(dims.begin() + 1, dims.end());
+    size_t new_offset = offset_ + index * strides()[0];
+    return Tensor<T>(new_dims, storage_, new_offset);
   }
 
-  // alternative implementation
-  // just needed for `auto& value : tensor`
-  // class Iterator {
-  //  public:
-  //   explicit Iterator(T *ptr) : ptr_(ptr) {}
+  T &operator()() {
+    if (!dims.empty()) {
+      throw std::out_of_range("Cannot access a non-scalar tensor.");
+    }
+    return (*storage_)[offset_];
+  }
 
-  //   T &operator*() const { return *ptr_; }
-  //   T *operator->() const { return ptr_; }
-  //   Iterator &operator++() {
-  //     ++ptr_;
-  //     return *this;
-  //   }
-  //   Iterator operator++(int) {
-  //     Iterator tmp = *this;
-  //     ++(*this);
-  //     return tmp;
-  //   }
-  //   bool operator==(const Iterator &other) const { return ptr_ == other.ptr_;
-  //   } bool operator!=(const Iterator &other) const { return !(*this ==
-  //   other); }
-
-  //  private:
-  //   T *ptr_;
-  // };
-
-  // Iterator begin() { return Iterator(&data[0]); }
-  // Iterator end() { return Iterator(&data[numel()]); }
-
-  typename std::vector<T>::iterator begin() { return data.begin(); }
-
-  typename std::vector<T>::iterator end() { return data.end(); }
-
-  typename std::vector<T>::const_iterator begin() const { return data.begin(); }
-
-  typename std::vector<T>::const_iterator end() const { return data.end(); }
+  const T &operator()() const {
+    if (!dims.empty()) {
+      throw std::out_of_range("Cannot access a non-scalar tensor.");
+    }
+    return (*storage_)[offset_];
+  }
 
   const std::vector<size_t> &size() const { return dims; }
 
-  size_t numel() const { return data.size(); }
+  size_t numel() const { return storage_->size(); }
 
  private:
+  Tensor(const std::vector<size_t> &dimensions,
+         std::shared_ptr<std::vector<T>> storage, size_t offset)
+      : dims(dimensions), storage_(storage), offset_(offset) {}
+
   std::vector<size_t> dims;
-  std::vector<T> data;
+  std::shared_ptr<std::vector<T>> storage_;
+  size_t offset_ = 0;
+
+  std::vector<size_t> strides() const {
+    std::vector<size_t> strides;
+    strides.reserve(dims.size());
+    size_t stride = 1;
+    for (auto it = dims.rbegin(); it != dims.rend(); ++it) {
+      strides.push_back(stride);
+      stride *= *it;
+    }
+    std::reverse(strides.begin(), strides.end());
+    return strides;
+  }
 
   size_t calculate_size(const std::initializer_list<size_t> &dimensions) const {
     size_t size = 1;
@@ -96,28 +110,6 @@ class Tensor {
       size *= dim;
     }
     return size;
-  }
-
-  size_t calculate_index(const std::initializer_list<size_t> &indices) const {
-    if (indices.size() != dims.size()) {
-      throw std::out_of_range("Incorrect number of indices provided.");
-    }
-
-    size_t index = 0;
-    size_t stride = 1;
-
-    auto dims_it = dims.begin();
-    for (auto idx_it = indices.begin(); idx_it != indices.end();
-         ++idx_it, ++dims_it) {
-      if (*idx_it >= *dims_it) {
-        throw std::out_of_range("Index out of range.");
-      }
-
-      index += stride * (*idx_it);
-      stride *= (*dims_it);
-    }
-
-    return index;
   }
 };
 
