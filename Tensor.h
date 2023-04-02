@@ -15,8 +15,8 @@ class Tensor {
   Tensor(std::initializer_list<size_t> dimensions)
       : dims(dimensions), data(calculate_size(dimensions)) {}
 
-  // Tensor(const std::vector<size_t> &dimensions, const std::vector<T> &values)
-  //     : dims(dimensions), data(values) {}
+  Tensor(const std::vector<size_t> &dimensions, const std::vector<T> &values)
+      : dims(dimensions), data(values) {}
 
   friend bool operator==(const Tensor<T> &lhs, const Tensor<T> &rhs) {
     return lhs.dims == rhs.dims && lhs.data == rhs.data;
@@ -35,6 +35,42 @@ class Tensor {
     size_t index = calculate_index(indices);
     return data[index];
   }
+
+  // alternative implementation
+  // just needed for `auto& value : tensor`
+  // class Iterator {
+  //  public:
+  //   explicit Iterator(T *ptr) : ptr_(ptr) {}
+
+  //   T &operator*() const { return *ptr_; }
+  //   T *operator->() const { return ptr_; }
+  //   Iterator &operator++() {
+  //     ++ptr_;
+  //     return *this;
+  //   }
+  //   Iterator operator++(int) {
+  //     Iterator tmp = *this;
+  //     ++(*this);
+  //     return tmp;
+  //   }
+  //   bool operator==(const Iterator &other) const { return ptr_ == other.ptr_;
+  //   } bool operator!=(const Iterator &other) const { return !(*this ==
+  //   other); }
+
+  //  private:
+  //   T *ptr_;
+  // };
+
+  // Iterator begin() { return Iterator(&data[0]); }
+  // Iterator end() { return Iterator(&data[numel()]); }
+
+  typename std::vector<T>::iterator begin() { return data.begin(); }
+
+  typename std::vector<T>::iterator end() { return data.end(); }
+
+  typename std::vector<T>::const_iterator begin() const { return data.begin(); }
+
+  typename std::vector<T>::const_iterator end() const { return data.end(); }
 
   // Tensor<T> operator+(const Tensor<T> &other) const {
   //   if (dims != other.size()) {

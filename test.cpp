@@ -70,44 +70,25 @@ bool test_tensor_inequality() {
   return true;
 }
 
-// bool test_tensor_constructor_with_values() {
-//   std::vector<size_t> dimensions = {2, 2, 2};
-//   std::vector<float> values =
-//   {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f}; Tensor<float>
-//   tensor(dimensions, values);
+bool test_tensor_constructor_with_values() {
+  std::vector<size_t> dimensions = {2, 2, 2};
+  std::vector<float> values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+  Tensor<float> tensor(dimensions, values);
 
-//   if (tensor.size() != dimensions) {
-//     std::cerr << "Failed: Tensor dimensions don't match the expected "
-//                  "dimensions in constructor with values."
-//               << std::endl;
-//     return false;
-//   }
+  const float epsilon = 1e-6f;
+  size_t i = 0;
+  for (auto &value : tensor) {
+    if (std::abs(value - values[i]) > epsilon) {
+      std::cerr << "Failed: Tensor values don't match the expected values in"
+                   " constructor with values."
+                << std::endl;
+      return false;
+    }
+    i++;
+  }
 
-//   if (tensor.numel() != values.size()) {
-//     std::cerr << "Failed: Tensor number of elements don't match the expected
-//     "
-//                  "number of elements in constructor with values."
-//               << std::endl;
-//     return false;
-//   }
-
-//   const float epsilon = 1e-6f;
-//   for (size_t i = 0; i < values.size(); ++i) {
-//     size_t x = i / 4;
-//     size_t y = (i % 4) / 2;
-//     size_t z = i % 2;
-//     std::cout << tensor[{x, y, z}] << std::endl;
-//     if (std::abs(tensor[{x, y, z}] - values[i]) > epsilon) {
-//       std::cerr << "Failed: Tensor values don't match the expected values in
-//       "
-//                    "constructor with values."
-//                 << std::endl;
-//       return false;
-//     }
-//   }
-
-//   return true;
-// }
+  return true;
+}
 
 // bool test_tensor_arithmetic_operations(const Tensor<int> &a, const
 // Tensor<int> &b) {
@@ -181,15 +162,14 @@ int main() {
     all_tests_passed = false;
   }
 
-  // // Test the constructor with dimensions and values
-  // if (test_tensor_constructor_with_values()) {
-  //   std::cout
-  //       << "Passed: Tensor constructor with dimensions and values is
-  //       correct."
-  //       << std::endl;
-  // } else {
-  //   all_tests_passed = false;
-  // }
+  // Test the constructor with dimensions and values
+  if (test_tensor_constructor_with_values()) {
+    std::cout
+        << "Passed: Tensor constructor with dimensions and values is correct."
+        << std::endl;
+  } else {
+    all_tests_passed = false;
+  }
 
   // Test tensor equality
   if (test_tensor_equality()) {
