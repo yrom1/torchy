@@ -18,6 +18,15 @@ class Tensor {
   Tensor(const std::vector<size_t> &dimensions, const std::vector<T> &values)
       : dims(dimensions), data(values) {}
 
+  Tensor(const Tensor<T> &other) : dims(other.dims), data(other.data) {}
+
+  Tensor<T> &operator=(const Tensor<T> &other) {
+    // scott meyers can stuff it
+    dims = other.dims;
+    data = other.data;
+    return *this;
+  }
+
   friend bool operator==(const Tensor<T> &lhs, const Tensor<T> &rhs) {
     return lhs.dims == rhs.dims && lhs.data == rhs.data;
   }

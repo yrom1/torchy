@@ -90,6 +90,31 @@ bool test_tensor_constructor_with_values() {
   return true;
 }
 
+bool test_copy_constructor_and_assignment() {
+  Tensor<float> original({2, 3}, {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f});
+
+  // Test copy constructor
+  Tensor<float> copy_constructed(original);
+  if (copy_constructed == original) {
+    std::cout << "Passed: Copy constructor test." << std::endl;
+  } else {
+    std::cerr << "Failed: Copy constructor test." << std::endl;
+    return false;
+  }
+
+  // Test copy assignment operator
+  Tensor<float> copy_assigned;
+  copy_assigned = original;
+  if (copy_assigned == original) {
+    std::cout << "Passed: Copy assignment test." << std::endl;
+  } else {
+    std::cerr << "Failed: Copy assignment test." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 // bool test_tensor_arithmetic_operations(const Tensor<int> &a, const
 // Tensor<int> &b) {
 //   const Tensor<int> c = a + b;
@@ -140,21 +165,18 @@ int main() {
 
   bool all_tests_passed = true;
 
-  // Test the dimensions of the tensor
   if (test_tensor_dimensions(t, {3, 4, 2})) {
     std::cout << "Passed: Tensor dimensions are correct." << std::endl;
   } else {
     all_tests_passed = false;
   }
 
-  // Test tensor assignment
   if (test_tensor_assignment(t)) {
     std::cout << "Passed: Tensor element assignment is correct." << std::endl;
   } else {
     all_tests_passed = false;
   }
 
-  // Test the default constructor
   if (test_tensor_default_constructor(empty_tensor)) {
     std::cout << "Passed: Default constructor creates an empty tensor."
               << std::endl;
@@ -162,7 +184,6 @@ int main() {
     all_tests_passed = false;
   }
 
-  // Test the constructor with dimensions and values
   if (test_tensor_constructor_with_values()) {
     std::cout
         << "Passed: Tensor constructor with dimensions and values is correct."
@@ -171,7 +192,6 @@ int main() {
     all_tests_passed = false;
   }
 
-  // Test tensor equality
   if (test_tensor_equality()) {
     std::cout << "Passed: Tensor equality check is correct." << std::endl;
   } else {
@@ -180,6 +200,13 @@ int main() {
 
   if (test_tensor_inequality()) {
     std::cout << "Passed: Tensor inequality check is correct." << std::endl;
+  } else {
+    all_tests_passed = false;
+  }
+
+  if (test_copy_constructor_and_assignment()) {
+    std::cout << "Passed: Copy constructor and copy assignment tests."
+              << std::endl;
   } else {
     all_tests_passed = false;
   }
