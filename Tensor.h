@@ -10,7 +10,8 @@
 template <typename T>
 class Tensor {
  public:
-  Tensor() {}
+  Tensor() = default;
+  ~Tensor() = default;
 
   Tensor(std::initializer_list<size_t> dimensions)
       : dims(dimensions), data(calculate_size(dimensions)) {}
