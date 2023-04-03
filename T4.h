@@ -38,9 +38,50 @@ class Tensor {
     computeStrides();
   }
 
-  size_t computeSize() const {
+  Tensor(std::shared_ptr<Storage<T>> storage, const std::vector<size_t> &sizes,
+         const std::vector<size_t> &strides, size_t offset = 0)
+      : storage_(std::move(storage)),
+        sizes_(sizes),
+        strides_(strides),
+        offset_(offset) {}
+
+  // Create a view on the tensor by slicing along a dimension
+  Tensor slice(size_t dimension, size_t start, size_t end) const {
+    if (dimension >= sizes_.size()) {
+      throw std::runtime_error("Dimension out of bounds.");
+    }
+    if (start >= end || end > sizes_[dimension]) {
+      throw std::runtime_error("Invalid slice range.");
+    }
+
+    std::vector<size_t> new_sizes = sizes_;
+    new_sizes[dimension] = end - start;
+    size_t new_offset = offset_ + start * strides_[dimension];
+
+    return Tensor(storage_, new_sizes, strides_, new_offset);
+  }
+
+  // Reshape the tensor while preserving its underlying storage
+  Tensor reshape(const std::vector<size_t> &new_sizes) const {
+    if (computeSize(new_sizes) != computeSize()) {
+      throw std::runtime_error("New sizes do not match the original number of elements.");
+    }
+
+    std::vector<size_t> new_strides(new_sizes.size());
+    size_t stride = 1;
+    for (int i = new_sizes.size() - 1; i >= 0; i--) {
+      new_strides[i] = stride;
+      stride *= new_sizes[i];
+    }
+
+    return Tensor(storage_, new_sizes, new_strides, offset_);
+  }
+
+  size_t computeSize() const { return computeSize(sizes_); }
+
+  size_t computeSize(const std::vector<size_t> &sizes) const {
     size_t total_size = 1;
-    for (const auto &dim : sizes_) {
+    for (const auto &dim : sizes) {
       total_size *= dim;
     }
     return total_size;
