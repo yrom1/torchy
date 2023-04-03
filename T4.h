@@ -12,7 +12,15 @@
 template <typename T>
 class Storage {
  public:
-  explicit Storage(size_t size) : data_(size) {}
+  explicit Storage(size_t size, std::vector<T> values = {})
+      : data_(std::move(values)) {
+    if (data_.empty()) {
+      data_.resize(size);
+    } else if (data_.size() != size) {
+      throw std::runtime_error("Size of the provided values vector does not match the size of the storage.");
+    }
+  }
+
   T &operator[](size_t idx) { return data_[idx]; }
   const T &operator[](size_t idx) const { return data_[idx]; }
 
@@ -25,15 +33,8 @@ class Tensor {
  public:
   Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
       : sizes_(dimensions),
-        storage_(std::make_shared<Storage<T>>(values.empty() ? computeSize()
-                                                             : values.size())),
-        offset_(0),
-        data_(std::move(values)) {
-    if (!data_.empty()) {
-      for (size_t i = 0; i < data_.size(); ++i) {
-        (*storage_)[i] = data_[i];
-      }
-    }
+        storage_(std::make_shared<Storage<T>>(computeSize(), std::move(values))),
+        offset_(0) {
     computeStrides();
   }
 
@@ -70,7 +71,6 @@ class Tensor {
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
-  std::vector<T> data_;
   std::vector<size_t> strides_;
 };
 
