@@ -6,5 +6,6 @@ int main() {
   std::cout << tensor({0, 1}) << std::endl;
   Tensor<float> slice1 = tensor.slice(0, 0, 2);  // First two rows
   Tensor<float> slice2 = tensor.slice(1, 1, 3);  // Last two columns
+  std::cout << slice1 << std::endl;
   std::cout << slice2 << std::endl;
 }
