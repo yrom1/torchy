@@ -95,9 +95,22 @@ class Tensor {
     return (*storage_)[idx];
   }
 
+  const T &operator()(const std::vector<size_t> &indices) const {
+    size_t idx = offset_;
+    for (size_t i = 0; i < indices.size(); ++i) {
+      idx += indices[i] * strides_[i];
+    }
+    return (*storage_)[idx];
+  }
+
   const std::vector<size_t> &sizes() const { return sizes_; }
   const std::vector<size_t> &strides() const { return strides_; }
   const std::shared_ptr<Storage<T>> &storage() const { return storage_; }
+
+  friend std::ostream &operator<<(std::ostream &os, const Tensor<T> &tensor) {
+    printTensor(os, tensor, {}, 0);
+    return os;
+  }
 
  private:
   void computeStrides() {
@@ -113,6 +126,35 @@ class Tensor {
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
+
+  static void printTensor(std::ostream &os, const Tensor<T> &tensor, std::vector<size_t> indices, size_t depth) {
+    if (depth == tensor.sizes_.size() - 1) {
+      os << "[";
+      for (size_t i = 0; i < tensor.sizes_[depth]; ++i) {
+        indices.push_back(i);
+        os << tensor(indices);
+        indices.pop_back();
+        if (i != tensor.sizes_[depth] - 1) {
+          os << ", ";
+        }
+      }
+      os << "]";
+    } else {
+      os << "[";
+      for (size_t i = 0; i < tensor.sizes_[depth]; ++i) {
+        indices.push_back(i);
+        printTensor(os, tensor, indices, depth + 1);
+        indices.pop_back();
+        if (i != tensor.sizes_[depth] - 1) {
+          os << ",\n";
+          for (size_t j = 0; j <= depth; ++j) {
+            os << " ";
+          }
+        }
+      }
+      os << "]";
+    }
+  }
 };
 
 #endif  // TENSOR_H_
