@@ -88,6 +88,8 @@ class Tensor {
   }
 
   T &operator()(const std::vector<size_t> &indices) {
+    checkIndicesBounds(indices);
+
     size_t idx = offset_;
     for (size_t i = 0; i < indices.size(); ++i) {
       idx += indices[i] * strides_[i];
@@ -96,6 +98,8 @@ class Tensor {
   }
 
   const T &operator()(const std::vector<size_t> &indices) const {
+    checkIndicesBounds(indices);
+
     size_t idx = offset_;
     for (size_t i = 0; i < indices.size(); ++i) {
       idx += indices[i] * strides_[i];
@@ -113,6 +117,11 @@ class Tensor {
   }
 
  private:
+  std::vector<size_t> sizes_;
+  std::shared_ptr<Storage<T>> storage_;
+  size_t offset_;
+  std::vector<size_t> strides_;
+
   void computeStrides() {
     strides_.resize(sizes_.size());
     size_t stride = 1;
@@ -122,10 +131,17 @@ class Tensor {
     }
   }
 
-  std::vector<size_t> sizes_;
-  std::shared_ptr<Storage<T>> storage_;
-  size_t offset_;
-  std::vector<size_t> strides_;
+  void checkIndicesBounds(const std::vector<size_t> &indices) const {
+    if (indices.size() != sizes_.size()) {
+      throw std::runtime_error("Number of indices does not match the number of dimensions.");
+    }
+
+    for (size_t i = 0; i < indices.size(); ++i) {
+      if (indices[i] >= sizes_[i]) {
+        throw std::runtime_error("Index out of bounds.");
+      }
+    }
+  }
 
   static void printTensor(std::ostream &os, const Tensor<T> &tensor, std::vector<size_t> indices, size_t depth) {
     if (depth == tensor.sizes_.size() - 1) {
