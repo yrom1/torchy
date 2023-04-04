@@ -1,4 +1,4 @@
-# TX.h
+# Tensor
 
 A tensor library, inspired by PyTorch's ATen
 
