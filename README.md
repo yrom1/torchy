@@ -1,4 +1,4 @@
-# Tensor.h
+# TX.h
 
 A tensor library, inspired by PyTorch's ATen
 
@@ -9,13 +9,36 @@ A tensor library, inspired by PyTorch's ATen
 
 # References
 
-## Strided Representation
+## http://blog.ezyang.com/2019/05/pytorch-internals/
+
+### Strided Representation
 
 ![](http://blog.ezyang.com/img/pytorch-internals/slide-08.png)
 
-- http://blog.ezyang.com/2019/05/pytorch-internals/
 
-## TensorBody.h
+### https://ezyang.github.io/stride-visualizer/index.html
+> Strides specify a factor by which an index is multiplied when computing its index into an array.
+> Contiguous: each stride is the product of the corresponding tail of sizes
+
+#### Chatgpt
+> For example, let's consider a 3-dimensional tensor with dimensions (H, W, C), where H is the height, W is the width, and C is the number of channels. The strides for each dimension would be:
+
+```
+Stride for height (H): W * C
+Stride for width (W): C
+Stride for channels (C): 1
+```
+
+### Views
+
+![](http://blog.ezyang.com/img/pytorch-internals/slide-10.png)
+
+### Tensor and Storage
+![](http://blog.ezyang.com/img/pytorch-internals/slide-11.png)
+
+## https://github.com/pytorch/pytorch/blob/da28af3286b2b0c54ec182fe2d4264f3e87d50f4/aten/src/ATen/templates/TensorBody.h
+
+### Tensor
 ```cpp
 // Tensor is a "generic" object holding a pointer to the underlying TensorImpl object, which
 // has an embedded reference count. In this way, Tensor is similar to boost::intrusive_ptr.
@@ -35,6 +58,8 @@ A tensor library, inspired by PyTorch's ATen
 // Note that Tensor can also be NULL, i.e. it is not associated with any underlying TensorImpl, and
 // special care must be taken to handle this.
 ```
+
+### Assignment and Not Copying
 ```cpp
 // The following overloads are very intruiging.  Consider the following
 // program:
@@ -60,4 +85,3 @@ A tensor library, inspired by PyTorch's ATen
 // ref-qualified overload.  Otherwise, it will be ambiguous, because
 // a non ref-qualified method is eligible for all situations.
 ```
-- https://github.com/pytorch/pytorch/blob/da28af3286b2b0c54ec182fe2d4264f3e87d50f4/aten/src/ATen/templates/TensorBody.h
