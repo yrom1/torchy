@@ -1,24 +1,22 @@
-CXXFLAGS=-std=c++14 -Wall -Wextra -Wpedantic -fsanitize=address
+CC=g++
+CFLAGS=-std=c++14
+TARGET=a.out
+SOURCES=T2.cpp
+HEADERS=T2.h
 
-all: build
-	./program
-
-program: test.o
-	g++ -o program test.o $(CXXFLAGS)
-
-test.o: test.cpp Tensor.h
-	g++ -c test.cpp -o test.o $(CXXFLAGS)
-
-clean:
-	rm -f program *.o
-
-lint:
-	cpplint --recursive test.cpp Tensor.h
+all: format lint compile run
 
 format:
-	clang-format -i -style=Google test.cpp Tensor.h
+	clang-format -i -style=Google $(SOURCES) $(HEADERS)
 
-build: program format lint
+lint:
+	cpplint --recursive $(SOURCES) $(HEADERS)
 
-.PHONY: all clean lint format build
-.DEFAULT_GOAL := all
+compile:
+	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET)
+
+run:
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)
