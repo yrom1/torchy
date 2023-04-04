@@ -44,10 +44,10 @@ class Tensor {
 
   Tensor(std::shared_ptr<Storage<T>> storage, const std::vector<size_t> &sizes,
          const std::vector<size_t> &strides, size_t offset = 0)
-      : storage_(std::move(storage)),
-        sizes_(sizes),
-        strides_(strides),
-        offset_(offset) {}
+      : sizes_(sizes),
+        storage_(std::move(storage)),
+        offset_(offset),
+        strides_(strides) {}
 
   // Create a view on the tensor by slicing along a dimension
   Tensor slice(size_t dimension, size_t start, size_t end) const {
