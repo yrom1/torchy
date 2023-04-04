@@ -1,8 +1,7 @@
 // Copyright 2023 Ryan Moore
-// Tensor.h
 
-#ifndef TENSOR_H_
-#define TENSOR_H_
+#ifndef T2_H_
+#define T2_H_
 
 #include <initializer_list>
 #include <memory>
@@ -173,4 +172,4 @@ class Tensor {
   }
 };
 
-#endif  // TENSOR_H_
+#endif  // T2_H_
