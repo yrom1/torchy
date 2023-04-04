@@ -151,6 +151,37 @@ class Tensor {
     return Tensor<T>(sizes_, result_values);
   }
 
+  Tensor<T> matmul(const Tensor<T> &other) const {
+    if (sizes_.size() != 2 || other.sizes_.size() != 2) {
+      throw std::runtime_error("Both tensors must be 2-dimensional.");
+    }
+
+    if (sizes_[1] != other.sizes_[0]) {
+      throw std::runtime_error(
+          "Incompatible dimensions for matrix multiplication.");
+    }
+
+    std::vector<size_t> result_sizes = {sizes_[0], other.sizes_[1]};
+    std::vector<T> result_values(result_sizes[0] * result_sizes[1], 0);
+
+    for (size_t i = 0; i < result_sizes[0]; ++i) {
+      for (size_t j = 0; j < result_sizes[1]; ++j) {
+        for (size_t k = 0; k < sizes_[1]; ++k) {
+          // Access the element at (i, j) in the result_values vector by
+          // converting the 2-dimensional index (i, j) to a 1-dimensional index
+          // The formula for this conversion is:
+          //   linear_index = i * number_of_columns + j
+          // where i represents the row index and j represents the column index.
+          result_values[i * result_sizes[1] + j] +=
+              (*this)(std::vector<size_t>{i, k}) *
+              other(std::vector<size_t>{k, j});
+        }
+      }
+    }
+
+    return Tensor<T>(result_sizes, result_values);
+  }
+
  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
