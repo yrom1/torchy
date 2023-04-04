@@ -1,4 +1,4 @@
-# Tensor
+# tensor
 
 A tensor library, inspired by PyTorch's ATen
 
@@ -85,3 +85,5 @@ Stride for channels (C): 1
 // ref-qualified overload.  Otherwise, it will be ambiguous, because
 // a non ref-qualified method is eligible for all situations.
 ```
+
+## https://www.tensors.net/tutorial-1
