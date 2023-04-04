@@ -159,3 +159,93 @@ int main() {
 In this example, we create 2x2 tensors x and y with requires_grad(true). We then compute z as the element-wise multiplication between x and y, plus the element-wise square of y. The loss is calculated as the sum of all elements in z. After calling loss.backward(), the gradients of the loss with respect to x and y are computed and stored in their respective .grad() attributes.
 
 Note that in C++, you'll need to include the LibTorch header files and link against the LibTorch library when building your program. For more information on setting up and using the PyTorch C++ API, see the official documentation: https://pytorch.org/cppdocs/installing.html
+
+---
+
+Before diving into automatic differentiation (autograd) implementation, it's useful to implement some more basic mathematical operations and features for your Tensor class. These operations will come in handy when you start working on autograd, as they are essential for building more complex functions and models. Here are some suggestions:
+
+- Element-wise operations: Implement element-wise addition, subtraction, multiplication, and division for two tensors with the same shape.
+
+- Broadcasting: Add support for broadcasting, which is a powerful feature that allows you to perform operations on tensors with different shapes. It automatically expands the dimensions of the smaller tensor to match the larger one so that the operation can be performed element-wise. Broadcasting is widely used in deep learning frameworks like PyTorch and TensorFlow.
+
+- Reduction operations: Implement reduction operations like sum, mean, min, max, and product that can be performed along specific dimensions or the entire tensor.
+
+- Unary operations: Add support for unary operations like absolute value, exponential, logarithm, square root, and trigonometric functions.
+
+- Basic linear algebra operations: Besides matrix multiplication, consider implementing other linear algebra operations like transpose, inverse, determinant, and trace.
+
+- Comparison operations: Implement element-wise comparison operations like equal, not equal, greater, less, greater equal, and less equal.
+
+- Advanced indexing: Add support for more advanced indexing techniques like masking and integer array indexing.
+
+Once you have these foundational mathematical operations and features implemented, you can start working on the autograd system. Implementing the autograd system will involve defining how gradients should be computed for each operation, as well as maintaining a computation graph to keep track of the operations and their corresponding gradients.
+
+Keep in mind that implementing an efficient and robust autograd system can be quite complex. If you're interested in learning more about autograd implementation, you can study existing deep learning frameworks like PyTorch or TensorFlow, which have well-developed autograd systems.
+
+---
+
+Yes, Micrograd is a minimalistic automatic differentiation (autograd) engine created by Andrej Karpathy. It's designed to be simple and easy to understand, making it a great starting point for building your own autograd system for tensors.
+
+To create a multi-layer perceptron (MLP) using your tensor library, you'll need the following components:
+
+Basic tensor operations: As previously mentioned, you should have essential tensor operations implemented, like element-wise addition, subtraction, multiplication, and division, as well as matrix multiplication.
+
+Activation functions: Implement popular activation functions like ReLU, Sigmoid, and Tanh. These functions introduce non-linearity into the MLP, allowing it to learn complex patterns in the data.
+
+```cpp
+template <typename T>
+Tensor<T> relu(const Tensor<T> &input) {
+  // Implement ReLU activation function
+}
+
+template <typename T>
+Tensor<T> sigmoid(const Tensor<T> &input) {
+  // Implement Sigmoid activation function
+}
+
+template <typename T>
+Tensor<T> tanh(const Tensor<T> &input) {
+  // Implement Tanh activation function
+}
+```
+
+Loss functions: Implement common loss functions like Mean Squared Error (MSE) and Cross-Entropy Loss. Loss functions are used to measure the discrepancy between the predicted output and the ground truth during training.
+
+```cpp
+template <typename T>
+T mse_loss(const Tensor<T> &predicted, const Tensor<T> &ground_truth) {
+  // Implement Mean Squared Error loss function
+}
+
+template <typename T>
+T cross_entropy_loss(const Tensor<T> &predicted, const Tensor<T> &ground_truth) {
+  // Implement Cross-Entropy loss function
+}
+```
+Automatic differentiation (autograd): Implement a simple autograd system for your tensor library, similar to Micrograd. This system should maintain a computation graph that keeps track of the operations and their gradients. Additionally, it should be able to compute gradients for the parameters (e.g., weights and biases) of the MLP during the backpropagation process.
+
+Optimizers: Implement optimization algorithms like Stochastic Gradient Descent (SGD) or Adam to update the parameters (weights and biases) of the MLP during training. Optimizers are responsible for minimizing the loss function.
+
+```cpp
+template <typename T>
+class SGD {
+ public:
+  // Implement the Stochastic Gradient Descent optimizer
+};
+```
+
+MLP architecture: Define the MLP architecture, which consists of multiple layers of linear transformations (matrix multiplication followed by the addition of biases) and activation functions. The number of layers and the size of each layer should be configurable.
+
+```cpp
+template <typename T>
+class MultiLayerPerceptron {
+ public:
+  // Implement the MLP class with configurable layers and sizes
+};
+```
+
+Training loop: Implement the training loop, where you feed data into the MLP, compute the loss, perform backpropagation to calculate gradients, and update the parameters using the optimizer.
+
+Evaluation: Implement functions to evaluate the performance of your MLP on a validation or test dataset.
+
+By implementing these components, you'll be able to create a simple MLP using your tensor library. Note that this is just a starting point, and there's a lot more that can be added and optimized for better performance and usability.
