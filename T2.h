@@ -4,6 +4,7 @@
 #define T2_H_
 
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -16,7 +17,9 @@ class Storage {
     if (data_.empty()) {
       data_.resize(size);
     } else if (data_.size() != size) {
-      throw std::runtime_error("Size of the provided values vector does not match the size of the storage.");
+      throw std::runtime_error(
+          "Size of the provided values vector does not match the size of the "
+          "storage.");
     }
   }
 
@@ -32,7 +35,8 @@ class Tensor {
  public:
   Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
       : sizes_(dimensions),
-        storage_(std::make_shared<Storage<T>>(computeSize(), std::move(values))),
+        storage_(
+            std::make_shared<Storage<T>>(computeSize(), std::move(values))),
         offset_(0) {
     computeStrides();
   }
@@ -63,7 +67,8 @@ class Tensor {
   // Reshape the tensor while preserving its underlying storage
   Tensor reshape(const std::vector<size_t> &new_sizes) const {
     if (computeSize(new_sizes) != computeSize()) {
-      throw std::runtime_error("New sizes do not match the original number of elements.");
+      throw std::runtime_error(
+          "New sizes do not match the original number of elements.");
     }
 
     std::vector<size_t> new_strides(new_sizes.size());
@@ -132,7 +137,8 @@ class Tensor {
 
   void checkIndicesBounds(const std::vector<size_t> &indices) const {
     if (indices.size() != sizes_.size()) {
-      throw std::runtime_error("Number of indices does not match the number of dimensions.");
+      throw std::runtime_error(
+          "Number of indices does not match the number of dimensions.");
     }
 
     for (size_t i = 0; i < indices.size(); ++i) {
@@ -142,7 +148,8 @@ class Tensor {
     }
   }
 
-  static void printTensor(std::ostream &os, const Tensor<T> &tensor, std::vector<size_t> indices, size_t depth) {
+  static void printTensor(std::ostream &os, const Tensor<T> &tensor,
+                          std::vector<size_t> indices, size_t depth) {
     if (depth == tensor.sizes_.size() - 1) {
       os << "[";
       for (size_t i = 0; i < tensor.sizes_[depth]; ++i) {

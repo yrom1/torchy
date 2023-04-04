@@ -1,7 +1,8 @@
 // Copyright 2023 Ryan Moore
 
-#include <iostream>
 #include "T2.h"
+
+#include <iostream>
 
 int main() {
   Tensor<float> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
