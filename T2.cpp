@@ -25,4 +25,9 @@ int main() {
   std::cout << slice1 << std::endl;
   std::cout << "slice2" << std::endl;
   std::cout << slice2 << std::endl;
+
+  std::vector<size_t> dimensions = {3, 3};
+  std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  Tensor<int> t(dimensions, values);
+  std::cout << t << std::endl;
 }

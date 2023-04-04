@@ -35,6 +35,10 @@ template <typename T>
 class Tensor {
  public:
   Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
+      : Tensor(std::vector<size_t>(dimensions), std::move(values)) {}
+
+  explicit Tensor(const std::vector<size_t> &dimensions,
+                  std::vector<T> values = {})
       : sizes_(dimensions),
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
