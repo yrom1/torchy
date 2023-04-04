@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++14
+CFLAGS=-std=c++14 -Wall -Wextra -Wpedantic -fsanitize=address
 TARGET=a.out
 SOURCES=T2.cpp
 HEADERS=T2.h
