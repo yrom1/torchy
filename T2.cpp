@@ -30,4 +30,12 @@ int main() {
   std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   Tensor<int> t(dimensions, values);
   std::cout << t << std::endl;
+
+  std::vector<int> values1 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  std::vector<int> values2 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  Tensor<int> t1(dimensions, values1);
+  Tensor<int> t2(dimensions, values2);
+
+  Tensor<int> t3 = t1 + t2;
+  std::cout << t3 << std::endl;
 }

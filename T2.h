@@ -125,11 +125,36 @@ class Tensor {
     return os;
   }
 
+  // TODO(yrom1) if same shape just add the underlying vectors?
+  Tensor<T> operator+(const Tensor<T> &other) const {
+    if (sizes_ != other.sizes_) {
+      throw std::runtime_error(
+          "Tensors must have the same shape for addition.");
+    }
+
+    std::vector<T> result_values(computeSize());
+    for (size_t i = 0; i < result_values.size(); ++i) {
+      std::vector<size_t> indices = unravelIndex(i);
+      result_values[i] = (*this)(indices) + other(indices);
+    }
+
+    return Tensor<T>(sizes_, result_values);
+  }
+
  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
+
+  std::vector<size_t> unravelIndex(size_t index) const {
+    std::vector<size_t> indices(sizes_.size());
+    for (size_t i = 0; i < sizes_.size(); ++i) {
+      indices[i] = (index % sizes_[i]);
+      index /= sizes_[i];
+    }
+    return indices;
+  }
 
   void computeStrides() {
     strides_.resize(sizes_.size());
