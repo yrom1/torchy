@@ -141,6 +141,16 @@ class Tensor {
     return Tensor<T>(sizes_, result_values);
   }
 
+  Tensor<T> operator+(const T &scalar) const {
+    std::vector<T> result_values(computeSize());
+    for (size_t i = 0; i < result_values.size(); ++i) {
+      std::vector<size_t> indices = unravelIndex(i);
+      result_values[i] = (*this)(indices) + scalar;
+    }
+
+    return Tensor<T>(sizes_, result_values);
+  }
+
  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
