@@ -7,6 +7,7 @@
 #include "tensor.h"  // NOLINT (build/include_subdir)
 
 void create_and_print_tensors() {
+  std::cout << "--- create tensors" << std::endl;
   Tensor<float> t1({3}, {1, 2, 3});
   Tensor<float> t2({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   Tensor<float> t3({3, 3, 3},
@@ -18,11 +19,13 @@ void create_and_print_tensors() {
 }
 
 void access_tensor_element() {
+  std::cout << "--- element access" << std::endl;
   Tensor<float> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   std::cout << tensor({0, 1}) << std::endl;
 }
 
 void catch_runtime_error() {
+  std::cout << "--- runtime error" << std::endl;
   Tensor<float> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   try {
     std::cout << tensor({0, 15}) << std::endl;
@@ -32,6 +35,7 @@ void catch_runtime_error() {
 }
 
 void create_and_print_tensor_slices() {
+  std::cout << "--- slices" << std::endl;
   Tensor<float> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   Tensor<float> t2({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   Tensor<float> slice1 = tensor.slice(0, 0, 2);  // First two rows
@@ -46,6 +50,7 @@ void create_and_print_tensor_slices() {
 }
 
 void create_and_print_tensor_with_values() {
+  std::cout << "--- create with values" << std::endl;
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   Tensor<int> t(dimensions, values);
@@ -53,6 +58,7 @@ void create_and_print_tensor_with_values() {
 }
 
 void create_and_print_tensor_addition() {
+  std::cout << "--- tensor addition" << std::endl;
   std::vector<int> values1 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<int> values2 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   std::vector<size_t> dimensions = {3, 3};
@@ -63,6 +69,7 @@ void create_and_print_tensor_addition() {
 }
 
 void create_and_print_tensor_scalar_addition() {
+  std::cout << "--- scalar addition" << std::endl;
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   Tensor<int> t(dimensions, values);
@@ -71,6 +78,7 @@ void create_and_print_tensor_scalar_addition() {
 }
 
 void create_and_print_matrix_multiplication() {
+  std::cout << "--- matmul" << std::endl;
   std::vector<size_t> dimensions1 = {2, 3};
   std::vector<size_t> dimensions2 = {3, 2};
   std::vector<int> values1 = {1, 2, 3, 4, 5, 6};
