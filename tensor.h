@@ -1,7 +1,7 @@
 // Copyright 2023 Ryan Moore
 
-#ifndef T2_H_
-#define T2_H_
+#ifndef TENSOR_H_
+#define TENSOR_H_
 
 #include <initializer_list>
 #include <iostream>
@@ -250,4 +250,4 @@ class Tensor {
   }
 };
 
-#endif  // T2_H_
+#endif  // TENSOR_H_

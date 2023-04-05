@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-std=c++14 -Wall -Wextra -Wpedantic -fsanitize=address
 TARGET=a.out
 SOURCES=test.cpp
-HEADERS=T2.h
+HEADERS=tensor.h
 
 all: format lint compile run
 

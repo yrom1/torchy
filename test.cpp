@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "T2.h"
+#include "tensor.h"  // NOLINT (build/include_subdir)
 
 void create_and_print_tensors() {
   Tensor<float> t1({3}, {1, 2, 3});
