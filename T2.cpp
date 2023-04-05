@@ -84,15 +84,13 @@ void create_and_print_matrix_multiplication() {
 }
 
 int main() {
-  std::vector<std::function<void()>> tests = {
-      // In this case, std::function<void()> is a type that represents a
-      // function
-      // with no parameters and no return value. It's a "callable object" that
-      // can
-      // hold any function that matches this signature.
+  // In this case, std::function<void()> is a type that represents a function
+  // with no parameters and no return value. It's a "callable object" that can
+  // hold any function that matches this signature.
 
-      // If a function took one argument of type int and returned a float, for
-      // example, its signature would be float(int).
+  // If a function took one argument of type int and returned a float, for
+  // example, its signature would be float(int).
+  std::vector<std::function<void()>> tests = {
       create_and_print_tensors,
       access_tensor_element,
       catch_runtime_error,
