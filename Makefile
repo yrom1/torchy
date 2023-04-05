@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-std=c++14 -Wall -Wextra -Wpedantic -fsanitize=address
 TARGET=a.out
-SOURCES=T2.cpp
+SOURCES=test.cpp
 HEADERS=T2.h
 
 all: format lint compile run

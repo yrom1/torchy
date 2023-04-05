@@ -1,10 +1,10 @@
 // Copyright 2023 Ryan Moore
 
-#include "T2.h"
-
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+
+#include "T2.h"
 
 void create_and_print_tensors() {
   Tensor<float> t1({3}, {1, 2, 3});
