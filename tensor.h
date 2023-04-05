@@ -127,28 +127,13 @@ class Tensor {
 
   // TODO(yrom1) if same shape just add the underlying vectors?
   Tensor<T> operator+(const Tensor<T> &other) const {
-    if (sizes_ != other.sizes_) {
-      throw std::runtime_error(
-          "Tensors must have the same shape for addition.");
-    }
-
-    std::vector<T> result_values(computeSize());
-    for (size_t i = 0; i < result_values.size(); ++i) {
-      std::vector<size_t> indices = unravelIndex(i);
-      result_values[i] = (*this)(indices) + other(indices);
-    }
-
-    return Tensor<T>(sizes_, result_values);
+    return applyElementwise(other,
+                            [](const T &a, const T &b) { return a + b; });
   }
 
   Tensor<T> operator+(const T &scalar) const {
-    std::vector<T> result_values(computeSize());
-    for (size_t i = 0; i < result_values.size(); ++i) {
-      std::vector<size_t> indices = unravelIndex(i);
-      result_values[i] = (*this)(indices) + scalar;
-    }
-
-    return Tensor<T>(sizes_, result_values);
+    return applyElementwise(scalar,
+                            [](const T &a, const T &b) { return a + b; });
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
@@ -187,6 +172,35 @@ class Tensor {
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
+
+  Tensor<T> applyElementwise(
+      const Tensor<T> &other,
+      const std::function<T(const T &, const T &)> &func) const {
+    if (sizes_ != other.sizes_) {
+      throw std::runtime_error(
+          "Tensors must have the same shape for element-wise operations.");
+    }
+
+    std::vector<T> result_values(computeSize());
+    for (size_t i = 0; i < result_values.size(); ++i) {
+      std::vector<size_t> indices = unravelIndex(i);
+      result_values[i] = func((*this)(indices), other(indices));
+    }
+
+    return Tensor<T>(sizes_, result_values);
+  }
+
+  Tensor<T> applyElementwise(
+      const T &scalar,
+      const std::function<T(const T &, const T &)> &func) const {
+    std::vector<T> result_values(computeSize());
+    for (size_t i = 0; i < result_values.size(); ++i) {
+      std::vector<size_t> indices = unravelIndex(i);
+      result_values[i] = func((*this)(indices), scalar);
+    }
+
+    return Tensor<T>(sizes_, result_values);
+  }
 
   std::vector<size_t> unravelIndex(size_t index) const {
     std::vector<size_t> indices(sizes_.size());
