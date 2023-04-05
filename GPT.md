@@ -249,3 +249,217 @@ Training loop: Implement the training loop, where you feed data into the MLP, co
 Evaluation: Implement functions to evaluate the performance of your MLP on a validation or test dataset.
 
 By implementing these components, you'll be able to create a simple MLP using your tensor library. Note that this is just a starting point, and there's a lot more that can be added and optimized for better performance and usability.
+
+# Single Layer PyTorch
+
+Sure, here's an example of a single-layer neural network in PyTorch with one output:
+
+```py
+import torch
+
+# Define input data and target output
+x = torch.tensor([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8]])
+y = torch.tensor([[0.5], [0.7], [0.9], [1.1]])
+
+# Define the model
+model = torch.nn.Sequential(
+    torch.nn.Linear(2, 1),
+)
+
+# Define the loss function
+loss_fn = torch.nn.MSELoss()
+
+# Define the optimizer
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+# Train the model
+for epoch in range(1000):
+    # Forward pass
+    y_pred = model(x)
+
+    # Compute loss
+    loss = loss_fn(y_pred, y)
+
+    # Backward pass
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    # Print progress
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch}, Loss {loss.item()}")
+
+# Test the model
+x_test = torch.tensor([[0.9, 1.0], [1.1, 1.2]])
+y_pred_test = model(x_test)
+print(y_pred_test)
+```
+In this example, we define an input tensor x of shape (4, 2) and a target output tensor y of shape (4, 1). We define a Sequential model with a single linear layer using torch.nn.Linear(2, 1). We define a mean squared error (MSE) loss function using torch.nn.MSELoss() and an optimizer using stochastic gradient descent (SGD) with a learning rate of 0.1. We train the model for 1000 epochs and print the loss every 100 epochs. Finally, we test the model on some new input data x_test and print the predicted output y_pred_test.
+
+---
+
+Sure, here's how you can define a single-layer neural network with one output using PyTorch without using the Sequential module:
+
+```py
+import torch
+
+# Define input data and target output
+x = torch.tensor([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8]])
+y = torch.tensor([[0.5], [0.7], [0.9], [1.1]])
+
+# Define the model
+class SingleLayerNet(torch.nn.Module):
+    def __init__(self):
+        super(SingleLayerNet, self).__init__()
+        self.linear = torch.nn.Linear(2, 1)
+
+    def forward(self, x):
+        y_pred = self.linear(x)
+        return y_pred
+
+model = SingleLayerNet()
+
+# Define the loss function
+loss_fn = torch.nn.MSELoss()
+
+# Define the optimizer
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+# Train the model
+for epoch in range(1000):
+    # Forward pass
+    y_pred = model(x)
+
+    # Compute loss
+    loss = loss_fn(y_pred, y)
+
+    # Backward pass
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    # Print progress
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch}, Loss {loss.item()}")
+
+# Test the model
+x_test = torch.tensor([[0.9, 1.0], [1.1, 1.2]])
+y_pred_test = model(x_test)
+print(y_pred_test)
+```
+In this example, we define a class SingleLayerNet that inherits from torch.nn.Module and contains a single linear layer with 2 input features and 1 output feature. We define the forward method to perform the forward pass of the network. We instantiate the class to create the model. The rest of the code is the same as in the previous example.
+
+---
+Sure, here's how you can define a single-layer neural network with one output using PyTorch without using the Sequential module:
+
+```py
+import torch
+
+# Define input data and target output
+x = torch.tensor([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8]])
+y = torch.tensor([[0.5], [0.7], [0.9], [1.1]])
+
+# Define the model
+class SingleLayerNet(torch.nn.Module):
+    def __init__(self):
+        super(SingleLayerNet, self).__init__()
+        self.w = torch.nn.Parameter(torch.randn(2, 1))
+        self.b = torch.nn.Parameter(torch.randn(1))
+
+    def forward(self, x):
+        y_pred = torch.mm(x, self.w) + self.b
+        return y_pred
+
+model = SingleLayerNet()
+
+# Define the loss function
+loss_fn = torch.nn.MSELoss()
+
+# Define the optimizer
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+# Train the model
+for epoch in range(1000):
+    # Forward pass
+    y_pred = model(x)
+
+    # Compute loss
+    loss = loss_fn(y_pred, y)
+
+    # Backward pass
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    # Print progress
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch}, Loss {loss.item()}")
+
+# Test the model
+x_test = torch.tensor([[0.9, 1.0], [1.1, 1.2]])
+y_pred_test = model(x_test)
+print(y_pred_test)
+```
+
+In this example, we define a class SingleLayerNet that inherits from torch.nn.Module. The __init__ method initializes two trainable parameters self.w and self.b using torch.nn.Parameter, where self.w is a 2x1 weight matrix and self.b is a scalar bias term. The forward method performs a linear transformation of the input x using torch.mm to compute the matrix multiplication of x and self.w, and adds the bias term self.b. We instantiate the class to create the model. The rest of the code is the same as in the previous examples.
+
+---
+
+Sure, here's how you can define a single-layer neural network with one output using only PyTorch tensors:
+
+```py
+import torch
+
+# Define input data and target output
+x = torch.tensor([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8]])
+y = torch.tensor([[0.5], [0.7], [0.9], [1.1]])
+
+# Define the model weights and bias
+w = torch.randn(2, 1, requires_grad=True)
+b = torch.randn(1, requires_grad=True)
+
+# Define the model
+def single_layer_net(x):
+    y_pred = torch.matmul(x, w) + b
+    return y_pred
+
+# Define the loss function
+def mse_loss(y_pred, y):
+    loss = torch.mean(torch.pow(y_pred - y, 2))
+    return loss
+
+# Define the learning rate and number of epochs
+lr = 0.1
+num_epochs = 1000
+
+# Train the model
+for epoch in range(num_epochs):
+    # Forward pass
+    y_pred = single_layer_net(x)
+
+    # Compute loss
+    loss = mse_loss(y_pred, y)
+
+    # Backward pass
+    loss.backward()
+
+    # Update parameters
+    with torch.no_grad():
+        w -= lr * w.grad
+        b -= lr * b.grad
+
+        # Reset gradients
+        w.grad.zero_()
+        b.grad.zero_()
+
+    # Print progress
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch}, Loss {loss.item()}")
+
+# Test the model
+x_test = torch.tensor([[0.9, 1.0], [1.1, 1.2]])
+y_pred_test = single_layer_net(x_test)
+print(y_pred_test)
+```
+
+In this example, we define the model weights w as a 2x1 tensor and the bias b as a 1-dimensional tensor. We define the single_layer_net function to perform a linear transformation of the input x using torch.matmul to compute the matrix multiplication of x and w, and adds the bias term b. We define the mse_loss function to compute the mean squared error loss between the predicted output and the target output. We define the learning rate lr and number of epochs num_epochs. We train the model using a for loop, where we perform a forward pass, compute the loss, perform a backward pass, and update the parameters using gradient descent. We print the loss every 100 epochs. Finally, we test the model on some new input data x_test and print the predicted output y_pred_test.
