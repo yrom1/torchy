@@ -65,6 +65,8 @@ void create_and_print_tensor_addition() {
   Tensor<int> t1(dimensions, values1);
   Tensor<int> t2(dimensions, values2);
   Tensor<int> t3 = t1 + t2;
+  std::cout << t1 << std::endl;
+  std::cout << t2 << std::endl;
   std::cout << t3 << std::endl;
 }
 

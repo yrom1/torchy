@@ -211,7 +211,7 @@ class Tensor {
 
   std::vector<size_t> unravelIndex(size_t index) const {
     std::vector<size_t> indices(sizes_.size());
-    for (size_t i = 0; i < sizes_.size(); ++i) {
+    for (int i = sizes_.size() - 1; i >= 0; --i) {
       indices[i] = (index % sizes_[i]);
       index /= sizes_[i];
     }
