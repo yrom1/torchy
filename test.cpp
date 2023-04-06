@@ -121,6 +121,18 @@ void catch_runtime_error_zero_divide_scalar() {
   }
 }
 
+void create_and_print_tensor_repr() {
+  std::cout << "--- create tensors" << std::endl;
+  Tensor<float> t1({3}, {1, 2, 3});
+  Tensor<float> t2({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
+  Tensor<float> t3({3, 3, 3},
+                   {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13,
+                    14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26});
+  std::cout << t1.repr() << std::endl;
+  std::cout << t2.repr() << std::endl;
+  std::cout << t3.repr() << std::endl;
+}
+
 int main() {
   // In this case, std::function<void()> is a type that represents a function
   // with no parameters and no return value. It's a "callable object" that can
@@ -138,7 +150,8 @@ int main() {
       create_and_print_tensor_scalar_addition,
       create_and_print_tensor_division,
       create_and_print_matrix_multiplication,
-      catch_runtime_error_zero_divide_scalar};
+      catch_runtime_error_zero_divide_scalar,
+      create_and_print_tensor_repr};
 
   for (const auto &test : tests) {
     test();

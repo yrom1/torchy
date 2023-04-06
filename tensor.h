@@ -7,10 +7,11 @@
 #include <initializer_list>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
-
 template <typename T>
 class Storage {
  public:
@@ -27,6 +28,7 @@ class Storage {
 
   T &operator[](size_t idx) { return data_[idx]; }
   const T &operator[](size_t idx) const { return data_[idx]; }
+  const std::vector<T> &data() const { return data_; }
 
  private:
   std::vector<T> data_;
@@ -188,6 +190,27 @@ class Tensor {
     }
 
     return Tensor<T>(result_sizes, result_values);
+  }
+
+  std::string repr() const {
+    std::ostringstream ss;
+    ss << "Tensor({";
+    for (size_t i = 0; i < sizes_.size(); ++i) {
+      ss << sizes_[i];
+      if (i != sizes_.size() - 1) {
+        ss << ", ";
+      }
+    }
+    ss << "}, {";
+    std::vector<T> values = storage()->data();
+    for (size_t i = 0; i < values.size(); ++i) {
+      ss << values[i];
+      if (i != values.size() - 1) {
+        ss << ", ";
+      }
+    }
+    ss << "})";
+    return ss.str();
   }
 
  private:
