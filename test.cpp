@@ -68,6 +68,33 @@ void create_and_print_tensor_addition() {
   std::cout << t3 << std::endl;
 }
 
+void create_and_print_tensor_division() {
+  /* BUG indexes are wrong should be transposed
+  -----------------
+  --- tensor division
+  [[9, 8, 7],
+  [6, 5, 4],
+  [3, 2, 1]]
+  [[1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]]
+  [[9, 1, 0],
+  [4, 1, 0],
+  [2, 0, 0]]
+  -----------------
+  */
+  std::cout << "--- tensor division" << std::endl;
+  std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  std::vector<size_t> dimensions = {3, 3};
+  Tensor<int> t1(dimensions, values1);
+  Tensor<int> t2(dimensions, values2);
+  Tensor<int> t3 = t1 / t2;
+  std::cout << t1 << std::endl;
+  std::cout << t2 << std::endl;
+  std::cout << t3 << std::endl;
+}
+
 void create_and_print_tensor_scalar_addition() {
   std::cout << "--- scalar addition" << std::endl;
   std::vector<size_t> dimensions = {3, 3};
@@ -106,6 +133,7 @@ int main() {
       create_and_print_tensor_with_values,
       create_and_print_tensor_addition,
       create_and_print_tensor_scalar_addition,
+      create_and_print_tensor_division,
       create_and_print_matrix_multiplication};
 
   for (const auto &test : tests) {

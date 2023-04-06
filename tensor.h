@@ -135,6 +135,14 @@ class Tensor {
     return applyElementwise(scalar, std::plus<T>());
   }
 
+  Tensor<T> operator/(const Tensor<T> &other) const {
+    return applyElementwise(other, std::divides<T>());
+  }
+
+  Tensor<T> operator/(const T &scalar) const {
+    return applyElementwise(scalar, std::divides<T>());
+  }
+
   Tensor<T> matmul(const Tensor<T> &other) const {
     if (sizes_.size() != 2 || other.sizes_.size() != 2) {
       throw std::runtime_error("Both tensors must be 2-dimensional.");
