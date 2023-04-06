@@ -60,7 +60,7 @@ void create_and_print_tensor_with_values() {
 void create_and_print_tensor_addition() {
   std::cout << "--- tensor addition" << std::endl;
   std::vector<int> values1 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-  std::vector<int> values2 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  std::vector<int> values2 = {2, 3, 4, 5, 6, 7, 8, 9, 10};
   std::vector<size_t> dimensions = {3, 3};
   Tensor<int> t1(dimensions, values1);
   Tensor<int> t2(dimensions, values2);
