@@ -71,20 +71,6 @@ void create_and_print_tensor_addition() {
 }
 
 void create_and_print_tensor_division() {
-  /* BUG indexes are wrong should be transposed
-  -----------------
-  --- tensor division
-  [[9, 8, 7],
-  [6, 5, 4],
-  [3, 2, 1]]
-  [[1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9]]
-  [[9, 1, 0],
-  [4, 1, 0],
-  [2, 0, 0]]
-  -----------------
-  */
   std::cout << "--- tensor division" << std::endl;
   std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -120,6 +106,21 @@ void create_and_print_matrix_multiplication() {
   std::cout << t3 << std::endl;
 }
 
+void catch_runtime_error_zero_divide_scalar() {
+  std::cout << "--- runtime error" << std::endl;
+  Tensor<float> tensor({3, 3}, {0, 1, 2, 3, 4, 5, 6, 7, 8});
+  try {
+    std::cout << tensor / 0 << std::endl;
+  } catch (const std::runtime_error &e) {
+    std::cout << "Error: " << e.what() << std::endl;
+  }
+  try {
+    std::cout << tensor / tensor << std::endl;
+  } catch (const std::runtime_error &e) {
+    std::cout << "Error: " << e.what() << std::endl;
+  }
+}
+
 int main() {
   // In this case, std::function<void()> is a type that represents a function
   // with no parameters and no return value. It's a "callable object" that can
@@ -136,7 +137,8 @@ int main() {
       create_and_print_tensor_addition,
       create_and_print_tensor_scalar_addition,
       create_and_print_tensor_division,
-      create_and_print_matrix_multiplication};
+      create_and_print_matrix_multiplication,
+      catch_runtime_error_zero_divide_scalar};
 
   for (const auto &test : tests) {
     test();

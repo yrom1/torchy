@@ -207,7 +207,12 @@ class Tensor {
     std::vector<T> result_values(computeSize());
     for (size_t i = 0; i < result_values.size(); ++i) {
       std::vector<size_t> indices = unravelIndex(i);
-      result_values[i] = func((*this)(indices), other(indices));
+      T other_value = other(indices);
+      if (func.target_type().name() == typeid(std::divides<T>).name() &&
+          other_value == static_cast<T>(0)) {
+        throw std::runtime_error("Division by zero.");
+      }
+      result_values[i] = func((*this)(indices), other_value);
     }
 
     return Tensor<T>(sizes_, result_values);
@@ -216,6 +221,11 @@ class Tensor {
   Tensor<T> applyElementwise(
       const T &scalar,
       const std::function<T(const T &, const T &)> &func) const {
+    if (func.target_type().name() == typeid(std::divides<T>).name() &&
+        scalar == static_cast<T>(0)) {
+      throw std::runtime_error("Division by zero.");
+    }
+
     std::vector<T> result_values(computeSize());
     for (size_t i = 0; i < result_values.size(); ++i) {
       std::vector<size_t> indices = unravelIndex(i);
