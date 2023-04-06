@@ -135,6 +135,22 @@ class Tensor {
     return applyElementwise(scalar, std::plus<T>());
   }
 
+  Tensor<T> operator-(const Tensor<T> &other) const {
+    return applyElementwise(other, std::plus<T>());
+  }
+
+  Tensor<T> operator-(const T &scalar) const {
+    return applyElementwise(scalar, std::plus<T>());
+  }
+
+  Tensor<T> operator*(const Tensor<T> &other) const {
+    return applyElementwise(other, std::divides<T>());
+  }
+
+  Tensor<T> operator*(const T &scalar) const {
+    return applyElementwise(scalar, std::divides<T>());
+  }
+
   Tensor<T> operator/(const Tensor<T> &other) const {
     return applyElementwise(other, std::divides<T>());
   }
