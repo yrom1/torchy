@@ -3,6 +3,7 @@
 #ifndef TENSOR_H_
 #define TENSOR_H_
 
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <memory>
@@ -127,13 +128,11 @@ class Tensor {
 
   // TODO(yrom1) if same shape just add the underlying vectors?
   Tensor<T> operator+(const Tensor<T> &other) const {
-    return applyElementwise(other,
-                            [](const T &a, const T &b) { return a + b; });
+    return applyElementwise(other, std::plus<T>());
   }
 
   Tensor<T> operator+(const T &scalar) const {
-    return applyElementwise(scalar,
-                            [](const T &a, const T &b) { return a + b; });
+    return applyElementwise(scalar, std::plus<T>());
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
