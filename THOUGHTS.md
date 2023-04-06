@@ -1,1 +1,0 @@
-- Would be nice to have a `__repr__` type thing so I can copy and paste constructor into c++, I'm looking at my tests and I'd rather just print the representation so I can convert them into test cases I dont need to manually check
