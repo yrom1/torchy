@@ -463,3 +463,35 @@ print(y_pred_test)
 ```
 
 In this example, we define the model weights w as a 2x1 tensor and the bias b as a 1-dimensional tensor. We define the single_layer_net function to perform a linear transformation of the input x using torch.matmul to compute the matrix multiplication of x and w, and adds the bias term b. We define the mse_loss function to compute the mean squared error loss between the predicted output and the target output. We define the learning rate lr and number of epochs num_epochs. We train the model using a for loop, where we perform a forward pass, compute the loss, perform a backward pass, and update the parameters using gradient descent. We print the loss every 100 epochs. Finally, we test the model on some new input data x_test and print the predicted output y_pred_test.
+
+# broadcasting in neuron activation bias
+
+In this code snippet, you are creating tensors using the PyTorch C++ API (LibTorch). The tensor b_aten represents a bias tensor, and it is added to the result of the matrix multiplication between x_aten and w_aten. Broadcasting is used here to perform the element-wise addition between tensors of different shapes.
+
+To explain how broadcasting works in this scenario, let's first understand the shapes of the tensors involved:
+
+x_aten: shape (3, 2)
+w_aten: shape (2, 4)
+b_aten: shape (1, 4) after unsqueezing
+The matrix multiplication (matmul) between x_aten and w_aten results in a tensor matmul_result of shape (3, 4). Now, you want to add the bias tensor b_aten to this result.
+
+Broadcasting rules in PyTorch (and NumPy) allow you to perform operations between tensors of different shapes as long as they are compatible. In this case, the tensors matmul_result (shape: (3, 4)) and b_aten (shape: (1, 4)) are compatible for broadcasting because their last dimensions match (4). When adding the bias tensor b_aten, broadcasting expands the tensor b_aten along the first dimension to match the shape of matmul_result, resulting in a tensor of shape (3, 4).
+
+The expanded b_aten will look like this:
+
+```
+[
+ [1, 2, 3, 4],
+ [1, 2, 3, 4],
+ [1, 2, 3, 4]
+]
+```
+Each row of the expanded b_aten will be added element-wise to the corresponding row of matmul_result. It is not adding the bias to every element in the weights of the neurons, but rather to the result of the matrix multiplication. This makes sense because the bias values are applied to the output of the matrix multiplication, not directly to the neuron weights. The addition of biases in this way allows for a shift in the activation function, enabling the neural network to better learn and represent complex patterns in the data.
+
+---
+
+Yes, that's correct. In this case, the weights of the neurons are represented as rows in the weight tensor w_aten. When you perform x_aten.matmul(w_aten), you are computing the dot product between each row in x_aten and each column in w_aten. The result of this operation will be a new tensor where each element (i, j) represents the dot product of the i-th row of x_aten and the j-th column of w_aten. This means that each row in the resulting tensor corresponds to the weighted sum of the input features for each neuron.
+
+When you add the bias tensor b_aten, the bias values are added element-wise to the result of the matrix multiplication, where each element in the bias tensor corresponds to a specific neuron. The broadcasting mechanism takes care of expanding the bias tensor to match the shape of the result, effectively adding the bias value to each neuron's output.
+
+So, in this scenario, the rows in w_aten represent the weights of the neurons, and the bias tensor b_aten is added to the output of the matrix multiplication to shift the activation function for each neuron.

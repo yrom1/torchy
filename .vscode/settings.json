@@ -1,0 +1,17 @@
+{
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "[python]": {
+        "python.formatting.provider": "black",
+        "python.formatting.blackArgs": ["--indent", "  "],
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    "[cpp]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    },
+    "files.associations": {
+        "vector": "cpp"
+    }
+}

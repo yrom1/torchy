@@ -135,7 +135,7 @@ class Tensor {
 
   // TODO(yrom1) if same shape just add the underlying vectors?
   Tensor<T> operator+(const Tensor<T> &other) const {
-    return applyElementwise(other, std::plus<T>());
+    return applyElementwiseWithBroadcast(other, std::plus<T>());
   }
 
   Tensor<T> operator+(const T &scalar) const {
@@ -143,7 +143,7 @@ class Tensor {
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
-    return applyElementwise(other, std::plus<T>());
+    return applyElementwiseWithBroadcast(other, std::plus<T>());
   }
 
   Tensor<T> operator-(const T &scalar) const {
@@ -151,7 +151,7 @@ class Tensor {
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
-    return applyElementwise(other, std::divides<T>());
+    return applyElementwiseWithBroadcast(other, std::divides<T>());
   }
 
   Tensor<T> operator*(const T &scalar) const {
@@ -159,7 +159,7 @@ class Tensor {
   }
 
   Tensor<T> operator/(const Tensor<T> &other) const {
-    return applyElementwise(other, std::divides<T>());
+    return applyElementwiseWithBroadcast(other, std::divides<T>());
   }
 
   Tensor<T> operator/(const T &scalar) const {
@@ -167,6 +167,10 @@ class Tensor {
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
+    // https://pytorch.org/docs/stable/generated/torch.matmul.html
+    // This is supported:
+    // If both arguments are 2-dimensional, the matrix-matrix product is returned.
+    // Everything else is not supported yet.
     if (sizes_.size() != 2 || other.sizes_.size() != 2) {
       throw std::runtime_error("Both tensors must be 2-dimensional.");
     }
@@ -223,6 +227,71 @@ class Tensor {
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
+
+  Tensor<T> applyElementwiseWithBroadcast(
+      const Tensor<T> &other,
+      const std::function<T(const T &, const T &)> &func) const {
+    std::vector<size_t> result_sizes = broadcastableShape(sizes_, other.sizes_);
+
+    Tensor<T> result(result_sizes);
+    for (size_t i = 0; i < result.computeSize(); ++i) {
+      std::vector<size_t> result_indices = result.unravelIndex(i);
+      std::vector<size_t> this_indices = broadcastIndices(result_indices, sizes_);
+      std::vector<size_t> other_indices = broadcastIndices(result_indices, other.sizes_);
+
+      T this_value = (*this)(this_indices);
+      T other_value = other(other_indices);
+      if (func.target_type().name() == typeid(std::divides<T>).name() &&
+          other_value == static_cast<T>(0)) {
+        throw std::runtime_error("Division by zero.");
+      }
+      result(result_indices) = func(this_value, other_value);
+    }
+
+    return result;
+  }
+
+  std::vector<size_t> broadcastIndices(const std::vector<size_t> &indices,
+                                       const std::vector<size_t> &shape) const {
+    std::vector<size_t> broadcasted_indices(shape.size());
+    for (size_t i = 0; i < shape.size(); ++i) {
+      broadcasted_indices[i] = (shape[i] == 1) ? 0 : indices[i];
+    }
+    return broadcasted_indices;
+  }
+
+  std::vector<size_t> broadcastableShape(const std::vector<size_t> &shape1,
+                                         const std::vector<size_t> &shape2) const {
+    size_t rank1 = shape1.size();
+    size_t rank2 = shape2.size();
+    size_t max_rank = std::max(rank1, rank2);
+
+    std::vector<size_t> padded_shape1(max_rank, 1);
+    std::vector<size_t> padded_shape2(max_rank, 1);
+
+    for (size_t i = 0; i < rank1; ++i) {
+      padded_shape1[max_rank - rank1 + i] = shape1[i];
+    }
+    for (size_t i = 0; i < rank2; ++i) {
+      padded_shape2[max_rank - rank2 + i] = shape2[i];
+    }
+
+    std::vector<size_t> result_shape(max_rank);
+    for (size_t i = 0; i < max_rank; ++i) {
+      if (padded_shape1[i] == padded_shape2[i]) {
+        result_shape[i] = padded_shape1[i];
+      } else if (padded_shape1[i] == 1) {
+        result_shape[i] = padded_shape2[i];
+      } else if (padded_shape2[i] == 1) {
+        result_shape[i] = padded_shape1[i];
+      } else {
+        throw std::runtime_error(
+            "Shapes are not broadcastable: mismatch in dimension " +
+            std::to_string(i) + ".");
+      }
+    }
+    return result_shape;
+  }
 
   Tensor<T> applyElementwise(
       const Tensor<T> &other,
