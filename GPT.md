@@ -495,3 +495,19 @@ Yes, that's correct. In this case, the weights of the neurons are represented as
 When you add the bias tensor b_aten, the bias values are added element-wise to the result of the matrix multiplication, where each element in the bias tensor corresponds to a specific neuron. The broadcasting mechanism takes care of expanding the bias tensor to match the shape of the result, effectively adding the bias value to each neuron's output.
 
 So, in this scenario, the rows in w_aten represent the weights of the neurons, and the bias tensor b_aten is added to the output of the matrix multiplication to shift the activation function for each neuron.
+
+## Approaching autograd
+
+Yes, it seems like you are ready to start adding an autograd type system to your tensor class. Your current implementation includes basic tensor functionality, such as reshaping, slicing, element-wise operations, and matrix multiplication. Adding autograd will enable you to compute gradients for operations performed on your tensors, which is essential for training neural networks and other machine learning models.
+
+To implement the autograd type system, you can start by adding the following features:
+
+1. Keep track of operations performed on the tensors and maintain a computation graph that stores the dependencies between tensors.
+
+2. Implement a backward() method that computes the gradients of a tensor with respect to its inputs by performing backpropagation through the computation graph.
+
+3. Implement gradient-aware versions of the basic operations (e.g., element-wise addition, subtraction, multiplication, and division, as well as matrix multiplication) so that they can be differentiated during backpropagation.
+
+4. Add support for creating tensors that do not require gradients, which can be useful for saving memory and computational resources when training large models. For example, you might have a flag requires_grad for each tensor, and only track operations and gradients for tensors with this flag set to true.
+
+Remember to test your implementation as you go, ensuring that the gradients are computed correctly for various tensor operations.
