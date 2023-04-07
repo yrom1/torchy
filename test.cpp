@@ -120,12 +120,12 @@ TEST(TensorTest, CreateAndPrintTensorRepr) {
 
 TEST(StorageDtypeTest, StorageDtypeIsInt) {
   Storage<int> storage(5, {1, 2, 3, 4, 5});
-  ASSERT_TRUE((std::is_same_v<decltype(storage)::dtype, int>));
+  ASSERT_TRUE((std::is_same<Storage<int>::dtype, int>::value));
 }
 
 TEST(TensorDtypeTest, TensorDtypeIsInt) {
   Tensor<int> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
-  ASSERT_TRUE((std::is_same_v<decltype(tensor)::dtype, int>));
+  ASSERT_TRUE((std::is_same<Tensor<int>::dtype, int>::value));
 }
 
 // FIXME(yrom1) this is broken and submatrix doesnt exist
