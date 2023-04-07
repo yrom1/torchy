@@ -15,7 +15,7 @@
 
 template <typename T>
 class Storage {
-  typedef T dtype
+  typedef T dtype;
 
  public:
   explicit Storage(size_t size, std::vector<T> values = {})
@@ -39,7 +39,7 @@ class Storage {
 
 template <typename T>
 class Tensor {
-  typedef T dtype
+  typedef T dtype;
 
  public:
   Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
