@@ -7,6 +7,10 @@ A tensor library, inspired by PyTorch's ATen
 > — Alexander Stepanov [@A9](https://youtu.be/aIHAEYyoTUc?t=2002)
 
 
+> "Some of you will drop after the first lecture, right? This always happens because you will be bored. You say, 'This guy doesn't know anything' – all true. However, before you drop, let me tell you a very simple piece of advice. If you remember just one thing out of this course, it should be this – two pieces of advice. The first piece of advice is whenever you can, use vector. The second piece of advice is if you cannot, find a way how you can. This is to avoid any data structures except arrays... Vector is an array, right. Sort of, you say, 'Well... Aren't there exceptions?' – yes, not for you!"
+>
+> — Alexander Stepanov [@A9](https://youtu.be/aIHAEYyoTUc?t=1543)
+
 # References
 
 ## http://blog.ezyang.com/2019/05/pytorch-internals/
