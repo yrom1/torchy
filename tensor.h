@@ -162,8 +162,11 @@ class Tensor {
     return applyElementwise(scalar, std::divides<T>());
   }
 
-  // TODO(yrom1) support broadcasting during matmul
   Tensor<T> matmul(const Tensor<T> &other) const {
+    // https://pytorch.org/docs/stable/generated/torch.matmul.html
+    // This is supported:
+    // If both arguments are 2-dimensional, the matrix-matrix product is returned.
+    // Everything else is not supported yet.
     if (sizes_.size() != 2 || other.sizes_.size() != 2) {
       throw std::runtime_error("Both tensors must be 2-dimensional.");
     }
