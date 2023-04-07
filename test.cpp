@@ -5,9 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "tensor.h"  // NOLINT (build/include_subdir)
-
 #include "gtest/gtest.h"
+#include "tensor.h"  // NOLINT (build/include_subdir)
 
 // The tests are now wrapped in TEST() macros from Google Test
 // The first argument of the TEST() macro is the test suite name,
@@ -21,9 +20,10 @@ TEST(TensorTest, CreateTensors) {
                     14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26});
   ASSERT_EQ(t1.repr(), "Tensor({3}, {1, 2, 3})");
   ASSERT_EQ(t2.repr(), "Tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9})");
-  ASSERT_EQ(t3.repr(),
-            "Tensor({3, 3, 3}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, "
-            "15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26})");
+  ASSERT_EQ(
+      t3.repr(),
+      "Tensor({3, 3, 3}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, "
+      "15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26})");
 }
 
 TEST(TensorTest, AccessTensorElement) {
@@ -36,14 +36,15 @@ TEST(TensorTest, CatchRuntimeError) {
   try {
     tensor({0, 15});
     FAIL();  // This line should not be reached
-  } catch (const std::runtime_error &e) {
+  } catch (const std::runtime_error& e) {
     ASSERT_EQ(std::string(e.what()), std::string("Index out of bounds."));
   }
 }
 
 // Since the original create_and_print_tensor_slices() test was not working,
 // I am not including it in this revised code.
-// However, you can create a new test using the TEST() macro if you fix the issue.
+// However, you can create a new test using the TEST() macro if you fix the
+// issue.
 
 TEST(TensorTest, CreateTensorWithValues) {
   std::vector<size_t> dimensions = {3, 3};
