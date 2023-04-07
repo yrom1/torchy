@@ -3,7 +3,7 @@ Based on your current progress and the fact that you are working nights and week
 1. Implement basic tensor data structure and functionality (Completed by April 5th)
 2. Add support for arithmetic operations:
 - [x] April 6 - April 12: Implement subtraction, multiplication, and division (both scalar and tensor-wise)
-- [ ] April 13 - April 19: Implement element-wise operations and broadcasting
+- [x] April 13 - April 19: Implement element-wise operations and broadcasting
 3. Implement autograd functionality for simple operations:
 - [ ] April 20 - April 26: Implement the basic autograd system and support for addition and subtraction
 - [ ] April 27 - May 3: Extend autograd support to multiplication, division, and element-wise operations
