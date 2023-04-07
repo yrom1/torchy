@@ -118,6 +118,16 @@ TEST(TensorTest, CreateAndPrintTensorRepr) {
   EXPECT_EQ(t.repr(), "Tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9})");
 }
 
+TEST(StorageDtypeTest, StorageDtypeIsInt) {
+  Storage<int> storage(5, {1, 2, 3, 4, 5});
+  ASSERT_TRUE((std::is_same_v<decltype(storage)::dtype, int>));
+}
+
+TEST(TensorDtypeTest, TensorDtypeIsInt) {
+  Tensor<int> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
+  ASSERT_TRUE((std::is_same_v<decltype(tensor)::dtype, int>));
+}
+
 // FIXME(yrom1) this is broken and submatrix doesnt exist
 
 // TEST(TensorTest, CreateAndPrintTensorSlices) {
