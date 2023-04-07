@@ -15,9 +15,9 @@
 
 template <typename T>
 class Storage {
+ public:
   typedef T dtype;
 
- public:
   explicit Storage(size_t size, std::vector<T> values = {})
       : data_(std::move(values)) {
     if (data_.empty()) {
@@ -39,9 +39,9 @@ class Storage {
 
 template <typename T>
 class Tensor {
+ public:
   typedef T dtype;
 
- public:
   Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
       : Tensor(std::vector<size_t>(dimensions), std::move(values)) {}
 
