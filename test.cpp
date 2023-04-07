@@ -143,51 +143,25 @@ TEST(TensorTest, CreateAndPrintTensorRepr) {
 
 TEST(Torch, Neuron) {
   // Test input tensors
-  Tensor<float> x({3, 2}, {1, 2, 3, 4, 5, 6});
-  Tensor<float> w({2, 4}, {1, 2, 3, 4, 5, 6, 7, 8});
-  Tensor<float> b({1, 4}, {1, 2, 3, 4});
+  Tensor<int> x({3, 2}, {1, 2, 3, 4, 5, 6});
+  Tensor<int> w({2, 4}, {1, 2, 3, 4, 5, 6, 7, 8});
+  Tensor<int> b({1, 4}, {1, 2, 3, 4});
+  Tensor<int> result = x.matmul(w) + b;
+  auto result_v = result.storage()->data();
 
-  // Perform operation with custom Tensor class
-  Tensor<float> result = x.matmul(w) + b;
-
-  // Perform operation with ATen
-  // at::Tensor x_aten = at::tensor({{1, 2}, {3, 4}, {5, 6}}, at::dtype(at::kFloat));
-  // at::Tensor w_aten = at::tensor({{1, 2, 3, 4}, {5, 6, 7, 8}}, at::dtype(at::kFloat));
-  std::vector<std::vector<float>> x_data = {{1, 2}, {3, 4}, {5, 6}};
-  std::vector<float> x_flat;
-
-  // Flatten the x_data vector
-  for (const auto &row : x_data) {
-    x_flat.insert(x_flat.end(), row.begin(), row.end());
-  }
-
-  // Create a 2D float tensor from the flattened data
-  at::Tensor x_aten = at::from_blob(x_flat.data(), {3, 2}, at::kFloat);
-
-  // Create a vector of vector of floats
-  std::vector<std::vector<float>> w_data = {{1, 2, 3, 4}, {5, 6, 7, 8}};
-  std::vector<float> w_flat;
-
-  // Flatten the w_data vector
-  for (const auto &row : w_data) {
-    w_flat.insert(w_flat.end(), row.begin(), row.end());
-  }
-  at::Tensor w_aten = at::from_blob(w_flat.data(), {2, 4}, at::kFloat);
-  // for some reason this might work
-
-
+  std::vector<int> data1 = {1, 2, 3, 4, 5, 6};
+  std::vector<int> data2 = {1, 2, 3, 4, 5, 6, 7, 8};
+  at::Tensor x_aten = at::from_blob(data1.data(), {3, 2}, at::kInt);
+  at::Tensor w_aten = at::from_blob(data2.data(), {2, 4}, at::kInt);
   at::Tensor b_aten = at::tensor({1, 2, 3, 4}).unsqueeze(0);
-
   at::Tensor result_aten = x_aten.matmul(w_aten) + b_aten;
+  std::vector<int> result_aten_v(result_aten.numel());
+  std::memcpy(result_aten_v.data(), result_aten.data_ptr<int>(), result_aten.numel() * sizeof(int));
 
-  // Compare results
-  ASSERT_TRUE(result_aten.is_contiguous());
-  auto result_data = result.storage()->data();
-  auto result_aten_data = result_aten.data_ptr<float>();
+  std::cout << result_v << std::endl;
+  std::cout << result_aten_v << std::endl;
 
-  for (size_t i = 0; i < result_data.size(); ++i) {
-    ASSERT_FLOAT_EQ(result_data[i], result_aten_data[i]);
-  }
+  EXPECT_EQ(result_v, result_aten_v);
 }
 
 
