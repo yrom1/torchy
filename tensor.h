@@ -3,6 +3,7 @@
 #ifndef TENSOR_H_
 #define TENSOR_H_
 
+#include <algorithm>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -169,8 +170,8 @@ class Tensor {
   Tensor<T> matmul(const Tensor<T> &other) const {
     // https://pytorch.org/docs/stable/generated/torch.matmul.html
     // This is supported:
-    // If both arguments are 2-dimensional, the matrix-matrix product is returned.
-    // Everything else is not supported yet.
+    // If both arguments are 2-dimensional, the matrix-matrix product is
+    // returned. Everything else is not supported yet.
     if (sizes_.size() != 2 || other.sizes_.size() != 2) {
       throw std::runtime_error("Both tensors must be 2-dimensional.");
     }
@@ -236,8 +237,10 @@ class Tensor {
     Tensor<T> result(result_sizes);
     for (size_t i = 0; i < result.computeSize(); ++i) {
       std::vector<size_t> result_indices = result.unravelIndex(i);
-      std::vector<size_t> this_indices = broadcastIndices(result_indices, sizes_);
-      std::vector<size_t> other_indices = broadcastIndices(result_indices, other.sizes_);
+      std::vector<size_t> this_indices =
+          broadcastIndices(result_indices, sizes_);
+      std::vector<size_t> other_indices =
+          broadcastIndices(result_indices, other.sizes_);
 
       T this_value = (*this)(this_indices);
       T other_value = other(other_indices);
@@ -260,8 +263,9 @@ class Tensor {
     return broadcasted_indices;
   }
 
-  std::vector<size_t> broadcastableShape(const std::vector<size_t> &shape1,
-                                         const std::vector<size_t> &shape2) const {
+  std::vector<size_t> broadcastableShape(
+      const std::vector<size_t> &shape1,
+      const std::vector<size_t> &shape2) const {
     size_t rank1 = shape1.size();
     size_t rank2 = shape2.size();
     size_t max_rank = std::max(rank1, rank2);

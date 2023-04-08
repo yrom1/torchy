@@ -1,11 +1,11 @@
 // Copyright 2023 Ryan Moore
 
+#include <torch/torch.h>
+
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-
-#include <torch/torch.h>
 
 #include "gtest/gtest.h"
 #include "tensor.h"  // NOLINT (build/include_subdir)
@@ -150,7 +150,6 @@ TEST(TensorDtypeTest, TensorDtypeIsInt) {
 //   EXPECT_EQ(submatrix_slice.repr(), "Tensor({2, 2}, {2, 3, 5, 6})");
 // }
 
-
 TEST(Torch, Neuron) {
   // Test input tensors
   Tensor<int> x({3, 2}, {1, 2, 3, 4, 5, 6});
@@ -166,15 +165,14 @@ TEST(Torch, Neuron) {
   at::Tensor b_aten = at::tensor({1, 2, 3, 4}).unsqueeze(0);
   at::Tensor result_aten = x_aten.matmul(w_aten) + b_aten;
   std::vector<int> result_aten_v(result_aten.numel());
-  std::memcpy(result_aten_v.data(), result_aten.data_ptr<int>(), result_aten.numel() * sizeof(int));
+  std::memcpy(result_aten_v.data(), result_aten.data_ptr<int>(),
+              result_aten.numel() * sizeof(int));
 
   std::cout << result_v << std::endl;
   std::cout << result_aten_v << std::endl;
 
   EXPECT_EQ(result_v, result_aten_v);
 }
-
-
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
