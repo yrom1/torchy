@@ -102,3 +102,11 @@ Stride for channels (C): 1
 
 > Virtual functions are slow: We care about how much time it takes to execute common Tensor functions such as numel() / sizes() / dim(). Currently, these functions are virtual in TensorImpl, so that Variable::Impl (a subclass of TensorImpl) can override them and dispatch those calls to the Variable::Impl's underlying at::Tensor. Virtual function calls are slow because they involve an extra vtable lookup. Specifically, we did the following comparison on the most common Tensor functions (all timings are in ns):
 
+# https://pytorch.org/tutorials/beginner/blitz/autograd_tutorial.html
+
+> Generally speaking, torch.autograd is an engine for computing vector-Jacobian product.
+
+> The backward pass kicks off when .backward() is called on the DAG root. autograd then:
+> - computes the gradients from each .grad_fn,
+> - accumulates them in the respective tensor’s .grad attribute, and
+> - using the chain rule, propagates all the way to the leaf tensors.
