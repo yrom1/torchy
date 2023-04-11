@@ -43,24 +43,24 @@ class Tensor {
  public:
   typedef T dtype;
 
-  Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
-      : Tensor(std::vector<size_t>(dimensions), std::move(values)) {}
-
   explicit Tensor(const std::vector<size_t> &dimensions,
                   std::vector<T> values = {})
       : sizes_(dimensions),
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
-        offset_(0) {
+        offset_(0),
+        autograd_meta_(nullptr) {
     computeStrides();
   }
 
   Tensor(std::shared_ptr<Storage<T>> storage, const std::vector<size_t> &sizes,
-         const std::vector<size_t> &strides, size_t offset = 0)
+         const std::vector<size_t> &strides, size_t offset = 0,
+         std::shared_ptr<AutogradMeta> autograd_meta = nullptr)
       : sizes_(sizes),
         storage_(std::move(storage)),
         offset_(offset),
-        strides_(strides) {}
+        strides_(strides),
+        autograd_meta_(std::move(autograd_meta)) {}
 
   // Create a view on the tensor by slicing along a dimension
   Tensor slice(size_t dimension, size_t start, size_t end) const {
@@ -228,6 +228,7 @@ class Tensor {
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
+  std::shared_ptr<AutogradMeta> autograd_meta_;
 
   Tensor<T> applyElementwiseWithBroadcast(
       const Tensor<T> &other,
@@ -397,5 +398,78 @@ class Tensor {
     }
   }
 };
+
+class AutogradFunction {
+ public:
+  virtual ~AutogradFunction() = default;
+
+  virtual Tensor<float> apply(const Tensor<float> &input) const = 0;
+};
+
+class AutogradMeta {
+ public:
+  AutogradMeta() : gradient_(nullptr), grad_fn_(nullptr) {}
+
+  void set_gradient(const Tensor<float> &gradient) { gradient_ = gradient; }
+  Tensor<float> &gradient() { return gradient_; }
+
+  void set_grad_fn(std::shared_ptr<AutogradFunction> grad_fn) {
+    grad_fn_ = std::move(grad_fn);
+  }
+  std::shared_ptr<AutogradFunction> grad_fn() const { return grad_fn_; }
+
+ private:
+  Tensor<float> gradient_;
+  std::shared_ptr<AutogradFunction> grad_fn_;
+};
+
+std::shared_ptr<AutogradMeta> autograd_meta() const { return autograd_meta_; }
+
+void set_autograd_meta(std::shared_ptr<AutogradMeta> autograd_meta) {
+  autograd_meta_ = std::move(autograd_meta);
+}
+
+Tensor<float> &gradient() {
+  if (!autograd_meta_) {
+    throw std::runtime_error("No AutogradMeta is set.");
+  }
+  return autograd_meta_->gradient();
+}
+
+void set_gradient(const Tensor<float> &gradient) {
+  if (!autograd_meta_) {
+    autograd_meta_ = std::make_shared<AutogradMeta>();
+  }
+  autograd_meta_->set_gradient(gradient);
+}
+
+std::shared_ptr<AutogradFunction> grad_fn() const {
+  if (!autograd_meta_) {
+    throw std::runtime_error("No AutogradMeta is set.");
+  }
+  return autograd_meta_->grad_fn();
+}
+
+void set_grad_fn(Tensor &result, Tensor &input, Tensor &weight) {
+  result.grad_fn =
+      [input_ptr = input.shared_from_this(),
+       weight_ptr = weight.shared_from_this()](
+          const Tensor &grad_output) mutable -> std::vector<Tensor> {
+    auto input_grad = mm(weight, grad_output.t());
+    auto weight_grad = mm(grad_output, input.t());
+    return {input_grad, weight_grad};
+  };
+}
+
+Tensor backward(const Tensor &grad_output, const Tensor &tensor) {
+  if (tensor.grad_fn) {
+    auto grads = tensor.grad_fn(grad_output);
+    for (size_t i = 0; i < grads.size(); ++i) {
+      grads[i] = backward(grads[i], tensor.requires_grad_parents[i]);
+    }
+    return grads[0];
+  }
+  return grad_output;
+}
 
 #endif  // TENSOR_H_
