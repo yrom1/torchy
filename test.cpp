@@ -95,6 +95,38 @@ TEST(TensorTest, TensorScalarDivision) {
   EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {3, 2, 2, 2, 1, 1, 1, 0, 0})");
 }
 
+TEST(TensorTest, TensorMultiplication) {
+  std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  std::vector<size_t> dimensions = {3, 3};
+  Tensor<int> t1(dimensions, values1);
+  Tensor<int> t2(dimensions, values2);
+  Tensor<int> t3 = t1 * t2;
+  EXPECT_EQ(t1.repr(), "Tensor({3, 3}, {9, 8, 7, 6, 5, 4, 3, 2, 1})");
+  EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9})");
+  EXPECT_EQ(t3.repr(), "Tensor({3, 3}, {9, 16, 21, 24, 25, 24, 21, 16, 9})");
+}
+
+TEST(TensorTest, TensorSubtraction) {
+  std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  std::vector<size_t> dimensions = {3, 3};
+  Tensor<int> t1(dimensions, values1);
+  Tensor<int> t2(dimensions, values2);
+  Tensor<int> t3 = t1 - t2;
+  EXPECT_EQ(t1.repr(), "Tensor({3, 3}, {9, 8, 7, 6, 5, 4, 3, 2, 1})");
+  EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9})");
+  EXPECT_EQ(t3.repr(), "Tensor({3, 3}, {8, 6, 4, 2, 0, -2, -4, -6, -8})");
+}
+
+TEST(TensorTest, TensorScalarMultiplication) {
+  std::vector<size_t> dimensions = {3, 3};
+  std::vector<int> values = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+  Tensor<int> t(dimensions, values);
+  Tensor<int> t2 = t * 3;
+  EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {27, 24, 21, 18, 15, 12, 9, 6, 3})");
+}
+
 TEST(TensorTest, MatrixMultiplication) {
   std::vector<size_t> dimensions1 = {2, 3};
   std::vector<int> values1 = {1, 2, 3, 4, 5, 6};
