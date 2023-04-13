@@ -21,6 +21,9 @@ struct B {
 struct C : public B {
   void bar() override { std::cout << "C" << std::endl; }
 };
+//...
+B* b = new C();
+b->bar();
 ```
 
 > "C++ is a multi-paradigm language. What it means is, once upon a time, it was an object-oriented language. And then some people chased away object-oriented and said you could program differently. And I am showing you how you could program differently. If you program in an object-oriented way, then many good things might happen. I don't know what they are, but you are not going to be efficient, alright? As Bjarne Stroustrup, you might have heard of him, used to joke, he would say, 'What are object-oriented systems?' He would say, 'These are systems with slow graphics.' And you know, if you go through all this virtual stuff, it is going to be slow. Replacing `++` on an `int` with virtual call is a wonderful idea. You could do it! But you see, `++` is really fast, and virtual function call is really slow. And as time progressed, `++` is getting faster and faster, and virtual function is getting slower and slower. Their spread is growing. Right? And what we're not going to address any parts of C++ in this course, which slow the computations down."
