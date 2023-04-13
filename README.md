@@ -6,15 +6,50 @@ A small tensor-valued autograd engine, inspired by PyTorch and micrograd
 >
 > — Alexander Stepanov [@A9 Day 1](https://youtu.be/aIHAEYyoTUc?t=2002)
 
+---
 
 > "Some of you will drop after the first lecture, right? This always happens because you will be bored. You say, 'This guy doesn't know anything' – all true. However, before you drop, let me tell you a very simple piece of advice. If you remember just one thing out of this course, it should be this – two pieces of advice. The first piece of advice is whenever you can, use vector. The second piece of advice is if you cannot, find a way how you can. This is to avoid any data structures except arrays... Vector is an array, right. Sort of, you say, 'Well... Aren't there exceptions?' – yes, not for you!"
 >
 > — Alexander Stepanov [@A9 Day 1](https://youtu.be/aIHAEYyoTUc?t=1543)
 
+---
+
+```cpp
+struct B {
+  virtual void bar() { std::cout << "B" << std::endl; }
+};
+struct C : public B {
+  void bar() override { std::cout << "C" << std::endl; }
+};
+```
+
+> "C++ is a multi-paradigm language. What it means is, once upon a time, it was an object-oriented language. And then some people chased away object-oriented and said you could program differently. And I am showing you how you could program differently. If you program in an object-oriented way, then many good things might happen. I don't know what they are, but you are not going to be efficient, alright? As Bjarne Stroustrup, you might have heard of him, used to joke, he would say, 'What are object-oriented systems?' He would say, 'These are systems with slow graphics.' And you know, if you go through all this virtual stuff, it is going to be slow. Replacing `++` on an `int` with virtual call is a wonderful idea. You could do it! But you see, `++` is really fast, and virtual function call is really slow. And as time progressed, `++` is getting faster and faster, and virtual function is getting slower and slower. Their spread is growing. Right? And what we're not going to address any parts of C++ in this course, which slow the computations down."
+>
+> — Alexander Stepanov [@A9 Day 2](https://youtu.be/B5yiLvaxPS4?t=333)
+
+---
 
 > "One thing that sort of that every programmer needs is to being relaxed. You're going from now on– It's your third day?... Let me tell you, from now on for the next 40 years, you're going to screw up, you're going to write bad code. I do all the time. I just did remember? I forgot to put angle brackets with `int` while standing in front of the room being recorded. Someone *kindly* corrected me. So you should not have– I'm actually dead serious. You know, we should be very relaxed about, ya, you know, I do something wrong, everyday. Try!"
 >
-> — Alexander Stepanov [@A9 Day 4](https://youtu.be/8bWx2WTYvB8?t=462)
+> — Alexander Stepanov [@A9 Day 5](https://youtu.be/8bWx2WTYvB8?t=462)
+
+---
+
+```cpp
+template <typename T>
+// requires T is TotallyOrdered
+struct less {
+  bool operator()(const T&, const T& b) const {
+    return a < b;
+  }
+};
+// ...
+std::sort(a.begin(), a.end(), less<int>())
+```
+
+> "Which function? There is no function. It's not a function. Let us observe what happens. This is not a function call, this is just `a < b`. It will literally be inlined at compile time. Is it good to be inlined at compile time? It is very good guys. Because instead of a function call, you're going to have how many instructions? Yes... Say one. One isntruction. Which will most likley be done in parallel with some other instruction. It is free! Function calls are not."
+>
+> — Alexander Stepanov [@A9 Day 5](https://youtu.be/8bWx2WTYvB8?t=1355)
 
 # References
 
