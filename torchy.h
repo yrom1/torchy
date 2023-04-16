@@ -1,7 +1,7 @@
 // Copyright 2023 Ryan Moore
 
-#ifndef TENSOR_H_
-#define TENSOR_H_
+#ifndef TORCHY_H_
+#define TORCHY_H_
 
 #include <algorithm>
 #include <functional>
@@ -398,4 +398,4 @@ class Tensor {
   }
 };
 
-#endif  // TENSOR_H_
+#endif  // TORCHY_H_

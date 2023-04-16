@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "tensor.h"  // NOLINT (build/include_subdir)
+#include "torchy.h"  // NOLINT (build/include_subdir)
 
 // The tests are now wrapped in TEST() macros from Google Test
 // The first argument of the TEST() macro is the test suite name,

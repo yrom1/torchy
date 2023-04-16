@@ -25,7 +25,7 @@ target_link_libraries(${PROJECT_NAME} gtest gtest_main ${TORCH_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -fsanitize=address)
 
 # Copy headers to build directory
-configure_file(tensor.h tensor.h COPYONLY)
+configure_file(torchy.h torchy.h COPYONLY)
 
 # Clang-format and cpplint custom targets
 find_program(CLANG_FORMAT NAMES clang-format)
@@ -34,7 +34,7 @@ find_program(CPPLINT NAMES cpplint)
 if(CLANG_FORMAT)
   add_custom_target(
     format
-    COMMAND ${CLANG_FORMAT} -i -style=Google ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/tensor.h
+    COMMAND ${CLANG_FORMAT} -i -style=Google ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/torchy.h
     COMMENT "Running clang-format on the source files"
   )
 endif()
@@ -42,7 +42,7 @@ endif()
 if(CPPLINT)
   add_custom_target(
     lint
-    COMMAND ${CPPLINT} ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/tensor.h
+    COMMAND ${CPPLINT} ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/torchy.h
     COMMENT "Running cpplint on the source files"
   )
 endif()
