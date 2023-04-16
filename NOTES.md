@@ -1,3 +1,133 @@
+# autograd
+
+![](http://blog.ezyang.com/img/pytorch-internals/slide-21.png)
+![](http://blog.ezyang.com/img/pytorch-internals/slide-22.png)
+![](http://blog.ezyang.com/img/pytorch-internals/slide-23.png)
+
+I dont get this one:
+![](http://blog.ezyang.com/img/pytorch-internals/slide-24.png)
+![](http://blog.ezyang.com/img/pytorch-internals/slide-25.png)
+
+## https://pytorch.org/blog/overview-of-pytorch-autograd-engine/
+
+> Formally, what we are doing here, and PyTorch autograd engine also does, is computing a Jacobian-vector product (Jvp) to calculate the gradients of the model parameters, since the model parameters and inputs are vectors.
+
+- automatic differentiation is a technique that, given a computational graph, calculates the gradients of the inputs.
+- Automatic differentiation can be performed in two different ways; forward and reverse mode:
+  - forward mode means that we calculate the gradients along with the result of the function
+  - while reverse mode requires us to evaluate the function first, and then we calculate the gradients starting from the output.
+
+
+https://www.cs.toronto.edu/~rgrosse/courses/csc321_2018/slides/lec10.pdf
+
+> Autodiff is not finite differences.
+> Finite differences are expensive, since you need to do a forward pass for
+each derivative. It also induces huge numerical error. Normally, we only use it for testing.
+> Autodiff is both efficient (linear in the cost of computing the value) and numerically stable.
+
+
+- Automatic differentiation relies on a classic calculus formula known as the chain-rule. The chain rule allows us to calculate very complex derivatives by splitting them and recombining them later.
+- `f(g(x))`'s derivative can be calculated as `d/dx f(g(x)) = f'(g(x))g'(x)` (Lagrange's notation)
+- dz/dx = dz/dy + dy/dx is leibniz's notation
+> As put by George F. Simmons: "if a car travels twice as fast as a bicycle and the bicycle is four times as fast as a walking man, then the car travels 2 × 4 = 8 times as fast as the man."[1]
+> Let z, y and x be the (variable) positions of the car, the bicycle, and the walking man, respectively
+> `dz/dx = (dz/dy)/(dy/dx)`
+
+- This result is what makes automatic differentiation work.
+- By combining the derivatives of the simpler functions that compose a larger one, such as a neural network, **it is possible to compute the exact value of the gradient at a given point rather than relying on the numerical approximation**, which would require multiple perturbations in the input to obtain a value.
+
+
+Let's do a concrete example, `f(x,y) = log(x*y)`. Okay so `x` and `y` are inputs on the left, this is the compute graph to make output `z`:
+```
+x --|
+    --> * --> v --> log --> w
+y --|
+```
+
+- The automatic differentiation engine will normally execute this graph. It will also extend it to calculate the derivatives of w with respect to the inputs x, y, and the intermediate result v.
+- `f(x,y) = log(g(x,y))` and `g(x,y)=xy`
+- **Every time the engine executes an operation in the graph, the derivative of that operation is added to the graph to be executed later in the backward pass.**
+- `d/dx g(x,y) = y` `d/dy g(x,y) = x`
+
+![](https://pytorch.org/assets/images/multi_derivative_graph.png)
+
+- Note that the backward graph (green nodes) will not be executed until all the forward steps are completed.
+- graph now executes `log(v)`, `dw/dv log(v) = 1/v`
+
+![](https://pytorch.org/assets/images/extended_computational_graph.png)
+
+- with `dw/dv` propagated backward and multiplied by the multiplication derivative as in the chain rule, generates the derivatives `dw/dx` and `dw/dx`
+
+IMPLEMENTATION DETAIL!
+
+- **The original computation graph is extended with a new dummy variable z that is the same w. The derivative of z with respect to w is 1 as they are the same variable,** this trick allows us to apply the chain rule to calculate the derivatives of the inputs.
+- we execute `LogDerivative` and multiple it's result by `dz/dw` (which is 1) as per chain rule. Then exectute `Mult Derivative` and chain again and get `dz/dx`, `dz/dy`
+
+- Formally, what we are doing here, and PyTorch autograd engine also does, is computing a Jacobian-vector product (Jvp) to calculate the gradients of the model parameters, **since the model parameters and inputs are vectors.**
+
+[To represent `x` hat, `x` with `->` hat vecotr on top I'm using `x|`]
+
+- gradient of vector valued function f(x| = y|) is esentially calculating a jacobian matrix
+- with chain rule, multiplying the jacobian matrix of a function `f(x|) = y|` by a vector `v`, with the previously calculated gradients of a scalar function `z = g(y|)` results in the gradients `dz/dx1 ... dz/dxn` of scalar output with respect to the vector valued function inputs. [(this sounds complicated but it isnt just think about it)]
+
+```py
+def f(x1, x2):
+      a = x1 * x2
+      y1 = log(a)
+      y2 = sin(x2)
+      return (y1, y2)
+
+def g(y1, y2):
+      return y1 * y2
+```
+
+- Now, if we derive this by hand using the chain rule and the definition of the derivatives, we obtain the following set of identities that we can directly plug into the Jacobian matrix of `f(x1, x2)`: `dy1/dx = 1/x1`, `dy1/dx2 = 1/x2`, `dy2/dx1 = 0`, `dy2/dx2 = cos(x2)`... And `z = g(y1, y2)`: `dz/y1 = y2`, `dz/y2 = y1`
+
+```
+|∂y₁/∂x₁   ∂y₁/∂x₂|ᵀ |y₂|   |1/x₁  0      |ᵀ |y₂|   |1/x₁*y₂|
+|∂y₂/∂x₁   ∂y₂/∂x₂|  |y₁| = |1/x₂  cos(x₂)|  |y₁| = |1/x₂*y₂ + cos(x₂)*y₁|
+
+Jvp for (x₁, x₂) = (0.5, 0.75): (dy/dx₁, dy/dx₂) = (1.3633, 0.1912)
+```
+
+```py
+>>> import torch
+>>> x = torch.tensor([0.5, 0.75], requires_grad=True)
+>>> y = torch.log(x[0] * x[1]) * torch.sin(x[1])
+>>> y.backward(torch.tensor(1)) # modified from example for torch 2.0
+>>> x.grad
+tensor([1.3633, 0.1912])
+```
+
+- The result is the same as our hand-calculated Jacobian-vector product! However, PyTorch never constructed the matrix as it could grow prohibitively large but instead, created a graph of operations that traversed backward while applying the Jacobian-vector products defined in tools/autograd/derivatives.yaml.
+
+https://github.com/pytorch/pytorch/blob/master/tools/autograd/derivatives.yaml
+
+- In PyTorch, the initial gradient is explicitly set by the user when he calls the backward method.
+- Then, the Jvp calculation starts **but it never constructs the matrix**. Instead, when PyTorch records the computational graph, the derivatives of the executed forward operations are added (Backward Nodes). Figure 5 shows a backward graph generated by the execution of the functions `f(x_1, x_2)` and `g(y_1, y_2)` seen before.
+
+![](https://pytorch.org/assets/images/computational_graph_backward_pass.png)
+
+- The basic derivatives are stored in the tools/autograd/derivatives.yaml file and they are not regular derivatives but the Jvp versions of them [3]. (references https://www.cs.toronto.edu/~rgrosse/courses/csc321_2018/slides/lec10.pdf)
+- Chain baby chain:
+
+![](https://pytorch.org/assets/images/chain_rule_backward_differentiation.png)
+
+Let's see an example of how the derivatives are stored in PyTorch:
+
+1. Suppose we are processing the backward propagation of the log function, in the LogBackward node in Figure 2.
+2. The derivative of log in derivatives.yaml is specified as `grad.div(self.conj())`. `grad` is the already calculated gradient `dz/dy1`, and `self.conj()` is the complex conjugate of the input vector.
+3. For complex numbers, PyTorch calculates a special derivative called the conjugate Wirtinger derivative. This derivative takes the complex number and its conjugate, and they are the direction of steepest descent when plugged into optimizers.
+4. The code translates to `(dz/dy1 * 1/v)`, corresponding to the green and red squares in Figure 3.
+5. The autograd engine continues executing the next operation, the backward of the multiplication. The inputs are the original function's inputs and the gradient calculated from the log backward step.
+6. This step repeats until we reach the gradient with respect to the inputs, and the computation finishes. The gradient `dz/dx2` is only completed once the multiplication and sin gradients are added together.
+
+As you can see, we computed the equivalent of the Jvp without constructing the matrix. In the next post, we will dive inside PyTorch code to see how this graph is constructed and where the relevant pieces are, should you want to experiment with it.
+
+## https://pytorch.org/blog/computational-graphs-constructed-in-pytorch/
+
+## https://pytorch.org/blog/how-computational-graphs-are-executed-in-pytorch/
+
 # tensors
 
 
