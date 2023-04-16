@@ -1,12 +1,56 @@
 # autograd
 
-![](http://blog.ezyang.com/img/pytorch-internals/slide-21.png)
-![](http://blog.ezyang.com/img/pytorch-internals/slide-22.png)
-![](http://blog.ezyang.com/img/pytorch-internals/slide-23.png)
-
-I dont get this one:
-![](http://blog.ezyang.com/img/pytorch-internals/slide-24.png)
-![](http://blog.ezyang.com/img/pytorch-internals/slide-25.png)
+```cpp
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//                               Node
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// A `Node` is an abstract class that represents an operation taking zero
+// or more input `Variable`s and producing zero or more output `Variable`s. All
+// functions in PyTorch's autograd machinery derive from this class and
+// override its `apply` method. Instances of such subclasses will then be
+// invokeable via the call operator.
+//
+//                    Nodes in the Autograd Graph
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// When viewing the autograd system as a graph, `Node`s are the vertices or
+// nodes, connected to each other via (directed) `Edge`s, which themselves are
+// represented via (`Node`, input_nr) pairs. `Variable`s are the outputs to
+// and inputs of `Node`s, and travel between these edges during execution
+// of the graph. When two or more `Edge`s (from different sources) point at the
+// same input to a `Node`, the values produced along all of these edges are
+// implicitly summed prior to being forwarded to the target `Node`.
+//
+//                              Hierarchy
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Subclasses usually represent differentiable functions as well as their
+// gradient operators. Note, however, that due to the very general definition
+// of a `Node` taking *zero* or more inputs and producing *zero* or more
+// outputs, uses of `Node`s are flexible and extend beyond purely
+// mathematical operations. For example, the `AccumulateGrad` function is a
+// *sink*: it takes one input, but produces no outputs, instead accumulating
+// the input as a side effect. At the other extreme, the `GraphRoot` function
+// receives no inputs from other functions, but produces multiple outputs.
+//
+//                              Interface
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The most important method on `Node` is the call operator, which takes in
+// a list of variables and produces a list of variables. The precise size of
+// these lists can be determined with `num_inputs()` and `num_outputs()`.
+// `Node`s are stitched together via their `next_edge` interface, which let
+// you manipulate the set of outgoing edges of a `Node`. You can add an
+// edge with `add_next_edge()`, retrieve an edge with `next_edge(index)` and
+// iterate over them via the `next_edges()` method. Other methods exist for
+// integration with the JIT and other parts of PyTorch. Every `Node` has a
+// *sequence number* that increases monotonically in the order of `Node`
+// construction. It can be retrieved via the `sequence_nr()` method. Note that
+// this sequence number is *thread local*. This means that when `Node`s
+// `A`, `B` and `C` are created consecutively in the same thread, their
+// sequence numbers will be ordered `A` < `B` < `C`. If, however, `A` and `B`
+// are created in one thread and `C` is created in a new thread, there are *no
+// guarantees* w.r.t. the ordering of `C` relative to `A` or `B`.
+// See NOTE [ Sequence Number] for more details on the usages of sequence number.
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 ## https://pytorch.org/blog/overview-of-pytorch-autograd-engine/
 
@@ -126,7 +170,307 @@ As you can see, we computed the equivalent of the Jvp without constructing the m
 
 ## https://pytorch.org/blog/computational-graphs-constructed-in-pytorch/
 
+- **tools**/autograd:
+  - Here we can find the definition of the derivatives as we saw in the previous post derivatives.yaml
+  - several python scripts and a folder called templates.
+    - These scripts and the templates are used at building time to generate the C++ code for the derivatives as specified in the yaml file.
+    - Also, the scripts here generate wrappers for the regular ATen functions so that the computational graph can be constructed.
+
+https://github.com/pytorch/pytorch/tree/release/1.9/tools/autograd
+
+
+- **torch**/autograd:
+  - This folder is where the autograd components that can be used directly from python are located.
+  - In function.py we find the actual definition of torch.autograd.Function, a class used by users to write their own differentiable functions in python as per the documentation.
+  - functional.py holds components for functionally computing the jacobian vector product, hessian, and other gradient related computations of a given function.
+  - The rest of the files have additional components such as **gradient checkers**, anomaly detection, and the autograd profiler.
+
+https://github.com/pytorch/pytorch/tree/851e89c8e817f28270e0fc21d74ced9446bea747/torch/autograd
+
+- torch/csrc/autograd:
+  - This is where the graph creation and execution-related code lives. All this code is written in C++, since it is a critical part that is required to be extremely performant.
+  - Here we have:
+    - several files that implement the engine, metadata storage, and all the needed components.
+    - Alongside this, we have several files whose names start with python_, and their main responsibility is to allow python objects to be used in the autograd engine.
+
+
+![](https://pytorch.org/assets/images/augmented_computational_graph.png)
+
+how PyTorch creates these graphs with references to the actual codebase.
+
+```py
+>>> # request a tensor to require the gradient.
+>>> x = torch.tensor([0.5, 0.75], requires_grad=True)
+```
+
+c10 will allocate an AutogradMeta object that is used to hold the graph information.
+
+```cpp
+void TensorImpl::set_requires_grad(bool requires_grad) {
+  // ...
+  if (!autograd_meta_)
+    autograd_meta_ = impl::GetAutogradMetaFactory()->make();
+    autograd_meta_->set_requires_grad(requires_grad, this);
+}
+```
+
+```cpp
+
+struct TORCH_API AutogradMeta : public c10::AutogradMetaInterface {
+  std::string name_;
+
+  Variable grad_;
+  std::shared_ptr<Node> grad_fn_;
+  std::weak_ptr<Node> grad_accumulator_;
+  // other fields and methods
+  // ...
+};
+```
+
+`AutogradMeta` in `variable.h`: https://github.com/pytorch/pytorch/blob/release/1.9/torch/csrc/autograd/variable.h#L190-L286
+
+The most important fields in this structure are:
+  - the computed gradient in grad_ and a pointer to the function grad_fn that will be called by the engine to produce the actual gradient.
+  - Also, there is a gradient accumulator object that is used to add together all the different gradients where this tensor is involved as we will see in the graph execution.
+
+
+## Graphs edges and Nodes
+
+
+Now, when we call a differentiable function that takes this tensor as an argument, the associated metadata will be populated.
+
+
+Let’s suppose that we call a regular torch function that is implemented in ATen. Let it be the multiplication as in our previous blog post example. The resulting tensor has a field called grad_fn that is essentially a pointer to the function that will be used to compute the gradient of that operation.
+
+```py
+>>> x = torch.tensor([0.5, 0.75], requires_grad=True)
+>>> v = x[0] * x[1]
+>>> v
+tensor(0.3750, grad_fn=<MulBackward0>)
+```
+
+Here we see that the tensors’ grad_fn has a MulBackward0 value. This function is the same that was written in the derivatives.yaml file, and its C++ code was generated automatically by all the scripts in tools/autograd:
+
+```yaml
+- name: mul.Tensor(Tensor self, Tensor other) -> Tensor
+  self: mul_tensor_backward(grad, other, self.scalar_type())
+  other: mul_tensor_backward(grad, self, other.scalar_type())
+  result: other_t * self_p + self_t * other_p
+```
+
+https://github.com/pytorch/pytorch/blob/e7cd59c7a061c78d8d0265e4308b5933e44f9176/tools/autograd/derivatives.yaml#L840-L843
+
+> It’s auto-generated source code can be seen in torch/csrc/autograd/generated/Functions.cpp.
+>
+> https://github.com/pytorch/pytorch/blob/e7cd59c7a061c78d8d0265e4308b5933e44f9176/torch/csrc/autograd/function.h#L50-L533
+
+
+```cpp
+variable_list MulBackward0::apply(variable_list&& grads) {
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  IndexRangeGenerator gen;
+  auto self_ix = gen.range(1);
+  auto other_ix = gen.range(1);
+  variable_list grad_inputs(gen.size());
+  auto& grad = grads[0];
+  auto self = self_.unpack();
+  auto other = other_.unpack();
+  bool any_grad_defined = any_variable_defined(grads);
+  if (should_compute_output({ other_ix })) {
+    auto grad_result = any_grad_defined ? (mul_tensor_backward(grad, self, other_scalar_type)) : Tensor();
+    copy_range(grad_inputs, other_ix, grad_result);
+  }
+  if (should_compute_output({ self_ix })) {
+    auto grad_result = any_grad_defined ? (mul_tensor_backward(grad, other, self_scalar_type)) : Tensor();
+    copy_range(grad_inputs, self_ix, grad_result);
+  }
+  return grad_inputs;
+}
+```
+
+🤯🤯🤯🤯🤯🤯!!
+
+The `grad_fn` objects inherit from the `TraceableFunction` class, a descendant of `Node`:
+  - adds just a property set to enable tracing for debugging and optimization purposes.
+
+A graph by definition has nodes and edges:
+  - so these functions are indeed the nodes of the computational graph that are linked together by using `Edge` objects to enable the graph traversal later on.
+
+
+#### Nodes
+
+```cpp
+struct TORCH_API Node : std::enable_shared_from_this<Node> {
+ // ...
+ /// Evaluates the function on the given inputs and returns the result of the
+  /// function call.
+  variable_list operator()(variable_list&& inputs) {
+  // ...
+  }
+
+protected:
+  /// Performs the `Node`'s actual operation.
+  virtual variable_list apply(variable_list&& inputs) = 0;
+  …
+  edge_list next_edges_;
+```
+
+- Essentially we see that it has an override of the operator () that performs the call to the actual function
+- and a pure virtual function called apply
+The automatically generated functions override this apply method as we saw in the MulBackward0 example above.
+- Finally, the node also has a **list** of edges to enable graph connectivity
+
+
+#### Edges
+
+The `Edge` object is used to link Nodes together and its implementation is straightforward.
+```cpp
+struct Edge {
+  ...
+  /// The function this `Edge` points to.
+  std::shared_ptr<Node> function;
+  /// The identifier of a particular input to the function.
+  uint32_t input_nr;
+};
+```
+
+- It only requires a function pointer (the actual grad_fn objects that the edges link together), and an input number that acts as an id for the edge.
+
+#### linking nodes
+
+When we invoke the product operation of two tensors, we enter into the realm of autogenerated code. All the scripts that we saw in tools/autograd fill a series of templates that wrap the differentiable functions in ATen. These functions have code to construct the backward graph during the forward pass.
+
+https://github.com/pytorch/pytorch/blob/release/1.9/tools/autograd/gen_variable_type.py
+
+
+Pytorch does a lot:
+```py
+GRADIENT_IMPLEMENTED_FOR_COMPLEX = {
+    't', 'view', 'reshape', 'reshape_as', 'view_as', 'roll', 'clone',
+    'repeat', 'expand', 'flip', 'fliplr', 'flipud', 'rot90', 'transpose',
+    'permute', 'squeeze', 'unsqueeze', 'resize', 'resize_as', 'tril',
+    'triu', 'chunk', 'zero_', 'eq_', 'ne_', 'add', '__radd__', 'sum',
+    '_conj', 'sin', 'cos', 'mul', 'sinc', 'sinh', 'cosh', '__rmul__',
+    'sgn', 'asin', 'acos', 'sub', 'div', 'cat', 'view_as_complex',
+    'neg', 'complex', 'select', '_s_where', 'as_strided', 'slice', 'constant_pad_nd',
+    'unbind', 'split', 'split_with_sizes', 'unsafe_split', 'split_with_sizes_backward',
+    'dot', 'vdot', 'cholesky', 'triangular_solve', 'mm', '_unsafe_view', 'mv', 'ger',
+    'bmm', 'diagonal', 'alias', 'atan', 'log', 'log10', 'log1p', 'log2', 'reciprocal',
+    'tan', 'pow', 'rsqrt', 'tanh', 'tanh_backward', 'asinh', 'acosh', 'atanh', 'take', 'fill_',
+    'exp', 'nonzero', 'mean', 'inverse', 'solve', 'linalg_cholesky', 'addcmul', 'addcdiv',
+    'matrix_exp', 'linalg_eigh', 'cholesky_solve', 'linalg_qr', '_svd_helper', '_fft_c2c', '_fft_r2c',
+    'linalg_solve', 'sqrt', 'stack', 'gather', 'index_select', 'index_add_', 'linalg_inv', 'linalg_inv_ex',
+    'l1_loss_backward', 'baddbmm', 'addbmm', 'addmm', 'addmv', 'addr', 'linalg_householder_product',
+    'constant_pad_nd', 'reflection_pad1d', 'reflection_pad2d', 'linalg_cholesky_ex', 'linalg_eig',
+    'reflection_pad1d_backward', 'reflection_pad2d_backward', 'symeig',
+    'replication_pad1d', 'replication_pad2d', 'replication_pad3d', 'take', 'put_',
+    'replication_pad1d_backward', 'replication_pad2d_backward', 'replication_pad3d_backward',
+    'diag', 'masked_scatter', 'masked_select', 'index_fill', 'trace', 'polar', 'cumsum', 'rsub',
+    'eig', 'lerp', 'linalg_vector_norm', 'cumprod', 'prod', 'index_copy', 'lu', 'unfold', 'unfold_backward',
+    'index', 'masked_fill', 'cross', 'lu_unpack'
+}
+```
+https://github.com/pytorch/pytorch/blob/release/1.9/tools/autograd/gen_autograd.py
+
+
+The gen_variable_type.py script is in charge of writing all this wrapping code.
+
+
+```cpp
+at::Tensor mul_Tensor(c10::DispatchKeySet ks, const at::Tensor & self, const at::Tensor & other) {
+  ...
+  auto _any_requires_grad = compute_requires_grad( self, other );
+  std::shared_ptr<MulBackward0> grad_fn;
+  if (_any_requires_grad) {
+    // Creates the link to the actual grad_fn and links the graph for backward traversal
+    grad_fn = std::shared_ptr<MulBackward0>(new MulBackward0(), deleteNode);
+    grad_fn->set_next_edges(collect_next_edges( self, other ));
+    ...
+  }
+  …
+  // Does the actual function call to ATen
+  auto _tmp = ([&]() {
+    at::AutoDispatchBelowADInplaceOrView guard;
+    return at::redispatch::mul(ks & c10::after_autograd_keyset, self_, other_);
+  })();
+
+  auto result = std::move(_tmp);
+    if (grad_fn) {
+       // Connects the result to the graph
+      set_history(flatten_tensor_args( result ), grad_fn);
+  }
+  ...
+  return result;
+}
+```
+
+
+> After the `grad_fn` object is created, the edges used to link the nodes together are created by using the `grad_fn->set_next_edges(collect_next_edges( self, other ))`; calls.
+
+```cpp
+struct MakeNextFunctionList : IterArgs<MakeNextFunctionList> {
+  edge_list next_edges;
+  using IterArgs<MakeNextFunctionList>::operator();
+  void operator()(const Variable& variable) {
+    if (variable.defined()) {
+      next_edges.push_back(impl::gradient_edge(variable));
+    } else {
+      next_edges.emplace_back();
+    }
+  }
+  void operator()(const c10::optional<Variable>& variable) {
+    if (variable.has_value() && variable->defined()) {
+      next_edges.push_back(impl::gradient_edge(*variable));
+    } else {
+      next_edges.emplace_back();
+    }
+  }
+};
+
+template <typename... Variables>
+edge_list collect_next_edges(Variables&&... variables) {
+  detail::MakeNextFunctionList make;
+  make.apply(std::forward<Variables>(variables)...);
+  return std::move(make.next_edges);
+}
+```
+
+NOTE ON LEAF NODES
+
+> Given an input variable (it’s just a regular tensor), collect_next_edges will create an Edge object by calling impl::gradient_edge
+
+```cpp
+Edge gradient_edge(const Variable& self) {
+    // If grad_fn is null (as is the case for a leaf node), we instead
+    // interpret the gradient function to be a gradient accumulator, which will
+    // accumulate its inputs into the grad property of the variable. These
+    // nodes get suppressed in some situations, see "suppress gradient
+    // accumulation" below. Note that only variables which have `requires_grad =
+    // True` can have gradient accumulators.
+    if (const auto& gradient = self.grad_fn()) {
+      return Edge(gradient, self.output_nr());
+    } else {
+      return Edge(grad_accumulator(self), 0);
+    }
+  }
+```
+
+![](https://pytorch.org/assets/images/computational_graph_creation.gif)
 ## https://pytorch.org/blog/how-computational-graphs-are-executed-in-pytorch/
+
+## ez autograd visuals
+
+https://github.com/pytorch/pytorch/blob/e7cd59c7a061c78d8d0265e4308b5933e44f9176/torch/csrc/autograd/function.h#L50
+
+![](http://blog.ezyang.com/img/pytorch-internals/slide-21.png)
+![](http://blog.ezyang.com/img/pytorch-internals/slide-22.png)
+![](http://blog.ezyang.com/img/pytorch-internals/slide-23.png)
+
+I dont get this one:
+![](http://blog.ezyang.com/img/pytorch-internals/slide-24.png)
+![](http://blog.ezyang.com/img/pytorch-internals/slide-25.png)
+
 
 # tensors
 
@@ -363,4 +707,26 @@ Don't forget to double check you aren't using the old Docker alias which is much
 ```cpp
 (main) Ryans-Air:tensorgrad ryan$ cat ~/.bash_profile | grep cling
 alias cling='docker run -it maddouri/cling-ubuntu-docker'
+```
+
+---
+
+An autograd python defined function looks like the following:
+
+```py
+class Exp(torch.autograd.Function):
+     @staticmethod
+     def forward(ctx, i):
+         result = i.exp()
+         ctx.save_for_backward(result)
+         return result
+
+     @staticmethod
+     def backward(ctx, grad_output):
+         result, = ctx.saved_tensors
+         return grad_output * result
+
+# Call the function
+Exp.apply(torch.tensor(0.5, requires_grad=True))
+# Outputs: tensor(1.6487, grad_fn=<ExpBackward>)
 ```

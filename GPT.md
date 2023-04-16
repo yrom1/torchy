@@ -1,3 +1,185 @@
+# graph
+
+Ryan Moore
+```cpp
+struct Edge {
+  ...
+  /// The function this `Edge` points to.
+  std::shared_ptr<Node> function;
+  /// The identifier of a particular input to the function.
+  uint32_t input_nr;
+};
+
+struct TORCH_API Node : std::enable_shared_from_this<Node> {
+ ...
+ /// Evaluates the function on the given inputs and returns the result of the
+  /// function call.
+  variable_list operator()(variable_list&& inputs) {
+  ...
+  }
+
+protected:
+  /// Performs the `Node`'s actual operation.
+  virtual variable_list apply(variable_list&& inputs) = 0;
+  …
+  edge_list next_edges_;
+```
+what is the point of edges in torch computation graph?
+
+---
+
+In the PyTorch computation graph, edges play an essential role in representing the connections between nodes. Each node represents a mathematical operation or a function, while the edges connect nodes in a directed manner to signify the flow of data (tensors) and gradients during the forward and backward passes.
+
+Here's a quick breakdown of the purpose of edges:
+
+Data flow: The edges represent the flow of tensors from one operation to another. This helps in executing operations in the correct order during the forward pass.
+
+Dependencies: The edges define the dependencies between operations. This information is crucial during the backward pass for the calculation of gradients via backpropagation.
+
+Gradient flow: During the backward pass, edges are responsible for carrying the gradients from one node to another, allowing the calculation of gradients for all nodes in the computation graph.
+
+In the provided code snippet, the Edge struct contains a shared_ptr to the Node it points to (the function) and an identifier for the input of that function. This structure enables the representation of connections between nodes in the computation graph, facilitating the forward and backward passes.
+
+---
+
+Ryan Moore
+are these pointers one way, which way starting form the loss function?
+Yes, the pointers in the PyTorch computation graph are one-way or directed. They generally flow from the input nodes of the graph towards the output nodes (i.e., the loss function). During the forward pass, the computation flows from input nodes, through intermediate nodes, and towards the output nodes. Each node's output is computed using the values passed through incoming edges and is then propagated to the next nodes via outgoing edges.
+
+When performing the backward pass for gradient calculation, the process is reversed. The gradients flow from the output nodes (starting from the loss function) towards the input nodes. However, it's essential to understand that the gradient flow still follows the direction of the edges in the computation graph. The backward pass utilizes the chain rule to compute gradients for each node, taking into account the gradients from downstream nodes and the local gradients of the node with respect to its inputs.
+
+--
+
+Ryan Moore
+so in this case of edge, what is input_nr and what is funciton
+
+---
+
+In the provided Edge struct, the two member variables have the following meanings:
+
+function: This is a std::shared_ptr<Node> that points to the Node this Edge connects to. In other words, it is a reference to the next operation (function) in the computation graph that will receive the output of the current node as input.
+
+input_nr: This is a uint32_t variable representing the identifier of a particular input to the function. Since a node can have multiple inputs, input_nr is used to specify which input of the next Node the current output is connected to. This helps in keeping track of the tensor ordering and ensuring that the correct inputs are used for the next operation.
+
+To summarize, an Edge in the PyTorch computation graph represents a connection between two nodes (operations). The function variable points to the next node in the graph, and the input_nr variable identifies the specific input of that next node to which the current node's output is connected.
+
+---
+
+Ryan Moore
+in `C = A + B` where C is the output and `A` and `B` are the inputs. does Edge point from C to A and B or from A and B to C
+In the expression C = A + B, where C is the output and A and B are the inputs, the edges in the computation graph would point from A and B to C.
+
+In the context of the PyTorch computation graph:
+
+Node A represents the first input tensor.
+Node B represents the second input tensor.
+Node C represents the output tensor resulting from the addition of A and B.
+The edges will be directed from A and B to C to signify the flow of data (tensors) during the forward pass. These directed edges help ensure that operations are executed in the correct order, and they also represent dependencies between operations that are essential for the backward pass to calculate gradients via backpropagation.
+
+---
+
+Ryan Moore
+so at the output node and you call .backwards on that tensor, if A's edge points to C, how would i get from C to A to do backpropogation from C to A
+
+---
+
+When you call .backward() on the output tensor (C in this case), PyTorch internally uses the computation graph to traverse from the output node back to the input nodes (A and B) to perform backpropagation.
+
+To facilitate backpropagation, PyTorch maintains a list of incoming edges for each node. This list essentially contains the nodes and their respective gradients that contribute to the gradient of the current node during the backward pass. These incoming edges allow PyTorch to traverse the graph in the reverse order of the forward pass, calculating gradients for each node using the chain rule.
+
+In the provided code snippet, the next_edges_ member variable in the Node struct is an example of such a list. It keeps track of the incoming edges to the node. While it's not shown in the snippet, during the backward pass, the incoming edges are used to propagate gradients in the reverse direction, starting from the output node (C) and moving towards the input nodes (A and B).
+
+To summarize, PyTorch internally manages the backward traversal of the computation graph using the incoming edges list for each node, allowing it to perform backpropagation from the output node (C) back to the input nodes (A and B).
+
+---
+
+Ryan Moore
+> PyTorch internally manages the backward traversal of the computation graph using the incoming edges list for each node,
+
+can you explain this with refence to the structs/classes of torch mentioned proviously with a visual in ascii
+
+---
+
+Certainly! I'll use the expression C = A + B to create a visual representation of the forward and backward traversal of the computation graph using the PyTorch constructs mentioned earlier.
+
+Let's assume we have three nodes: A, B, and C. The edges in the computation graph will be directed from nodes A and B to node C.
+
+```css
+  A   B
+  |   |
+  v   v
+   \ /
+    C
+```
+Now let's associate the Node and Edge structs with this visual representation:
+
+```css
+
+  [Node A]   [Node B]
+      |          |
+      v          v
+      [Edge A]   [Edge B]
+       \         /
+        v       v
+        [Node C]
+```
+In this graph, Edge A connects Node A to Node C, and Edge B connects Node B to Node C.
+
+During the forward pass, the computation flows from Node A and Node B to Node C.
+
+Now, let's talk about the backward pass. In this example, I'll demonstrate how the backward traversal is managed using the incoming edges list for each node.
+
+For simplicity, let's assume that each Node has a member variable called incoming_edges_, which is a list of Edge pointers representing the incoming edges.
+
+
+```cpp
+struct Node {
+  ...
+  std::vector<Edge*> incoming_edges_;
+  ...
+};
+```
+
+When the computation graph is constructed, the incoming edges for each node are set as follows:
+
+```css
+Node A: incoming_edges_ = {}
+Node B: incoming_edges_ = {}
+Node C: incoming_edges_ = {&Edge A, &Edge B}
+```
+Now, when you call .backward() on the output tensor (C), PyTorch will traverse the graph using the incoming edges list for each node. In this case, it starts from Node C and moves towards Node A and Node B.
+
+```
+[Node C] <-- [Node A]
+        <-- [Node B]
+```
+During the backward pass, gradients are calculated for each node using the chain rule, taking into account the gradients from downstream nodes (the nodes connected by incoming edges) and the local gradients of the node with respect to its inputs. This process is repeated recursively until the input nodes (A and B) are reached.
+
+In summary, PyTorch uses the incoming_edges_ member variable to manage the backward traversal of the computation graph, allowing it to perform backpropagation from the output node (C) back to the input nodes (A and B).
+
+---
+
+Ryan Moore
+```
+[Node A] <-- [Node C] <-- [Node B]
+```
+is this correct?
+
+---
+
+Apologies for the confusion in my previous response. I made an error in the ASCII representation of the backward pass. Here's the corrected version:
+
+During the backward pass, the gradients are calculated for each node using the chain rule, taking into account the gradients from downstream nodes (the nodes connected by outgoing edges) and the local gradients of the node with respect to its inputs. This process is repeated recursively until the input nodes (A and B) are reached. The backward pass can be visualized like this:
+
+```
+[Node C] <-- [Node A]
+        <-- [Node B]
+```
+
+The gradients flow from Node C back to both Node A and Node B. The computation graph is still traversed in reverse order, using the next_edges_ (outgoing edges) member variable in the Node struct.
+
+In summary, PyTorch uses the next_edges_ member variable to manage the backward traversal of the computation graph, allowing it to perform backpropagation from the output node (C) back to the input nodes (A and B).
+
 # neuron operations
 
 To implement the core mathematical functionality for a simple feedforward neural network layer that performs a dot product of weights and inputs plus a bias term, you will need to add the following features to your Tensor library:
