@@ -10,7 +10,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 # Find the Torch package
-find_package(Torch REQUIRED)
+find_package(Torch REQUIRED CONFIG NO_DEFAULT_PATH HINTS ${CMAKE_PREFIX_PATH} QUIET)
+set(USE_CUDA OFF)
 
 # Build googletest from the submodule
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/googletest)
