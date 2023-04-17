@@ -1,1 +1,1 @@
-cling -l "torchy.h"
+cling --nologo -l "torchy.h"
