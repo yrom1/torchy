@@ -1,5 +1,6 @@
 // Copyright 2023 Ryan Moore
 
+#include <gtest/gtest.h>
 #include <torch/torch.h>
 
 #include <cassert>
@@ -7,7 +8,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "torchy.h"  // NOLINT (build/include_subdir)
 
 // The tests are now wrapped in TEST() macros from Google Test
