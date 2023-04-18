@@ -182,6 +182,14 @@ TEST(Basic, TensorDtypeIsInt) {
 //   EXPECT_EQ(submatrix_slice.repr(), "Tensor({2, 2}, {2, 3, 5, 6})");
 // }
 
+template <typename T>
+std::vector<T> tensorToVector(const torch::Tensor& tensor) {
+  size_t num_elements = tensor.numel();
+  std::vector<T> result(num_elements);
+  std::memcpy(result.data(), tensor.data_ptr<T>(), num_elements * sizeof(T));
+  return result;
+}
+
 TEST(Torch, Neuron) {
   // Test input tensors
   Tensor<int> x({3, 2}, {1, 2, 3, 4, 5, 6});
@@ -196,9 +204,9 @@ TEST(Torch, Neuron) {
   at::Tensor w_aten = at::from_blob(data2.data(), {2, 4}, at::kInt);
   at::Tensor b_aten = at::tensor({1, 2, 3, 4}).unsqueeze(0);
   at::Tensor result_aten = x_aten.matmul(w_aten) + b_aten;
-  std::vector<int> result_aten_v(result_aten.numel());
-  std::memcpy(result_aten_v.data(), result_aten.data_ptr<int>(),
-              result_aten.numel() * sizeof(int));
+  std::vector<int> result_aten_v = tensorToVector<int>(result_aten);
+  // std::cout << result_v << std::endl;
+  // std::cout << result_aten_v << std::endl;
   EXPECT_EQ(result_v, result_aten_v);
 }
 
