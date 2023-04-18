@@ -210,6 +210,23 @@ TEST(Torch, Neuron) {
   EXPECT_EQ(result_v, result_aten_v);
 }
 
+TEST(Torch, BackwardAdd) {
+  torch::Tensor a =
+      torch::tensor({{1.0, 2.0}, {3.0, 4.0}}, torch::requires_grad(true));
+  torch::Tensor b =
+      torch::tensor({{2.0, 3.0}, {4.0, 5.0}}, torch::requires_grad(true));
+  torch::Tensor c = a + b;
+  torch::Tensor scalar_output = c.sum();
+  scalar_output.backward();
+  auto result_torch_a = tensorToVector<float>(a.grad());
+  auto result_torch_b = tensorToVector<float>(b.grad());
+
+  std::vector<float> result_torchy = {42.0, 42.0, 42.0, 42.0};
+
+  EXPECT_EQ(result_torch_a, result_torchy);
+  EXPECT_EQ(result_torch_b, result_torchy);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
