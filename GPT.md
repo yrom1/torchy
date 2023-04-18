@@ -1,3 +1,91 @@
+# backwards of tensor addition and sum of result
+
+```cpp
+#include <iostream>
+#include <torch/torch.h>
+
+int main() {
+  // 2x2 tensors
+  torch::Tensor a = torch::tensor({{1.0, 2.0}, {3.0, 4.0}}, torch::requires_grad(true));
+  torch::Tensor b = torch::tensor({{2.0, 3.0}, {4.0, 5.0}}, torch::requires_grad(true));
+  torch::Tensor c = a + b;
+
+  // c.backward();
+  /* BAD NO GOOD!
+  ERORR The backward function in PyTorch requires a scalar output to compute gradients with respect to its input tensors.
+  // : terminating with uncaught exception of type c10::Error: grad can be implicitly created only for scalar outputs
+  */
+
+  torch::Tensor scalar_output = c.sum();
+
+  scalar_output.backward();
+
+  std::cout << "a.grad: " << a.grad() << std::endl;
+  std::cout << "b.grad: " << b.grad() << std::endl;
+
+  return 0;
+}
+```
+```
+/**
+a.grad:  1  1
+1  1
+[ CPUFloatType{2,2} ]
+b.grad:  1  1
+1  1
+[ CPUFloatType{2,2} ]
+*/
+```
+
+explain this output
+
+---
+
+In the given code, you create two tensors a and b, each with the shape (2, 2). Then, you add them together element-wise to get a new tensor c.
+
+```css
+a = | 1.0  2.0 |    b = | 2.0  3.0 |
+    | 3.0  4.0 |        | 4.0  5.0 |
+```
+
+The resulting tensor c is:
+
+```makefile
+c = | 3.0  5.0 |
+    | 7.0  9.0 |
+```
+
+Next, you compute the sum of all elements in tensor c to get a scalar output:
+
+```makefile
+scalar_output = 3.0 + 5.0 + 7.0 + 9.0 = 24.0
+```
+
+You then call scalar_output.backward() to compute the gradients for tensors a and b. Since the scalar output is a sum of all elements of c, and c is an element-wise sum of a and b, the gradient of each element in a and b with respect to the scalar output will be 1.
+
+The gradients for tensors a and b are:
+
+```css
+a.grad = | 1  1 |
+         | 1  1 |
+
+b.grad = | 1  1 |
+         | 1  1 |
+```
+
+The output you see in the terminal represents these gradient tensors:
+
+```css
+a.grad:  1  1
+         1  1
+[ CPUFloatType{2,2} ]
+b.grad:  1  1
+         1  1
+[ CPUFloatType{2,2} ]
+```
+
+The CPUFloatType{2,2} in the output indicates that the gradient tensors are of type float and have a shape of (2, 2) and reside on the CPU device.
+
 # graph
 
 Ryan Moore
