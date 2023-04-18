@@ -14,7 +14,7 @@
 // The first argument of the TEST() macro is the test suite name,
 // and the second argument is the test name.
 
-TEST(TensorTest, CreateTensors) {
+TEST(Basic, CreateTensors) {
   Tensor<float> t1({3}, {1, 2, 3});
   Tensor<float> t2({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   Tensor<float> t3({3, 3, 3},
@@ -28,12 +28,12 @@ TEST(TensorTest, CreateTensors) {
       "15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26})");
 }
 
-TEST(TensorTest, AccessTensorElement) {
+TEST(Basic, AccessTensorElement) {
   Tensor<float> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   ASSERT_EQ(tensor({0, 1}), 2);
 }
 
-TEST(TensorTest, CatchRuntimeError) {
+TEST(Basic, CatchRuntimeError) {
   Tensor<float> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   try {
     tensor({0, 15});
@@ -48,14 +48,14 @@ TEST(TensorTest, CatchRuntimeError) {
 // However, you can create a new test using the TEST() macro if you fix the
 // issue.
 
-TEST(TensorTest, CreateTensorWithValues) {
+TEST(Basic, CreateTensorWithValues) {
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   Tensor<int> t(dimensions, values);
   EXPECT_EQ(t.repr(), "Tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9})");
 }
 
-TEST(TensorTest, TensorAddition) {
+TEST(Basic, TensorAddition) {
   std::vector<int> values1 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<int> values2 = {2, 3, 4, 5, 6, 7, 8, 9, 10};
   std::vector<size_t> dimensions = {3, 3};
@@ -67,7 +67,7 @@ TEST(TensorTest, TensorAddition) {
   EXPECT_EQ(t3.repr(), "Tensor({3, 3}, {3, 5, 7, 9, 11, 13, 15, 17, 19})");
 }
 
-TEST(TensorTest, TensorScalarAddition) {
+TEST(Basic, TensorScalarAddition) {
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   Tensor<int> t(dimensions, values);
@@ -75,7 +75,7 @@ TEST(TensorTest, TensorScalarAddition) {
   EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {4, 5, 6, 7, 8, 9, 10, 11, 12})");
 }
 
-TEST(TensorTest, TensorDivision) {
+TEST(Basic, TensorDivision) {
   std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<size_t> dimensions = {3, 3};
@@ -87,7 +87,7 @@ TEST(TensorTest, TensorDivision) {
   EXPECT_EQ(t3.repr(), "Tensor({3, 3}, {9, 4, 2, 1, 1, 0, 0, 0, 0})");
 }
 
-TEST(TensorTest, TensorScalarDivision) {
+TEST(Basic, TensorScalarDivision) {
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   Tensor<int> t(dimensions, values);
@@ -95,7 +95,7 @@ TEST(TensorTest, TensorScalarDivision) {
   EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {3, 2, 2, 2, 1, 1, 1, 0, 0})");
 }
 
-TEST(TensorTest, TensorMultiplication) {
+TEST(Basic, TensorMultiplication) {
   std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<size_t> dimensions = {3, 3};
@@ -107,7 +107,7 @@ TEST(TensorTest, TensorMultiplication) {
   EXPECT_EQ(t3.repr(), "Tensor({3, 3}, {9, 16, 21, 24, 25, 24, 21, 16, 9})");
 }
 
-TEST(TensorTest, TensorSubtraction) {
+TEST(Basic, TensorSubtraction) {
   std::vector<int> values1 = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   std::vector<int> values2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<size_t> dimensions = {3, 3};
@@ -119,7 +119,7 @@ TEST(TensorTest, TensorSubtraction) {
   EXPECT_EQ(t3.repr(), "Tensor({3, 3}, {8, 6, 4, 2, 0, -2, -4, -6, -8})");
 }
 
-TEST(TensorTest, TensorScalarMultiplication) {
+TEST(Basic, TensorScalarMultiplication) {
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   Tensor<int> t(dimensions, values);
@@ -127,7 +127,7 @@ TEST(TensorTest, TensorScalarMultiplication) {
   EXPECT_EQ(t2.repr(), "Tensor({3, 3}, {27, 24, 21, 18, 15, 12, 9, 6, 3})");
 }
 
-TEST(TensorTest, MatrixMultiplication) {
+TEST(Basic, MatrixMultiplication) {
   std::vector<size_t> dimensions1 = {2, 3};
   std::vector<int> values1 = {1, 2, 3, 4, 5, 6};
   std::vector<size_t> dimensions2 = {3, 2};
@@ -138,26 +138,26 @@ TEST(TensorTest, MatrixMultiplication) {
   EXPECT_EQ(t3.repr(), "Tensor({2, 2}, {58, 64, 139, 154})");
 }
 
-TEST(TensorTest, CatchRuntimeErrorZeroDivideScalar) {
+TEST(Basic, CatchRuntimeErrorZeroDivideScalar) {
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {9, 8, 7, 6, 5, 4, 3, 2, 1};
   Tensor<int> t(dimensions, values);
   ASSERT_THROW(t / 0, std::runtime_error);
 }
 
-TEST(TensorTest, CreateAndPrintTensorRepr) {
+TEST(Basic, CreateAndPrintTensorRepr) {
   std::vector<size_t> dimensions = {3, 3};
   std::vector<int> values = {1, 2, 3, 4, 5, 6, 7, 8, 9};
   Tensor<int> t(dimensions, values);
   EXPECT_EQ(t.repr(), "Tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9})");
 }
 
-TEST(StorageDtypeTest, StorageDtypeIsInt) {
+TEST(Basic, StorageDtypeIsInt) {
   Storage<int> storage(5, {1, 2, 3, 4, 5});
   ASSERT_TRUE((std::is_same<Storage<int>::dtype, int>::value));
 }
 
-TEST(TensorDtypeTest, TensorDtypeIsInt) {
+TEST(Basic, TensorDtypeIsInt) {
   Tensor<int> tensor({3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9});
   ASSERT_TRUE((std::is_same<Tensor<int>::dtype, int>::value));
 }
@@ -199,10 +199,6 @@ TEST(Torch, Neuron) {
   std::vector<int> result_aten_v(result_aten.numel());
   std::memcpy(result_aten_v.data(), result_aten.data_ptr<int>(),
               result_aten.numel() * sizeof(int));
-
-  std::cout << result_v << std::endl;
-  std::cout << result_aten_v << std::endl;
-
   EXPECT_EQ(result_v, result_aten_v);
 }
 
