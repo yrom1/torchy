@@ -5,6 +5,6 @@ cd build
 cmake -DCMAKE_PREFIX_PATH=$(python -c 'import torch;print(torch.utils.cmake_prefix_path)') ..
 cmake --build .
 
-for f in aten_*; do
+for f in torch_*; do
   ./"$f"
 done

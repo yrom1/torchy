@@ -5,7 +5,7 @@ project(aten_example)
 find_package(Torch REQUIRED)
 
 # Get a list of all C++ files in the directory that start with "aten_"
-file(GLOB_RECURSE ATEN_SOURCES "aten_*.cpp")
+file(GLOB_RECURSE ATEN_SOURCES "torch_*.cpp")
 
 # Create an executable for each ATen-related file
 foreach(SOURCE ${ATEN_SOURCES})
