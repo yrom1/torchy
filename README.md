@@ -32,15 +32,21 @@ The next examples use a C++ interpreter called [Cling](https://github.com/root-p
 The plan is to be similar to PyTorch's internals, particularily the [Variable/Tensor Merge Proposal](https://github.com/pytorch/pytorch/issues/13638) design.
 
 ```
+Storage<T> has-a [
+  vector<T> data_;
+]
+
+AutogradMeta<T> has-a [
+  Tensor<T> grad_;
+]
+
 Tensor<T> has-a [
   vector<size_t> sizes_;
   shared_ptr<Storage<T>> storage_;
   size_t offset_;
   vector<size_t> strides_;
-]
-
-Storage<T> has-a [
-  vector<T> data_;
+  bool requires_grad_;
+  std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 ]
 ```
 ## Mathematical Operations
