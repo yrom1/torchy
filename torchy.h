@@ -15,6 +15,13 @@
 #include <vector>
 
 template <typename T>
+class Storage;
+template <typename T>
+class AutogradMeta;
+template <typename T>
+class Tensor;
+
+template <typename T>
 class Storage {
  public:
   typedef T dtype;
@@ -39,19 +46,49 @@ class Storage {
 };
 
 template <typename T>
+class AutogradMeta {
+ public:
+  AutogradMeta() : grad_() {}  //, function_() {}
+
+  const Tensor<T> &grad() const { return grad_; }
+  Tensor<T> &grad() {
+    return grad_;
+  }  // Add this overload to return a non-const reference
+
+  // ... (Other methods related to autograd)
+
+ private:
+  Tensor<T> grad_;
+  // std::shared_ptr<Function> function_; // Uncomment and replace 'Function'
+  // with the appropriate class name for the autograd function
+};
+
+template <typename T>
 class Tensor {
  public:
   typedef T dtype;
 
-  Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {})
-      : Tensor(std::vector<size_t>(dimensions), std::move(values)) {}
+  Tensor()
+      : sizes_(),
+        storage_(),
+        offset_(0),
+        requires_grad_(false),
+        autograd_meta_(nullptr) {}
+
+  Tensor(std::initializer_list<size_t> dimensions, std::vector<T> values = {},
+         bool requires_grad = false)
+      : Tensor(std::vector<size_t>(dimensions), std::move(values),
+               requires_grad) {}
 
   explicit Tensor(const std::vector<size_t> &dimensions,
-                  std::vector<T> values = {})
+                  std::vector<T> values = {}, bool requires_grad = false)
       : sizes_(dimensions),
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
-        offset_(0) {
+        offset_(0),
+        requires_grad_(requires_grad),
+        autograd_meta_(requires_grad ? std::make_shared<AutogradMeta<T>>()
+                                     : nullptr) {
     computeStrides();
   }
 
@@ -223,11 +260,32 @@ class Tensor {
     return ss.str();
   }
 
+  bool requires_grad() const { return requires_grad_; }
+
+  // std::shared_ptr<AutogradMeta<T>> autograd_meta() const { return
+  // autograd_meta_; }
+
+  Tensor<T> grad() const {
+    if (!requires_grad_) {
+      throw std::runtime_error("This tensor does not require gradients.");
+    }
+    return autograd_meta_->grad();
+  }
+
+  void set_grad(const Tensor<T> &grad) {
+    if (!requires_grad_) {
+      throw std::runtime_error("This tensor does not require gradients.");
+    }
+    autograd_meta_->grad() = grad;
+  }
+
  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
+  bool requires_grad_;
+  std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 
   Tensor<T> applyElementwiseWithBroadcast(
       const Tensor<T> &other,

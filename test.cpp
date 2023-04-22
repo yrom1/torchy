@@ -182,6 +182,40 @@ TEST(Basic, TensorDtypeIsInt) {
 //   EXPECT_EQ(submatrix_slice.repr(), "Tensor({2, 2}, {2, 3, 5, 6})");
 // }
 
+// Test if setting requires_grad creates an AutogradMeta object and assigns a
+// grad tensor
+TEST(AutogradMeta, RequiresGradCreatesAutogradMeta) {
+  Tensor<float> t1({2, 3}, {1, 2, 3, 4, 5, 6}, true);
+
+  // Check if requires_grad is set correctly
+  ASSERT_TRUE(t1.requires_grad());
+
+  // Check if the AutogradMeta object exists
+  ASSERT_NO_THROW(t1.grad());
+
+  // Assign a gradient to the tensor
+  Tensor<float> grad({2, 3}, {1, 1, 1, 1, 1, 1});
+  t1.set_grad(grad);
+
+  // Check if the assigned gradient can be retrieved
+  Tensor<float> retrieved_grad = t1.grad();
+  for (size_t i = 0; i < t1.computeSize(); ++i) {
+    ASSERT_FLOAT_EQ(grad.storage()->data()[i],
+                    retrieved_grad.storage()->data()[i]);
+  }
+}
+
+// Test if setting requires_grad to false does not create an AutogradMeta object
+TEST(AutogradMeta, RequiresGradFalseNoAutogradMeta) {
+  Tensor<float> t2({2, 3}, {1, 2, 3, 4, 5, 6}, false);
+
+  // Check if requires_grad is set correctly
+  ASSERT_FALSE(t2.requires_grad());
+
+  // Check if the AutogradMeta object does not exist
+  ASSERT_THROW(t2.grad(), std::runtime_error);
+}
+
 template <typename T>
 std::vector<T> tensorToVector(const torch::Tensor& tensor) {
   size_t num_elements = tensor.numel();
