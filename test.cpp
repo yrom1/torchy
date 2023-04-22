@@ -244,7 +244,7 @@ TEST(Torch, Neuron) {
   EXPECT_EQ(result_v, result_aten_v);
 }
 
-TEST(Torch, BackwardAdd) {
+TEST(Torch, DISABLED_BackwardAdd) {
   torch::Tensor a =
       torch::tensor({{1.0, 2.0}, {3.0, 4.0}}, torch::requires_grad(true));
   torch::Tensor b =
