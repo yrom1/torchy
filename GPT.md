@@ -1,3 +1,34 @@
+# grad_ grad_fn_ and grad_accumulator_
+
+> When the user calls t.requires_grad_(true), we do the following under the hood:
+> - We initialize a struct called AutogradMeta, which stores autograd-specific fields (such as grad_/grad_fn_/grad_accumulator_).
+> - We assign the struct to the AutogradMeta pointer in t's TensorImpl.
+
+what does grad_fn_ and grad_accumulator_ do
+
+---
+
+grad_fn_ and grad_accumulator_ are components of PyTorch's automatic differentiation system, which is responsible for computing gradients of tensors with respect to some scalar value (typically, the loss function during training). Both of these fields are part of the AutogradMeta struct that stores autograd-related information for each tensor.
+
+grad_fn_: This field is a pointer to the function that computes the gradient of the tensor with respect to its inputs. Each grad_fn_ is a node in the computational graph representing the history of operations that created the tensor. When you perform an operation that involves tensors with requires_grad=True, the resulting tensor's grad_fn_ field is set to an appropriate Function object that knows how to compute the gradient for that operation. During backpropagation, PyTorch traverses the graph from the output tensor to input tensors, using grad_fn_ to compute gradients along the way.
+
+grad_accumulator_: This field is a pointer to a Node object that keeps track of the accumulated gradient for the tensor. During backpropagation, gradients for each tensor can be computed multiple times due to the presence of shared parameters or loops in the computational graph. Instead of directly updating the tensor's gradient with each new contribution, the gradients are accumulated in grad_accumulator_. Once the backward pass is completed, the final accumulated gradient is used to update the tensor's gradient (grad_). This mechanism ensures that the gradients are correctly accumulated when the same tensor is involved in multiple parts of the computational graph.
+
+In summary, grad_fn_ and grad_accumulator_ are essential components of PyTorch's autograd system. They help to compute gradients for tensors by maintaining information about the function that created the tensor (grad_fn_) and keeping track of the accumulated gradients during backpropagation (grad_accumulator_).
+
+---
+
+Ryan Moore
+are grad_fn_, themselves Node objects or do they have-a Node object
+
+---
+
+grad_fn_ themselves are not Node objects. Instead, they are Function objects, which are subclasses of the Node class in PyTorch's autograd system. The Function class represents a single operation in the computational graph, and each Function object has a Node object as a base.
+
+The grad_fn_ field in the AutogradMeta struct is a pointer to a Function object. This Function object represents the operation that created the tensor and is responsible for computing the gradient of the tensor with respect to its inputs during backpropagation.
+
+So, grad_fn_ has-a Node object as a base, since it is a Function object, and Function is a subclass of Node. The Node class serves as a base for the autograd graph's structure, while the Function class adds the actual computation logic for gradients.
+
 # requires grad only defined for floats!
 
 https://discuss.pytorch.org/t/dont-understand-why-only-tensors-of-floating-point-dtype-can-require-gradients/158282
