@@ -86,9 +86,15 @@ class Tensor {
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
         offset_(0),
-        requires_grad_(requires_grad),
-        autograd_meta_(requires_grad ? std::make_shared<AutogradMeta<T>>()
-                                     : nullptr) {
+        requires_grad_(requires_grad) {
+    if (!is_allowed_grad_type() && requires_grad) {
+      throw std::runtime_error(
+          "requires_grad can only be set to true for float, double, or long "
+          "double types");
+    }
+    if (requires_grad_) {
+      autograd_meta_ = std::make_shared<AutogradMeta<T>>();
+    }
     computeStrides();
   }
 
@@ -286,6 +292,11 @@ class Tensor {
   std::vector<size_t> strides_;
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
+
+  constexpr bool is_allowed_grad_type() const {
+    return std::is_same<T, float>::value || std::is_same<T, double>::value ||
+           std::is_same<T, long double>::value;
+  }
 
   Tensor<T> applyElementwiseWithBroadcast(
       const Tensor<T> &other,
