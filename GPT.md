@@ -1,3 +1,39 @@
+# decltype
+
+what does decltype do
+```cpp
+[cling]$ std::is_same<t::dtype, int>()
+input_line_7:2:15: error: 't' is not a class, namespace, or enumeration
+ std::is_same<t::dtype, int>()
+              ^
+input_line_4:2:14: note: 't' declared here
+ Tensor<int> t({1}, {42})
+             ^
+input_line_7:2:30: error: expected unqualified-id
+ std::is_same<t::dtype, int>()
+                             ^
+[cling]$ std::is_same<decltype(t)::dtype, int>()
+(std::is_same<Tensor<int>::dtype, int>) @0x600001f76090
+[cling]$ std::cout << std::is_same<decltype(t)::dtype, int>()
+1(std::basic_ostream &) @0x1fb94a148
+[cling]$ std::cout << std::is_same<decltype(t)::dtype, float>()
+0(std::basic_ostream &) @0x1fb94a148
+```
+
+---
+
+
+decltype is a keyword in C++ that is used to query the type of an expression at compile-time. It allows you to obtain the type of a given expression without needing to explicitly specify the type. This can be useful in template metaprogramming and type inference.
+
+In the code snippet you provided, decltype is being used to determine the data type of t, which is Tensor<int>. You then use std::is_same to check if the data type of t (Tensor<int>::dtype) is the same as int or float. std::is_same returns a boolean value, with 1 indicating that the types are the same, and 0 indicating they are different.
+
+Here's the breakdown of the code:
+
+std::is_same<t::dtype, int>(): This line generates an error because t is not a class, namespace, or enumeration. The correct way to access the dtype member would be to use decltype with the type of t.
+std::is_same<decltype(t)::dtype, int>(): This line correctly uses decltype to obtain the type of t and then checks if its dtype is the same as int.
+std::cout << std::is_same<decltype(t)::dtype, int>(): This line prints the result of the previous comparison, which is 1, indicating that the types are the same.
+std::cout << std::is_same<decltype(t)::dtype, float>(): This line checks if the dtype of t is the same as float and prints the result, which is 0, indicating that the types are different.
+
 # grad_ grad_fn_ and grad_accumulator_
 
 > When the user calls t.requires_grad_(true), we do the following under the hood:
