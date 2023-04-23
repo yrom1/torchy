@@ -86,9 +86,15 @@ class Tensor {
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
         offset_(0),
-        requires_grad_(is_allowed_grad_type() ? requires_grad : false),
-        autograd_meta_(requires_grad_ ? std::make_shared<AutogradMeta<T>>()
-                                      : nullptr) {
+        requires_grad_(requires_grad) {
+    if (!is_allowed_grad_type() && requires_grad) {
+      throw std::runtime_error(
+          "requires_grad can only be set to true for float, double, or long "
+          "double types");
+    }
+    if (requires_grad_) {
+      autograd_meta_ = std::make_shared<AutogradMeta<T>>();
+    }
     computeStrides();
   }
 
