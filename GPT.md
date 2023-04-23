@@ -1,3 +1,224 @@
+# backward/apply implementations
+
+so how does AddBackward get called in the loss.backward() where loss is a scalar tensor final output of an expression graph
+
+---
+
+When you call loss.backward() on a scalar tensor, PyTorch initiates the backpropagation process. The backward() method starts from the loss tensor and traverses the computation graph in reverse order (from the final output to the inputs), calling the apply() method of each grad_fn associated with the tensors in the graph. The apply() method of these Function subclasses computes the gradients for the input tensors and accumulates them in the .grad_ fields.
+
+
+In the case of AddBackward, the apply() method would be called when the backpropagation process reaches the tensor that resulted from an addition operation. Here's a high-level overview of what happens when you call loss.backward():
+
+
+The backward() method is called on the loss tensor.
+The method checks if the loss tensor has a grad_fn attribute, which points to the associated backward function (e.g., AddBackward for addition). If there's no grad_fn, the backpropagation process stops.
+
+
+The method then creates an initial gradient tensor for the output (usually a tensor of the same shape as the loss tensor, filled with ones).
+
+
+The apply() method of the grad_fn (e.g., AddBackward::apply()) is called with the initial gradient tensor (or any incoming gradient from the previous operation in the graph).
+
+
+The apply() method computes the gradients for the input tensors, accumulates them in the .grad_ fields if they require gradients, and returns the computed input gradients.
+
+
+The backpropagation process continues, calling the apply() method of the grad_fn associated with the input tensors (and so on, recursively), until it reaches the input tensors or tensors without grad_fn.
+
+
+To summarize, when you call loss.backward(), PyTorch traverses the computation graph in reverse order, and for each tensor in the graph, it calls the apply() method of the associated grad_fn. In the case of AddBackward, the apply() method computes the input gradients and accumulates them in the input tensors' .grad_ fields.
+
+---
+
+Ryan Moore
+why does it use this apply interface, why does that simplify things please show me an example
+
+---
+
+The apply interface in PyTorch's autograd system provides a consistent way to define the backward computation of a wide variety of operations. The apply method is a part of the Function base class, and each subclass implementing a specific operation's backward computation overrides this method. By using this interface, PyTorch can handle the backpropagation process in a generic and modular way.
+
+This interface simplifies things by allowing PyTorch to:
+
+Easily extend the system with new operations without changing the core backpropagation logic.
+Traverse the computation graph and perform backpropagation in a consistent and unified manner, regardless of the specific operation being executed.
+Let's consider an example with two operations: addition and multiplication. We'll define two classes, AddBackward and MulBackward, that inherit from the Function base class:
+
+```python
+class Function:
+    def apply(self, grads):
+        raise NotImplementedError
+
+class AddBackward(Function):
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def apply(self, grads):
+        grad_output = grads[0]
+        return [grad_output, grad_output]
+
+class MulBackward(Function):
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def apply(self, grads):
+        grad_output = grads[0]
+        return [grad_output * self.b, grad_output * self.a]
+```
+
+Now, let's say you have a computation graph that includes both addition and multiplication operations:
+
+```python
+a = Tensor(2.0, requires_grad=True)
+b = Tensor(3.0, requires_grad=True)
+c = Tensor(4.0, requires_grad=True)
+
+add_result = a + b  # grad_fn = AddBackward(a, b)
+mul_result = add_result * c  # grad_fn = MulBackward(add_result, c)
+```
+
+When you call mul_result.backward(), PyTorch initiates backpropagation and traverses the computation graph in reverse order. At each step, it calls the apply() method of the associated grad_fn. In this example, PyTorch will first call MulBackward::apply() and then AddBackward::apply().
+
+The apply interface enables PyTorch to work with various operations in a consistent way during the backpropagation process. The user can define the backward computation for new operations by simply extending the Function class and overriding the apply() method, without having to modify the core backpropagation logic.
+
+---
+
+Ryan Moore
+show me the backward code or pseudocode where its iterating backward applying apply and explain what are the inputs outputs and sideffects
+
+---
+
+Here is a high-level pseudocode for the backward process in PyTorch, showing the steps involved in calling apply() and the inputs, outputs, and side effects associated with it.
+
+```python
+def backward(tensor, grad_output=None):
+    # Stack to keep track of the tensors to be processed
+    processing_stack = [(tensor, grad_output)]
+
+    while processing_stack:
+        current_tensor, current_grad_output = processing_stack.pop()
+
+        # If the current tensor has no grad_fn, skip it and move to the next one
+        if current_tensor.grad_fn is None:
+            continue
+
+        # Call the apply() method of the grad_fn associated with the current tensor
+        input_grads = current_tensor.grad_fn.apply([current_grad_output])
+
+        # Iterate over the inputs of the current grad_fn, and for each input tensor,
+        # accumulate its gradient and add it to the processing stack
+        for input_tensor, input_grad in zip(current_tensor.grad_fn.inputs, input_grads):
+            if input_tensor.requires_grad:
+                input_tensor.grad += input_grad
+                processing_stack.append((input_tensor, input_grad))
+```
+
+Here's a breakdown of the inputs, outputs, and side effects at each step:
+
+Inputs: The function takes a tensor (usually the final output tensor, e.g., the loss) and an optional grad_output (the initial gradient, usually a tensor filled with ones of the same shape as tensor).
+
+Outputs: The function doesn't return any value, as the main goal is to compute and accumulate gradients in the input tensors' .grad fields.
+
+Side effects: The main side effect is that the gradients of the input tensors in the computation graph are updated in their .grad fields. This is done by calling the apply() method of the grad_fn associated with each tensor in the graph and accumulating the computed gradients in the input tensors' .grad fields.
+
+The backward process starts by initializing a stack with the input tensor and its associated gradient. The stack is used to traverse the computation graph in reverse order. During each iteration, the algorithm pops a tensor from the stack, calls the apply() method of its associated grad_fn, and processes the input gradients returned by the apply() method.
+
+For each input tensor of the current grad_fn, the algorithm accumulates its gradient and adds it to the processing stack. This way, the graph is traversed in reverse order, and the apply() method of each grad_fn is called exactly once. The loop continues until the stack is empty, which means that all the tensors in the graph have been processed.
+
+As a result, the gradients of the input tensors are computed and accumulated in their .grad fields, ready to be used in an optimizer for updating the model's parameters.
+
+---
+
+Ryan Moore
+for `processing_stack = [(tensor, grad_output)]`
+
+say if the graph is l = c.sum(), c = a + b, a + b are tensors where requires_grad = True, what does tensor and grad_output look like initially
+
+---
+
+In the case of the computation graph you provided, where l = c.sum() and c = a + b, the initial tensor and grad_output look like the following:
+
+tensor: This is the final output tensor, l in this case, which is the result of the c.sum() operation. l will have a grad_fn attribute that points to the backward function associated with the sum operation (e.g., SumBackward).
+
+grad_output: This is the initial gradient tensor. If not provided, it's usually a tensor filled with ones of the same shape as the final output tensor, l. Since l is a scalar in this example, grad_output would be a scalar tensor with the value 1.
+
+So, when you call l.backward() (equivalent to backward(tensor=l)), the processing_stack is initialized with [(l, grad_output)], where l is the final output tensor and grad_output is a scalar tensor with the value 1.
+
+---
+
+Ryan Moore
+```py
+def backward(tensor, grad_output=None):
+    # Stack to keep track of the tensors to be processed
+    processing_stack = [(tensor, grad_output)]
+
+    while processing_stack:
+        current_tensor, current_grad_output = processing_stack.pop()
+
+        # If the current tensor has no grad_fn, skip it and move to the next one
+        if current_tensor.grad_fn is None:
+            continue
+
+        # Call the apply() method of the grad_fn associated with the current tensor
+        input_grads = current_tensor.grad_fn.apply([current_grad_output])
+
+        # Iterate over the inputs of the current grad_fn, and for each input tensor,
+        # accumulate its gradient and add it to the processing stack
+        for input_tensor, input_grad in zip(current_tensor.grad_fn.inputs, input_grads):
+            if input_tensor.requires_grad:
+                input_tensor.grad += input_grad
+                processing_stack.append((input_tensor, input_grad))
+```
+
+can you show me the backward c++ version, where it's using the apply method of
+
+---
+
+`AddBackward` to propogate gradients backwards
+Here's a rough C++ pseudocode of the backward process that uses the apply method of AddBackward (or any other operation's backward class) to propagate gradients. Note that this is not the exact C++ code used in PyTorch, but a simplified version to illustrate the main concepts.
+
+```cpp
+void backward(Tensor& tensor, Tensor& grad_output) {
+    // Stack to keep track of the tensors to be processed
+    std::stack<std::pair<Tensor, Tensor>> processing_stack;
+    processing_stack.push({tensor, grad_output});
+
+    while (!processing_stack.empty()) {
+        // Get the current tensor and its gradient
+        Tensor current_tensor = processing_stack.top().first;
+        Tensor current_grad_output = processing_stack.top().second;
+        processing_stack.pop();
+
+        // If the current tensor has no grad_fn, skip it and move to the next one
+        if (!current_tensor.grad_fn()) {
+            continue;
+        }
+
+        // Call the apply() method of the grad_fn associated with the current tensor
+        std::vector<Tensor> input_grads = current_tensor.grad_fn()->apply({current_grad_output});
+
+        // Iterate over the inputs of the current grad_fn, and for each input tensor,
+        // accumulate its gradient and add it to the processing stack
+        auto& inputs = current_tensor.grad_fn()->inputs();
+        for (size_t i = 0; i < inputs.size(); ++i) {
+            Tensor& input_tensor = inputs[i];
+            Tensor& input_grad = input_grads[i];
+            if (input_tensor.requires_grad()) {
+                input_tensor.grad() += input_grad;
+                processing_stack.push({input_tensor, input_grad});
+            }
+        }
+    }
+}
+```
+
+The C++ version of the backward process follows the same logic as the Python version, with some syntax adjustments. It initializes the processing_stack with the input tensor and its associated gradient and iterates through the stack until it's empty.
+
+During each iteration, it calls the apply() method of the grad_fn associated with the current tensor and processes the input gradients returned by the apply() method. It accumulates the gradients in the input tensors' grad() fields and adds them to the processing stack, propagating the gradients backward through the computation graph.
+
+Keep in mind that this is just a simplified pseudocode to provide an understanding of how the backward process works in C++ and not the exact implementation used in PyTorch's C++ codebase.
+
 # decltype
 
 what does decltype do
