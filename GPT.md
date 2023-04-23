@@ -1,3 +1,50 @@
+# requires grad only defined for floats!
+
+https://discuss.pytorch.org/t/dont-understand-why-only-tensors-of-floating-point-dtype-can-require-gradients/158282
+
+```py
+(main) Ryans-MacBook-Air:torchy ryan$ py
+Python 3.11.1 (main, Apr 19 2023, 18:41:42) [Clang 14.0.3 (clang-1403.0.22.14.1)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import torch
+>>> A = torch.tensor((42), requires_grad=True)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+RuntimeError: Only Tensors of floating point and complex dtype can require gradients
+>>> A = torch.tensor((42.0), requires_grad=True)
+>>>
+```
+
+> The problem is not with how we compute the gradient but the definition of gradients itself. Mathematically, for gradients to be defined, you need a continuous function (at least locally)
+
+# requires_grad propogation
+
+can you explain to me do internal tensors in pytorch, say if L = C.sum, C = A+B and A + B are inputs. which of these requires_grad = True? and which of these have .grad
+
+---
+
+In PyTorch, when you perform operations on tensors, the resulting tensor will have requires_grad set to True if at least one of the input tensors has requires_grad=True. In this case, let's assume that A and B are input tensors.
+
+If at least one of A or B has requires_grad=True, the resulting tensor C (resulting from the operation A + B) will also have requires_grad=True. This means that C will be part of the computational graph and gradients will be computed for it during backpropagation. Similarly, if C has requires_grad=True, then the resulting tensor L (resulting from the operation C.sum()) will also have requires_grad=True.
+
+Regarding the .grad attribute, it holds the gradients of a tensor with respect to some scalar value (usually the loss) that has been backpropagated through the computational graph. Only tensors with requires_grad=True will have their .grad attribute populated with gradient values after calling .backward() on the scalar value.
+
+So, in summary:
+
+If at least one of A or B has requires_grad=True, then C and L will also have requires_grad=True.
+The .grad attribute will be populated for A, B, and C after calling .backward() on L. Note that L will not have a .grad attribute because it's a scalar value (the result of C.sum()), and gradients are computed with respect to this value.
+
+---
+
+Ryan Moore
+okay so it's a straight forward thing where you set it on the inputs and it propagates whenever you interact with the inputs to product an output
+
+---
+
+Yes, that's correct. In PyTorch, when you perform operations with input tensors, the requires_grad property propagates automatically to the output tensors if at least one of the input tensors has requires_grad=True. This allows PyTorch to build a dynamic computational graph and compute gradients during backpropagation.
+
+By setting requires_grad=True on input tensors, you inform PyTorch to track the gradients for those tensors and all tensors derived from them. When you call the .backward() method on the final scalar value (usually the loss), PyTorch will backpropagate the gradients through the computational graph and populate the .grad attribute for all tensors with requires_grad=True.
+
 # backwards of tensor addition and sum of result
 
 ```cpp
