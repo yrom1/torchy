@@ -467,4 +467,17 @@ class Tensor {
   }
 };
 
+template <typename T>
+Tensor<T> zeros(const std::vector<T> shape) {
+  Tensor<T> t({1, 42});
+  return t;
+}
+
+template <typename T>
+Tensor<T> ones(const std::vector<T> shape) {
+  Tensor<T> t({1, 42});
+  t = t + 1;
+  return t;
+}
+
 #endif  // TORCHY_H_
