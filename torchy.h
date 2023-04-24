@@ -105,6 +105,18 @@ class Tensor {
         offset_(offset),
         strides_(strides) {}
 
+  static Tensor ones(const std::vector<size_t> &dimensions) {
+    size_t size = computeSizeFromDimensions(dimensions);
+    std::vector<T> values(size, static_cast<T>(1));
+    return Tensor(dimensions, std::move(values));
+  }
+
+  static Tensor zeros(const std::vector<size_t> &dimensions) {
+    size_t size = computeSizeFromDimensions(dimensions);
+    std::vector<T> values(size, static_cast<T>(0));
+    return Tensor(dimensions, std::move(values));
+  }
+
   // Create a view on the tensor by slicing along a dimension
   Tensor slice(size_t dimension, size_t start, size_t end) const {
     if (dimension >= sizes_.size()) {
@@ -292,6 +304,14 @@ class Tensor {
   std::vector<size_t> strides_;
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
+
+  static size_t computeSizeFromDimensions(const std::vector<size_t> &dimensions) {
+    size_t size = 1;
+    for (const auto &dim : dimensions) {
+      size *= dim;
+    }
+    return size;
+  }
 
   constexpr bool is_allowed_grad_type() const {
     return std::is_same<T, float>::value || std::is_same<T, double>::value ||
