@@ -20,6 +20,66 @@ template <typename T>
 class AutogradMeta;
 template <typename T>
 class Tensor;
+template <typename T>
+class Node;
+template <typename T>
+class Function;
+template <typename T>
+class AddBackward;
+
+template <typename T>
+class Node {
+ public:
+  virtual std::vector<Tensor<T>> apply(
+      const std::vector<Tensor<T>> &grad_outputs) = 0;
+};
+
+template <typename T>
+class Function {
+ public:
+  explicit Function(std::shared_ptr<Node<T>> node) : node_(node) {}
+
+  std::vector<Tensor<T>> apply(const std::vector<Tensor<T>> &grad_outputs) {
+    return node_->apply(grad_outputs);
+  }
+
+ private:
+  std::shared_ptr<Node<T>> node_;
+};
+
+template <typename T>
+class AddBackward : public Node<T> {
+ public:
+  AddBackward(const Tensor<T> &input1, const Tensor<T> &input2)
+      : input1_(input1), input2_(input2) {}
+
+  std::vector<Tensor<T>> apply(
+      const std::vector<Tensor<T>> &grad_outputs) override {
+    // Gradient of the addition operation is the same for both inputs
+    return {grad_outputs[0], grad_outputs[0]};
+  }
+
+ private:
+  Tensor<T> input1_;
+  Tensor<T> input2_;
+};
+
+template <typename T>
+class MulBackward : public Node<T> {
+ public:
+  MulBackward(const Tensor<T> &input1, const Tensor<T> &input2)
+      : input1_(input1), input2_(input2) {}
+
+  std::vector<Tensor<T>> apply(
+      const std::vector<Tensor<T>> &grad_outputs) override {
+    // Gradient of the multiplication operation with respect to each input
+    return {grad_outputs[0] * input2_, grad_outputs[0] * input1_};
+  }
+
+ private:
+  Tensor<T> input1_;
+  Tensor<T> input2_;
+};
 
 template <typename T>
 class Storage {
@@ -59,8 +119,7 @@ class AutogradMeta {
 
  private:
   Tensor<T> grad_;
-  // std::shared_ptr<Function> function_; // Uncomment and replace 'Function'
-  // with the appropriate class name for the autograd function
+  Function<T> grad_fn_;
 };
 
 template <typename T>
@@ -292,6 +351,43 @@ class Tensor {
   std::vector<size_t> strides_;
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
+
+  void backward(const Tensor<T> &grad_output = Tensor<T>::ones(sizes_)) {
+    // Stack to keep track of the tensors to be processed
+    std::vector<std::pair<Tensor<T>, Tensor<T>>> processing_stack = {
+        std::make_pair(*this, grad_output)};
+
+    while (!processing_stack.empty()) {
+      auto current = processing_stack.back();
+      processing_stack.pop_back();
+
+      Tensor<T> &current_tensor = current.first;
+      const Tensor<T> &current_grad_output = current.second;
+
+      // If the current tensor has no grad_fn, skip it and move to the next one
+      if (!current_tensor.autograd_meta_ ||
+          !current_tensor.autograd_meta_->grad_fn_) {
+        continue;
+      }
+
+      // Call the apply() method of the grad_fn associated with the current
+      // tensor
+      std::vector<Tensor<T>> input_grads =
+          current_tensor.autograd_meta_->grad_fn_.apply({current_grad_output});
+
+      // Iterate over the inputs of the current grad_fn, and for each input
+      // tensor, accumulate its gradient and add it to the processing stack
+      for (size_t i = 0; i < input_grads.size(); ++i) {
+        Tensor<T> &input_tensor =
+            current_tensor.autograd_meta_->grad_fn_.node_->inputs[i];
+        if (input_tensor.requires_grad_) {
+          input_tensor.autograd_meta_->grad_ += input_grads[i];
+          processing_stack.push_back(
+              std::make_pair(input_tensor, input_grads[i]));
+        }
+      }
+    }
+  }
 
   constexpr bool is_allowed_grad_type() const {
     return std::is_same<T, float>::value || std::is_same<T, double>::value ||
