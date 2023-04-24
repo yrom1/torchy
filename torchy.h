@@ -14,19 +14,17 @@
 #include <utility>
 #include <vector>
 
-template <typename T>
 class Storage;
 template <typename T>
 class AutogradMeta;
 template <typename T>
 class Tensor;
 
-template <typename T>
 class Storage {
  public:
-  typedef T dtype;
+  typedef float dtype;
 
-  explicit Storage(size_t size, std::vector<T> values = {})
+  explicit Storage(size_t size, std::vector<float> values = {})
       : data_(std::move(values)) {
     if (data_.empty()) {
       data_.resize(size);
@@ -37,12 +35,12 @@ class Storage {
     }
   }
 
-  T &operator[](size_t idx) { return data_[idx]; }
-  const T &operator[](size_t idx) const { return data_[idx]; }
-  const std::vector<T> &data() const { return data_; }
+  float &operator[](size_t idx) { return data_[idx]; }
+  const float &operator[](size_t idx) const { return data_[idx]; }
+  const std::vector<float> &data() const { return data_; }
 
  private:
-  std::vector<T> data_;
+  std::vector<float> data_;
 };
 
 template <typename T>
@@ -84,7 +82,7 @@ class Tensor {
                   std::vector<T> values = {}, bool requires_grad = false)
       : sizes_(dimensions),
         storage_(
-            std::make_shared<Storage<T>>(computeSize(), std::move(values))),
+            std::make_shared<Storage>(computeSize(), std::move(values))),
         offset_(0),
         requires_grad_(requires_grad) {
     if (!is_allowed_grad_type() && requires_grad) {
@@ -98,7 +96,7 @@ class Tensor {
     computeStrides();
   }
 
-  Tensor(std::shared_ptr<Storage<T>> storage, const std::vector<size_t> &sizes,
+  Tensor(std::shared_ptr<Storage> storage, const std::vector<size_t> &sizes,
          const std::vector<size_t> &strides, size_t offset = 0)
       : sizes_(sizes),
         storage_(std::move(storage)),
@@ -182,7 +180,7 @@ class Tensor {
 
   const std::vector<size_t> &sizes() const { return sizes_; }
   const std::vector<size_t> &strides() const { return strides_; }
-  const std::shared_ptr<Storage<T>> &storage() const { return storage_; }
+  const std::shared_ptr<Storage> &storage() const { return storage_; }
 
   friend std::ostream &operator<<(std::ostream &os, const Tensor<T> &tensor) {
     printTensor(os, tensor, {}, 0);
@@ -267,7 +265,7 @@ class Tensor {
       }
     }
     ss << "}, {";
-    std::vector<T> values = storage()->data();
+    std::vector<float> values = storage()->data();
     for (size_t i = 0; i < values.size(); ++i) {
       ss << values[i];
       if (i != values.size() - 1) {
@@ -299,7 +297,7 @@ class Tensor {
 
  private:
   std::vector<size_t> sizes_;
-  std::shared_ptr<Storage<T>> storage_;
+  std::shared_ptr<Storage> storage_;
   size_t offset_;
   std::vector<size_t> strides_;
   bool requires_grad_;
