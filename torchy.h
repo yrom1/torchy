@@ -50,6 +50,9 @@ class AutogradMeta {
  public:
   AutogradMeta() : grad_() {}  //, function_() {}
 
+  AutogradMeta(std::initializer_list<size_t> dimensions)
+      : grad_(Tensor<T>::zeros(dimensions)) {}
+
   const Tensor<T> &grad() const { return grad_; }
   Tensor<T> &grad() {
     return grad_;
@@ -305,7 +308,8 @@ class Tensor {
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 
-  static size_t computeSizeFromDimensions(const std::vector<size_t> &dimensions) {
+  static size_t computeSizeFromDimensions(
+      const std::vector<size_t> &dimensions) {
     size_t size = 1;
     for (const auto &dim : dimensions) {
       size *= dim;
