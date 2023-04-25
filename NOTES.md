@@ -1,3 +1,81 @@
+# shared_ptr
+
+tldr use `.get()` for raw pointer
+
+```
+(communism) Ryans-MacBook-Air:torchy ryan$ sh cling.sh
+^[[A[cling]$ Tensor<float> t({1},{42},true);
+[cling]$ t
+(Tensor<float> &) @0x1079fc420
+[cling]$ t.autograd_meta_
+(std::shared_ptr<AutogradMeta<float> > &) std::shared_ptr -> 0x6000000b6618
+[cling]$ t.autograd_meta_->data()
+input_line_8:2:20: error: no member named 'data' in 'AutogradMeta<float>'
+ t.autograd_meta_->data()
+ ~~~~~~~~~~~~~~~~  ^
+[cling]$ t.autograd_meta_.grad_
+input_line_9:2:19: error: no member named 'grad_' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ t.autograd_meta_.grad_
+ ~~~~~~~~~~~~~~~~ ^
+[cling]$ t.autograd_meta_->grad_
+input_line_10:2:18: error: member reference type 'std::shared_ptr<AutogradMeta<float> >' is not a pointer; did you mean to use '.'?
+ t.autograd_meta_->grad_
+ ~~~~~~~~~~~~~~~~^~
+                 .
+input_line_10:2:20: error: no member named 'grad_' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ t.autograd_meta_->grad_
+ ~~~~~~~~~~~~~~~~  ^
+[cling]$ t.autograd_meta_.grad_.data()
+input_line_11:2:19: error: no member named 'grad_' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ t.autograd_meta_.grad_.data()
+ ~~~~~~~~~~~~~~~~ ^
+[cling]$ t
+(Tensor<float> &) @0x1079fc420
+[cling]$ t.autograd_meta_
+(std::shared_ptr<AutogradMeta<float> > &) std::shared_ptr -> 0x6000000b6618
+[cling]$ t.autograd_meta_.grad()
+input_line_14:2:19: error: no member named 'grad' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ t.autograd_meta_.grad()
+ ~~~~~~~~~~~~~~~~ ^
+[cling]$ t.autograd_meta_->grad()
+input_line_15:2:18: error: member reference type 'std::shared_ptr<AutogradMeta<float> >' is not a pointer; did you mean to use '.'?
+ t.autograd_meta_->grad()
+ ~~~~~~~~~~~~~~~~^~
+                 .
+input_line_15:2:20: error: no member named 'grad' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ t.autograd_meta_->grad()
+ ~~~~~~~~~~~~~~~~  ^
+[cling]$ t.autograd_meta_->grad()
+input_line_16:2:18: error: member reference type 'std::shared_ptr<AutogradMeta<float> >' is not a pointer; did you mean to use '.'?
+ t.autograd_meta_->grad()
+ ~~~~~~~~~~~~~~~~^~
+                 .
+input_line_16:2:20: error: no member named 'grad' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ t.autograd_meta_->grad()
+ ~~~~~~~~~~~~~~~~  ^
+[cling]$ auto grad_t = t.autograd_meta_->grad();
+input_line_17:2:32: error: member reference type 'std::shared_ptr<AutogradMeta<float> >' is not a pointer; did you mean to use '.'?
+ auto grad_t = t.autograd_meta_->grad();
+               ~~~~~~~~~~~~~~~~^~
+                               .
+input_line_17:2:34: error: no member named 'grad' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ auto grad_t = t.autograd_meta_->grad();
+               ~~~~~~~~~~~~~~~~  ^
+[cling]$ auto grad_t = t.autograd_meta_.grad();
+input_line_18:2:33: error: no member named 'grad' in 'std::__1::shared_ptr<AutogradMeta<float> >'
+ auto grad_t = t.autograd_meta_.grad();
+               ~~~~~~~~~~~~~~~~ ^
+[cling]$ auto grad_t = t.autograd_meta_.get()->grad();
+[cling]$ grad_t
+(Tensor<float> &) @0x1077e8540
+[cling]$ grad_t.storage_
+(std::shared_ptr<Storage<float> > &) std::shared_ptr -> 0x6000020a2da8
+[cling]$ grad_t.storage_.get()->data_
+(std::vector<float> &) { 0.00000f }
+[cling]$ grad_t.storage_.get()->data_[0]
+(float) 0.00000f
+```
+
 # autograd
 
 ```cpp
