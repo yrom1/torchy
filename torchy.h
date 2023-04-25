@@ -41,26 +41,24 @@ class Storage {
   const T &operator[](size_t idx) const { return data_[idx]; }
   const std::vector<T> &data() const { return data_; }
 
- private:
+//  private:
   std::vector<T> data_;
 };
 
 template <typename T>
 class AutogradMeta {
  public:
-  AutogradMeta() : grad_() {}  //, function_() {}
+  AutogradMeta() : grad_() {}
 
-  AutogradMeta(std::initializer_list<size_t> dimensions)
+  AutogradMeta(std::vector<size_t> dimensions)
       : grad_(Tensor<T>::zeros(dimensions)) {}
 
   const Tensor<T> &grad() const { return grad_; }
-  Tensor<T> &grad() {
-    return grad_;
-  }  // Add this overload to return a non-const reference
+  Tensor<T> &grad() { return grad_; }
 
   // ... (Other methods related to autograd)
 
- private:
+//  private:
   Tensor<T> grad_;
   // std::shared_ptr<Function> function_; // Uncomment and replace 'Function'
   // with the appropriate class name for the autograd function
@@ -83,8 +81,8 @@ class Tensor {
       : Tensor(std::vector<size_t>(dimensions), std::move(values),
                requires_grad) {}
 
-  explicit Tensor(const std::vector<size_t> &dimensions,
-                  std::vector<T> values = {}, bool requires_grad = false)
+  Tensor(const std::vector<size_t> &dimensions,
+        std::vector<T> values = {}, bool requires_grad = false)
       : sizes_(dimensions),
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
@@ -96,10 +94,11 @@ class Tensor {
           "double types");
     }
     if (requires_grad_) {
-      autograd_meta_ = std::make_shared<AutogradMeta<T>>();
+      autograd_meta_ = std::make_shared<AutogradMeta<T>>(dimensions);
     }
     computeStrides();
   }
+
 
   Tensor(std::shared_ptr<Storage<T>> storage, const std::vector<size_t> &sizes,
          const std::vector<size_t> &strides, size_t offset = 0)
@@ -300,7 +299,7 @@ class Tensor {
     autograd_meta_->grad() = grad;
   }
 
- private:
+//  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
