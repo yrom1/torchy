@@ -22,6 +22,48 @@ template <typename T>
 class Tensor;
 
 template <typename T>
+class Function {
+ public:
+  virtual void apply(
+      const Tensor<T> &grad_output,
+      std::vector<Tensor<T>> &grad_inputs  // NOLINT (runtime/references)
+  ) const = 0;                             // NOLINT (whitespace/parens)
+};
+
+template <typename T>
+class AddBackward0 : public Function<T> {
+ public:
+  AddBackward0() = default;
+  void apply(
+      const Tensor<T> &grad_output,
+      std::vector<Tensor<T>> &grad_inputs)  // NOLINT (runtime/references)
+      const override {
+    grad_inputs[0] = grad_output;
+    grad_inputs[1] = grad_output;
+  }
+};
+
+// wrong
+// Tensor::Tensor(at::Tensor data, std::shared_ptr<Function> grad_fn) : data(data), grad_fn(grad_fn) {}
+
+// void Tensor::backward(const at::Tensor& grad_output) {
+//     if (!grad_fn) {
+//         return;
+//     }
+//     std::vector<Tensor> grad_inputs(2);
+//     grad_fn->apply(grad_output, grad_inputs);
+//     for (auto& grad_input : grad_inputs) {
+//         grad_input.backward(grad_input.data);
+//     }
+// }
+
+// Tensor add(const Tensor& tensor1, const Tensor& tensor2) {
+//     at::Tensor result_data = tensor1.data + tensor2.data;
+//     auto result_grad_fn = std::make_shared<AddBackward0>(); // wrong
+//     return Tensor(result_data, result_grad_fn);
+// }
+
+template <typename T>
 class Storage {
  public:
   typedef T dtype;
@@ -60,6 +102,7 @@ class AutogradMeta {
 
   //  private:
   Tensor<T> grad_;
+  // std::shared_ptr<Function> grad_fn_;
   // std::shared_ptr<Function> function_; // Uncomment and replace 'Function'
   // with the appropriate class name for the autograd function
 };
