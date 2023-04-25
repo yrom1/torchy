@@ -44,7 +44,8 @@ class AddBackward0 : public Function<T> {
 };
 
 // wrong
-// Tensor::Tensor(at::Tensor data, std::shared_ptr<Function> grad_fn) : data(data), grad_fn(grad_fn) {}
+// Tensor::Tensor(at::Tensor data, std::shared_ptr<Function> grad_fn) :
+// data(data), grad_fn(grad_fn) {}
 
 // void Tensor::backward(const at::Tensor& grad_output) {
 //     if (!grad_fn) {
@@ -162,20 +163,23 @@ class Tensor {
   }
 
   // Create a view on the tensor by slicing along a dimension
-  Tensor slice(size_t dimension, size_t start, size_t end) const {
-    if (dimension >= sizes_.size()) {
-      throw std::runtime_error("Dimension out of bounds.");
-    }
-    if (start >= end || end > sizes_[dimension]) {
-      throw std::runtime_error("Invalid slice range.");
-    }
+  // TODO this is broken to my knowledge in terms of not changing
+  //      the strides, offsets...
+  //      it's also not essential at the moment
+  // Tensor slice(size_t dimension, size_t start, size_t end) const {
+  //   if (dimension >= sizes_.size()) {
+  //     throw std::runtime_error("Dimension out of bounds.");
+  //   }
+  //   if (start >= end || end > sizes_[dimension]) {
+  //     throw std::runtime_error("Invalid slice range.");
+  //   }
 
-    std::vector<size_t> new_sizes = sizes_;
-    new_sizes[dimension] = end - start;
-    size_t new_offset = offset_ + start * strides_[dimension];
+  //   std::vector<size_t> new_sizes = sizes_;
+  //   new_sizes[dimension] = end - start;
+  //   size_t new_offset = offset_ + start * strides_[dimension];
 
-    return Tensor(storage_, new_sizes, strides_, new_offset);
-  }
+  //   return Tensor(storage_, new_sizes, strides_, new_offset);
+  // }
 
   // Reshape the tensor while preserving its underlying storage
   Tensor reshape(const std::vector<size_t> &new_sizes) const {
