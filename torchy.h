@@ -41,7 +41,7 @@ class Storage {
   const T &operator[](size_t idx) const { return data_[idx]; }
   const std::vector<T> &data() const { return data_; }
 
-//  private:
+  //  private:
   std::vector<T> data_;
 };
 
@@ -50,7 +50,7 @@ class AutogradMeta {
  public:
   AutogradMeta() : grad_() {}
 
-  AutogradMeta(std::vector<size_t> dimensions)
+  explicit AutogradMeta(std::vector<size_t> dimensions)
       : grad_(Tensor<T>::zeros(dimensions)) {}
 
   const Tensor<T> &grad() const { return grad_; }
@@ -58,7 +58,7 @@ class AutogradMeta {
 
   // ... (Other methods related to autograd)
 
-//  private:
+  //  private:
   Tensor<T> grad_;
   // std::shared_ptr<Function> function_; // Uncomment and replace 'Function'
   // with the appropriate class name for the autograd function
@@ -81,8 +81,8 @@ class Tensor {
       : Tensor(std::vector<size_t>(dimensions), std::move(values),
                requires_grad) {}
 
-  Tensor(const std::vector<size_t> &dimensions,
-        std::vector<T> values = {}, bool requires_grad = false)
+  Tensor(const std::vector<size_t> &dimensions, std::vector<T> values = {},
+         bool requires_grad = false)
       : sizes_(dimensions),
         storage_(
             std::make_shared<Storage<T>>(computeSize(), std::move(values))),
@@ -98,7 +98,6 @@ class Tensor {
     }
     computeStrides();
   }
-
 
   Tensor(std::shared_ptr<Storage<T>> storage, const std::vector<size_t> &sizes,
          const std::vector<size_t> &strides, size_t offset = 0)
@@ -299,7 +298,7 @@ class Tensor {
     autograd_meta_->grad() = grad;
   }
 
-//  private:
+  //  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
   size_t offset_;
