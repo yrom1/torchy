@@ -246,16 +246,17 @@ class Tensor {
   // TODO(yrom1) if same shape just add the underlying vectors?
   Tensor<T> operator+(const Tensor<T> &other) const {
     auto t = applyElementwiseWithBroadcast(other, std::plus<T>());
-    t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
-    std::cout << t.autograd_meta_.get()->grad_fn_.get()->op  << std::endl;
+    // t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
     return t;
   }
 
   Tensor<T> operator+(const T &scalar) const {
     auto t = applyElementwise(scalar, std::plus<T>());
-    t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
-    std::cout << t.autograd_meta_.get()->grad_fn_.get()->op  << std::endl;
-    return t;
+    if (requires_grad()) {
+      auto new_grad_fn = std::make_shared<AddBackward0<T>>();
+      t.autograd_meta_.get()->grad_fn_ = new_grad_fn;
+    }
+    return t;// std::ref(t);
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
