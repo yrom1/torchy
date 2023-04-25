@@ -353,6 +353,28 @@ class Tensor {
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 
+
+    // TODO  we also have to change this so that when you perform an operation on a
+    //       tensor with autograd_meta_ set, and do an operation like operator+
+    //       we set it's t.autograd_meta_.get()->children_, which we can use a vector for now
+  void backward() {
+    /* called on the scalar output tensor calculated in the forward pass
+    0) we check this tensor is a scalar
+    1) we set the grad_ of this scalar output tensor to [1]
+    2) we look for this scalar output tensor's @ grad_fn_ (could be nullptr)
+    3) we look for the children of this output tensor @ children_
+    4) we call the apply method of the grad_fn_:
+        apply(const this tensor (output tensor), children_ tensors (input tensors)
+    5) then, propagate backwards
+      ```cpp
+      grad_fn->apply(grad_output, grad_inputs);
+      for (auto& grad_input : grad_inputs) {
+          grad_input.backward(grad_input.data);
+      }
+      ```
+    */
+  }
+
   static size_t computeSizeFromDimensions(
       const std::vector<size_t> &dimensions) {
     size_t size = 1;
