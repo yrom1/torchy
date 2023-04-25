@@ -24,10 +24,13 @@ class Tensor;
 template <typename T>
 class Function {
  public:
+  virtual ~Function() {}
   virtual void apply(
       const Tensor<T> &grad_output,
       std::vector<Tensor<T>> &grad_inputs  // NOLINT (runtime/references)
   ) const = 0;                             // NOLINT (whitespace/parens)
+
+  virtual char op() const { return '?'; };
 };
 
 template <typename T>
@@ -41,6 +44,7 @@ class AddBackward0 : public Function<T> {
     grad_inputs[0] = grad_output;
     grad_inputs[1] = grad_output;
   }
+  char op() const override { return '+'; };
 };
 
 // wrong
@@ -96,16 +100,18 @@ class AutogradMeta {
   explicit AutogradMeta(std::vector<size_t> dimensions)
       : grad_(Tensor<T>::zeros(dimensions)) {}
 
+
+  // TODO remove pointless getter setters...
   const Tensor<T> &grad() const { return grad_; }
   Tensor<T> &grad() { return grad_; }
 
-  // ... (Other methods related to autograd)
+  const Tensor<T> &gradfn() const { return grad_fn_; }
+  Tensor<T> &gradfn() { return grad_fn_; }
 
   //  private:
   Tensor<T> grad_;
-  // std::shared_ptr<Function> grad_fn_;
-  // std::shared_ptr<Function> function_; // Uncomment and replace 'Function'
-  // with the appropriate class name for the autograd function
+  // SPEED oh no! you have to use pointers for abstract class members in c++!
+  std::shared_ptr<Function<T>> grad_fn_;
 };
 
 template <typename T>
@@ -239,11 +245,17 @@ class Tensor {
 
   // TODO(yrom1) if same shape just add the underlying vectors?
   Tensor<T> operator+(const Tensor<T> &other) const {
-    return applyElementwiseWithBroadcast(other, std::plus<T>());
+    auto t = applyElementwiseWithBroadcast(other, std::plus<T>());
+    t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
+    std::cout << t.autograd_meta_.get()->grad_fn_.get()->op  << std::endl;
+    return t;
   }
 
   Tensor<T> operator+(const T &scalar) const {
-    return applyElementwise(scalar, std::plus<T>());
+    auto t = applyElementwise(scalar, std::plus<T>());
+    t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
+    std::cout << t.autograd_meta_.get()->grad_fn_.get()->op  << std::endl;
+    return t;
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {

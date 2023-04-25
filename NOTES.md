@@ -1,5 +1,26 @@
 # shared_ptr
 
+```
+[cling]$ Tensor<float> t({1}, {42}, true)
+(Tensor<float> &) @0x106c9c858
+[cling]$ t
+(Tensor<float> &) @0x106c9c858
+[cling]$ t.autograd_meta_
+(std::shared_ptr<AutogradMeta<float> > &) std::shared_ptr -> 0x6000022559f8
+[cling]$ t.autograd_meta_.get()
+(std::shared_ptr<AutogradMeta<float> >::element_type *) 0x6000022559f8
+[cling]$ t.autograd_meta_.get()->grad_
+(Tensor<float> &) @0x6000022559f8
+[cling]$ t.autograd_meta_.get()->grad_fn_
+(std::shared_ptr<Function<float> > &) std::shared_ptr -> nullptr
+[cling]$ t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<float>>()
+(std::shared_ptr &) std::shared_ptr -> 0x6000010b0eb8
+```
+
+unique pointer broken in cling? idk using shared
+
+---
+
 tldr use `.get()` for raw pointer
 
 ```
