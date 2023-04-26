@@ -397,6 +397,10 @@ class Tensor {
       }
       ```
     */
+    if (computeSize() != 1) {
+      throw std::runtime_error("backward can only be called on single element tensors");
+    }
+    autograd_meta_.get()->grad_ = Tensor<T>::ones(sizes_);
   }
 
   static size_t computeSizeFromDimensions(
