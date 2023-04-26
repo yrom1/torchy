@@ -112,6 +112,7 @@ class AutogradMeta {
   Tensor<T> grad_;
   // SPEED oh no! you have to use pointers for abstract class members in c++!
   std::shared_ptr<Function<T>> grad_fn_;
+  std::vector<std::shared_ptr<Tensor<T>>> children_;
 };
 
 template <typename T>
@@ -258,6 +259,8 @@ class Tensor {
   Tensor<T> operator+(const Tensor<T> &other) const {
     auto t = applyElementwiseWithBroadcast(other, std::plus<T>());
     // t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
+    t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(*this));
+    t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(other));
     return t;
   }
 
@@ -397,6 +400,9 @@ class Tensor {
       }
       ```
     */
+    if (!is_allowed_grad_type()) {
+      throw std::runtime_error("backward can only be called on floating point tensors");
+    }
     if (computeSize() != 1) {
       throw std::runtime_error("backward can only be called on single element tensors");
     }
