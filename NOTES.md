@@ -1,3 +1,35 @@
+```c
+[cling]$ Tensor<float> a({1}, {42.0}, true);  Tensor<float> b({1}, {42.0}, true);
+[cling]$ a
+(Tensor<float> &) @0x10761c478
+[cling]$ b
+(Tensor<float> &) @0x10761c4d8
+[cling]$ auto c = a + b
+(Tensor<float> &) @0x107644478
+[cling]$ c
+(Tensor<float> &) @0x107644478
+[cling]$ c.storage_.get()
+(std::shared_ptr<Storage<float> >::element_type *) 0x6000021028c8
+[cling]$ c.storage_.get().data_
+input_line_11:2:18: error: member reference type 'std::__1::shared_ptr<Storage<float> >::element_type *' (aka 'Storage<float> *') is
+      a pointer; did you mean to use '->'?
+ c.storage_.get().data_
+ ~~~~~~~~~~~~~~~~^
+                 ->
+[cling]$ c.storage_.get()->data_
+(std::vector<float> &) { 84.0000f }
+[cling]$ c.autograd_meta_.get()->storage_.get()->data_
+input_line_13:2:26: error: no member named 'storage_' in 'AutogradMeta<float>'
+ c.autograd_meta_.get()->storage_.get()->data_
+ ~~~~~~~~~~~~~~~~~~~~~~  ^
+[cling]$ c.autograd_meta_.get()->grad_.get()->storage_.get()->data_
+input_line_14:2:32: error: no member named 'get' in 'Tensor<float>'
+ c.autograd_meta_.get()->grad_.get()->storage_.get()->data_
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+[cling]$ c.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 0.00000f }
+```
+
 # shared_ptr
 
 ```
