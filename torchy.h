@@ -418,7 +418,7 @@ class Tensor {
       const std::function<T(const T &, const T &)> &func) const {
     std::vector<size_t> result_sizes = broadcastableShape(sizes_, other.sizes_);
 
-    Tensor<T> result(result_sizes);
+    Tensor<T> result(result_sizes, {}, requires_grad() || other.requires_grad());
     for (size_t i = 0; i < result.computeSize(); ++i) {
       std::vector<size_t> result_indices = result.unravelIndex(i);
       std::vector<size_t> this_indices =
@@ -500,7 +500,7 @@ class Tensor {
       result_values[i] = func((*this)(indices), other_value);
     }
 
-    return Tensor<T>(sizes_, result_values);
+    return Tensor<T>(sizes_, result_values, requires_grad() || other.requires_grad());
   }
 
   Tensor<T> applyElementwise(
