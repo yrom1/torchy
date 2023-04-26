@@ -156,6 +156,17 @@ class Tensor {
         offset_(offset),
         strides_(strides) {}
 
+  // Tensor(const Tensor& other)
+  //     : sizes_(other.sizes_),
+  //       storage_(other.storage_),
+  //       offset_(other.offset_),
+  //       strides_(other.strides_),
+  //       requires_grad_(other.requires_grad_) {
+  //   if (other.autograd_meta_) {
+  //     autograd_meta_ = std::make_shared<AutogradMeta<T>>(*other.autograd_meta_);
+  //   }
+  // }
+
   static Tensor ones(const std::vector<size_t> &dimensions) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(1));
@@ -252,10 +263,10 @@ class Tensor {
 
   Tensor<T> operator+(const T &scalar) const {
     auto t = applyElementwise(scalar, std::plus<T>());
-    if (requires_grad()) {
-      auto new_grad_fn = std::make_shared<AddBackward0<T>>();
-      t.autograd_meta_.get()->grad_fn_ = new_grad_fn;
-    }
+    // if (requires_grad()) {
+    //   auto new_grad_fn = std::make_shared<AddBackward0<T>>();
+    //   t.autograd_meta_.get()->grad_fn_ = new_grad_fn;
+    // }
     return t;// std::ref(t);
   }
 
@@ -506,7 +517,7 @@ class Tensor {
       result_values[i] = func((*this)(indices), scalar);
     }
 
-    return Tensor<T>(sizes_, result_values);
+    return Tensor<T>(sizes_, result_values, requires_grad());
   }
 
   std::vector<size_t> unravelIndex(size_t index) const {
