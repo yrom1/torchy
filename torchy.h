@@ -27,11 +27,7 @@ class Function {
   virtual ~Function() {}
   virtual void apply(
       const Tensor<T> &grad_output,
-      std::vector<Tensor<T>> &grad_inputs
-  ) const = 0;
-  virtual void apply(
-    const Tensor<T> &grad_output, // NOLINT (runtime/references)
-    std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;  // NOLINT (whitespace/parens)
+      std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;
   virtual char op() const { return '?'; };
 };
 
@@ -42,12 +38,13 @@ class AddBackward0 : public Function<T> {
   void apply(
       const Tensor<T> &grad_output,
       std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) // NOLINT (runtime/references)
-      const override {
-    grad_inputs[0] = std::make_shared<Tensor<T>>(grad_output);
-    grad_inputs[1] = std::make_shared<Tensor<T>>(grad_output);
+      override {
+    // grad_inputs[0] = std::make_shared<Tensor<T>>(grad_output);
+    // grad_inputs[1] = std::make_shared<Tensor<T>>(grad_output);
   }
   char op() const override { return '+'; };
 };
+
 
 // wrong
 // Tensor::Tensor(at::Tensor data, std::shared_ptr<Function> grad_fn) :
