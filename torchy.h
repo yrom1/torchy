@@ -27,9 +27,11 @@ class Function {
   virtual ~Function() {}
   virtual void apply(
       const Tensor<T> &grad_output,
-      std::vector<Tensor<T>> &grad_inputs  // NOLINT (runtime/references)
-  ) const = 0;                             // NOLINT (whitespace/parens)
-
+      std::vector<Tensor<T>> &grad_inputs
+  ) const = 0;
+  virtual void apply(
+    const Tensor<T> &grad_output, // NOLINT (runtime/references)
+    std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;  // NOLINT (whitespace/parens)
   virtual char op() const { return '?'; };
 };
 
@@ -39,10 +41,10 @@ class AddBackward0 : public Function<T> {
   AddBackward0() = default;
   void apply(
       const Tensor<T> &grad_output,
-      std::vector<Tensor<T>> &grad_inputs)  // NOLINT (runtime/references)
+      std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) // NOLINT (runtime/references)
       const override {
-    grad_inputs[0] = grad_output;
-    grad_inputs[1] = grad_output;
+    grad_inputs[0] = std::make_shared<Tensor<T>>(grad_output);
+    grad_inputs[1] = std::make_shared<Tensor<T>>(grad_output);
   }
   char op() const override { return '+'; };
 };
@@ -407,7 +409,18 @@ class Tensor {
       throw std::runtime_error("backward can only be called on single element tensors");
     }
     autograd_meta_.get()->grad_ = Tensor<T>::ones(sizes_);
+    std::vector<std::shared_ptr<Tensor<T>>> grad_inputs = autograd_meta_.get()->children_; // Update this line
+
+    // Pass the grad_ tensor as grad_output to the apply() method
+    autograd_meta_.get()->grad_fn_.get()->apply(autograd_meta_.get()->grad_, grad_inputs);
+
+    // Call the backward() method on each grad_input tensor
+    for (auto& grad_input : grad_inputs) {
+      grad_input->backward(); // Update this line
+    }
   }
+
+
 
   static size_t computeSizeFromDimensions(
       const std::vector<size_t> &dimensions) {
