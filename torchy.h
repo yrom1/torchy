@@ -25,9 +25,8 @@ template <typename T>
 class Function {
  public:
   virtual ~Function() {}
-  virtual void apply(
-      const Tensor<T> &grad_output,
-      std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;
+  virtual void apply(const Tensor<T> &grad_output,
+                     std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;
   virtual char op() const { return '?'; };
 };
 
@@ -35,47 +34,53 @@ template <typename T>
 class AddBackward0 : public Function<T> {
  public:
   AddBackward0() = default;
-  void apply(
-      const Tensor<T> &grad_output,
-      std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) // NOLINT (runtime/references)
+  void apply(const Tensor<T> &grad_output,
+             std::vector<std::shared_ptr<Tensor<T>>>
+                 &grad_inputs)  // NOLINT (runtime/references)
       override {
     std::cout << "Inside AddBackward0::apply before" << std::endl;
     std::cout << "input vec size: " << grad_inputs.size() << std::endl;
-    // std::cout << "grad output data " << grad_output.autograd_meta_.get()->grad_.storage_.get()->data_ << std::endl;
-    // for (auto& grad_input : grad_inputs) {
-    //   grad_input = grad_input + grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
+    // std::cout << "grad output data " <<
+    // grad_output.autograd_meta_.get()->grad_.storage_.get()->data_ <<
+    // std::endl; for (auto& grad_input : grad_inputs) {
+    //   grad_input = grad_input +
+    //   grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
     // }
-
 
     // for (auto &grad_input : grad_inputs) {
     //   std::cout << "iter " << std::endl;
-    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ = grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ + grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
+    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ =
+    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ +
+    //   grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
     // }
 
-    // size_t grad_input_size = grad_input->autograd_meta_.get()->grad_.storage_.get()->data_.size();
+    // size_t grad_input_size =
+    // grad_input->autograd_meta_.get()->grad_.storage_.get()->data_.size();
     std::cout << "-1" << std::endl;
     std::cout << grad_output << std::endl;
-    std::cout << "size: " << grad_output.storage_.get()->data_.size() << std::endl;
+    std::cout << "size: " << grad_output.storage_.get()->data_.size()
+              << std::endl;
 
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
     std::cout << grad_output_size << std::endl;
     // TODO check inputs outputs same length vector
-  for (auto &grad_input : grad_inputs) {
-    std::cout << "a0" << std::endl;
-    for (size_t i = 0; i < grad_output_size; ++i) {
-      std::cout << "a1" << std::endl;
-        grad_input->autograd_meta_.get()->grad_.storage_.get()->data_[i] += grad_output.storage_.get()->data_[i];
+    for (auto &grad_input : grad_inputs) {
+      std::cout << "a0" << std::endl;
+      for (size_t i = 0; i < grad_output_size; ++i) {
+        std::cout << "a1" << std::endl;
+        grad_input->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+            grad_output.storage_.get()->data_[i];
         std::cout << "a2" << std::endl;
-    }
+      }
     }
 
-    // grad_inputs[0] = grad_output.autograd_meta_.get()->grad_.storage_.get()->data_
+    // grad_inputs[0] =
+    // grad_output.autograd_meta_.get()->grad_.storage_.get()->data_
     // grad_inputs[1] = std::make_shared<Tensor<T>>(grad_output);
     std::cout << "Inside AddBackward0::apply after" << std::endl;
   }
   char op() const override { return '+'; };
 };
-
 
 // wrong
 // Tensor::Tensor(at::Tensor data, std::shared_ptr<Function> grad_fn) :
@@ -129,7 +134,6 @@ class AutogradMeta {
 
   explicit AutogradMeta(std::vector<size_t> dimensions)
       : grad_(Tensor<T>::zeros(dimensions)) {}
-
 
   // TODO remove pointless getter setters...
   const Tensor<T> &grad() const { return grad_; }
@@ -194,7 +198,8 @@ class Tensor {
   //       strides_(other.strides_),
   //       requires_grad_(other.requires_grad_) {
   //   if (other.autograd_meta_) {
-  //     autograd_meta_ = std::make_shared<AutogradMeta<T>>(*other.autograd_meta_);
+  //     autograd_meta_ =
+  //     std::make_shared<AutogradMeta<T>>(*other.autograd_meta_);
   //   }
   // }
 
@@ -288,11 +293,15 @@ class Tensor {
   // TODO(yrom1) if same shape just add the underlying vectors?
   Tensor<T> operator+(const Tensor<T> &other) const {
     auto t = applyElementwiseWithBroadcast(other, std::plus<T>());
-    std::cout << "operator+ grad_fn_ before: " << t.autograd_meta_.get()->grad_fn_ << std::endl;
+    std::cout << "operator+ grad_fn_ before: "
+              << t.autograd_meta_.get()->grad_fn_ << std::endl;
     t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
-    std::cout << "operator+ grad_fn_ after: " << t.autograd_meta_.get()->grad_fn_ << std::endl;
-    t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(*this));
-    t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(other));
+    std::cout << "operator+ grad_fn_ after: "
+              << t.autograd_meta_.get()->grad_fn_ << std::endl;
+    t.autograd_meta_.get()->children_.push_back(
+        std::make_shared<Tensor<T>>(*this));
+    t.autograd_meta_.get()->children_.push_back(
+        std::make_shared<Tensor<T>>(other));
     return t;
   }
 
@@ -302,7 +311,7 @@ class Tensor {
     //   auto new_grad_fn = std::make_shared<AddBackward0<T>>();
     //   t.autograd_meta_.get()->grad_fn_ = new_grad_fn;
     // }
-    return t;// std::ref(t);
+    return t;  // std::ref(t);
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
@@ -412,10 +421,11 @@ class Tensor {
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 
-
-    // TODO  we also have to change this so that when you perform an operation on a
-    //       tensor with autograd_meta_ set, and do an operation like operator+
-    //       we set it's t.autograd_meta_.get()->children_, which we can use a vector for now
+  // TODO  we also have to change this so that when you perform an operation on
+  // a
+  //       tensor with autograd_meta_ set, and do an operation like operator+
+  //       we set it's t.autograd_meta_.get()->children_, which we can use a
+  //       vector for now
   void backward() {
     /* called on the scalar output tensor calculated in the forward pass
     0) we check this tensor is a scalar
@@ -423,8 +433,8 @@ class Tensor {
     2) we look for this scalar output tensor's @ grad_fn_ (could be nullptr)
     3) we look for the children of this output tensor @ children_
     4) we call the apply method of the grad_fn_:
-        apply(const this tensor (output tensor), children_ tensors (input tensors)
-    5) then, propagate backwards
+        apply(const this tensor (output tensor), children_ tensors (input
+    tensors) 5) then, propagate backwards
       ```cpp
       grad_fn->apply(grad_output, grad_inputs);
       for (auto& grad_input : grad_inputs) {
@@ -432,49 +442,51 @@ class Tensor {
       }
       ```
     */
-   std::cout << "0" << std::endl;
+    std::cout << "0" << std::endl;
     if (!is_allowed_grad_type()) {
-      throw std::runtime_error("backward can only be called on floating point tensors");
+      throw std::runtime_error(
+          "backward can only be called on floating point tensors");
     }
-   std::cout << "1" << std::endl;
+    std::cout << "1" << std::endl;
     if (computeSize() != 1) {
-      throw std::runtime_error("backward can only be called on single element tensors");
+      throw std::runtime_error(
+          "backward can only be called on single element tensors");
     }
-   std::cout << "2" << std::endl;
+    std::cout << "2" << std::endl;
     autograd_meta_.get()->grad_ = Tensor<T>::ones(sizes_);
-       std::cout << "3" << std::endl;
+    std::cout << "3" << std::endl;
 
-    std::vector<std::shared_ptr<Tensor<T>>> grad_inputs = autograd_meta_.get()->children_; // Update this line
-   std::cout << "4" << std::endl;
-   std::cout << autograd_meta_.get()->children_.size() << std::endl;
-   for (auto &x : autograd_meta_.get()->children_ ) {
-   std::cout << "children: " << x << std::endl;
-   }
+    std::vector<std::shared_ptr<Tensor<T>>> grad_inputs =
+        autograd_meta_.get()->children_;  // Update this line
+    std::cout << "4" << std::endl;
+    std::cout << autograd_meta_.get()->children_.size() << std::endl;
+    for (auto &x : autograd_meta_.get()->children_) {
+      std::cout << "children: " << x << std::endl;
+    }
 
     // Pass the grad_ tensor as grad_output to the apply() method
 
     std::cout << "Before apply()" << std::endl;
 
     std::cout << "autograd_meta_: " << autograd_meta_.get() << std::endl;
-    std::cout << "grad_fn_: " << autograd_meta_.get()->grad_fn_.get() << std::endl;
+    std::cout << "grad_fn_: " << autograd_meta_.get()->grad_fn_.get()
+              << std::endl;
 
-    autograd_meta_.get()->grad_fn_.get()->apply(autograd_meta_.get()->grad_, grad_inputs);
+    autograd_meta_.get()->grad_fn_.get()->apply(autograd_meta_.get()->grad_,
+                                                grad_inputs);
     std::cout << "After apply()" << std::endl;
 
-
-   std::cout << "5" << std::endl;
+    std::cout << "5" << std::endl;
 
     // Call the backward() method on each grad_input tensor
     // TODO need to think is this correct for more complex scenarios
-    for (auto& grad_input : grad_inputs) {
-         std::cout << "6" << std::endl;
+    for (auto &grad_input : grad_inputs) {
+      std::cout << "6" << std::endl;
       if (grad_input->autograd_meta_.get()->children_.size() != 0) {
-      grad_input->backward(); // Update this line
+        grad_input->backward();  // Update this line
       }
     }
   }
-
-
 
   static size_t computeSizeFromDimensions(
       const std::vector<size_t> &dimensions) {
@@ -495,7 +507,8 @@ class Tensor {
       const std::function<T(const T &, const T &)> &func) const {
     std::vector<size_t> result_sizes = broadcastableShape(sizes_, other.sizes_);
 
-    Tensor<T> result(result_sizes, {}, requires_grad() || other.requires_grad());
+    Tensor<T> result(result_sizes, {},
+                     requires_grad() || other.requires_grad());
     for (size_t i = 0; i < result.computeSize(); ++i) {
       std::vector<size_t> result_indices = result.unravelIndex(i);
       std::vector<size_t> this_indices =
@@ -577,7 +590,8 @@ class Tensor {
       result_values[i] = func((*this)(indices), other_value);
     }
 
-    return Tensor<T>(sizes_, result_values, requires_grad() || other.requires_grad());
+    return Tensor<T>(sizes_, result_values,
+                     requires_grad() || other.requires_grad());
   }
 
   Tensor<T> applyElementwise(
