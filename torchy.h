@@ -11,6 +11,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -672,5 +673,29 @@ class Tensor {
     }
   }
 };
+
+template <typename T>
+void print_tensor_graph_helper(Tensor<T> &tensor, int level,
+                               std::unordered_set<const Tensor<T> *> &visited) {
+  if (visited.find(&tensor) != visited.end()) return;
+  visited.insert(&tensor);
+
+  for (int i = 0; i < level; ++i) {
+    std::cout << "  ";
+  }
+  std::cout << "Tensor@" << &tensor << std::endl;
+
+  if (!tensor.autograd_meta_) return;
+
+  for (const auto &child : tensor.autograd_meta_->children_) {
+    print_tensor_graph_helper(*child, level + 1, visited);
+  }
+}
+
+template <typename T>
+void print_tensor_graph(Tensor<T> &tensor) {
+  std::unordered_set<const Tensor<T> *> visited;
+  print_tensor_graph_helper(tensor, 0, visited);
+}
 
 #endif  // TORCHY_H_

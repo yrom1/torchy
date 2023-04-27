@@ -1,3 +1,30 @@
+# graph
+```cpp
+(main) Ryans-MacBook-Air:torchy ryan$ sh cling.sh
+[cling]$ Tensor<float> a({1}, {42.0}, true);  Tensor<float> b({1}, {42.0}, true); Tensor<float> c({1}, {42.0}, true);  Tensor<float> d({1}, {42.0}, true);
+[cling]$ auto x = a + b
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x600002acc998
+(Tensor<float> &) @0x10700c5c8
+[cling]$ auto y = c + d
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x600002ac7a38
+(Tensor<float> &) @0x1070284d8
+[cling]$ auto l = x + y
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x600002ac7938
+(Tensor<float> &) @0x1070444d8
+[cling]$ print_tensor_graph(l)
+Tensor@0x1070444d8
+  Tensor@0x600000463818
+    Tensor@0x6000004a1698
+    Tensor@0x6000004a1818
+  Tensor@0x600000461d98
+    Tensor@0x600000456118
+    Tensor@0x600000455d98
+[cling]$ .q
+```
+
 # auto l = a + b + c + d
 `:)`
 ```
