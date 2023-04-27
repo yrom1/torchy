@@ -1,3 +1,123 @@
+# auto l = a + b + c + d
+`:)`
+```
+(main) Ryans-MacBook-Air:torchy ryan$ sh cling.sh
+[cling]$ Tensor<float> a({1}, {42.0}, true);  Tensor<float> b({1}, {42.0}, true); Tensor<float> c({1}, {42.0}, true);  Tensor<float> d({1}, {42.0}, true);
+[cling]$ auto l = a + b + c + d
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x6000036480f8
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x600003648218
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x6000036481b8
+(Tensor<float> &) @0x1050b05e0
+[cling]$ l.autograd_meta_.get()->storage_.get()->data_
+input_line_7:2:26: error: no member named 'storage_' in 'AutogradMeta<float>'
+ l.autograd_meta_.get()->storage_.get()->data_
+ ~~~~~~~~~~~~~~~~~~~~~~  ^
+[cling]$ l.autograd_meta_.get()->grad_.get()->storage_.get()->data_
+input_line_8:2:32: error: no member named 'get' in 'Tensor<float>'
+ l.autograd_meta_.get()->grad_.get()->storage_.get()->data_
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+[cling]$ l.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 0.00000f }
+[cling]$ l.backward()
+0
+1
+2
+3
+4
+2
+children: 0x600001801218
+children: 0x600001801018
+Before apply()
+autograd_meta_: 0x6000007712d8
+grad_fn_: 0x6000036481b8
+Inside AddBackward0::apply before
+input vec size: 2
+-1
+[1]
+size: 1
+1
+a0
+a1
+a2
+a0
+a1
+a2
+Inside AddBackward0::apply after
+After apply()
+5
+6
+0
+1
+2
+3
+4
+2
+children: 0x600001801618
+children: 0x600001801e18
+Before apply()
+autograd_meta_: 0x600000770ab8
+grad_fn_: 0x600003648218
+Inside AddBackward0::apply before
+input vec size: 2
+-1
+[1]
+size: 1
+1
+a0
+a1
+a2
+a0
+a1
+a2
+Inside AddBackward0::apply after
+After apply()
+5
+6
+0
+1
+2
+3
+4
+2
+children: 0x600001801718
+children: 0x600001801798
+Before apply()
+autograd_meta_: 0x600000770dd8
+grad_fn_: 0x6000036480f8
+Inside AddBackward0::apply before
+input vec size: 2
+-1
+[1]
+size: 1
+1
+a0
+a1
+a2
+a0
+a1
+a2
+Inside AddBackward0::apply after
+After apply()
+5
+6
+6
+6
+6
+[cling]$ l.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 1.00000f }
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 1.00000f }
+[cling]$ b.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 1.00000f }
+[cling]$ c.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 1.00000f }
+[cling]$ d.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 1.00000f }
+```
+
 ```c
 [cling]$ Tensor<float> a({1}, {42.0}, true);  Tensor<float> b({1}, {42.0}, true);
 [cling]$ a
