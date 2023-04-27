@@ -22,16 +22,16 @@ template <typename T>
 class Tensor;
 
 template <typename T>
-class Function {
+class AutogradFunction {
  public:
-  virtual ~Function() {}
+  virtual ~AutogradFunction() {}
   virtual void apply(const Tensor<T> &grad_output,
                      std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;
   virtual char op() const { return '?'; };
 };
 
 template <typename T>
-class AddBackward0 : public Function<T> {
+class AddBackward0 : public AutogradFunction<T> {
  public:
   AddBackward0() = default;
   void apply(const Tensor<T> &grad_output,
@@ -83,7 +83,7 @@ class AddBackward0 : public Function<T> {
 };
 
 // wrong
-// Tensor::Tensor(at::Tensor data, std::shared_ptr<Function> grad_fn) :
+// Tensor::Tensor(at::Tensor data, std::shared_ptr<AutogradFunction> grad_fn) :
 // data(data), grad_fn(grad_fn) {}
 
 // void Tensor::backward(const at::Tensor& grad_output) {
@@ -145,7 +145,7 @@ class AutogradMeta {
   //  private:
   Tensor<T> grad_;
   // SPEED oh no! you have to use pointers for abstract class members in c++!
-  std::shared_ptr<Function<T>> grad_fn_;
+  std::shared_ptr<AutogradFunction<T>> grad_fn_;
   std::vector<std::shared_ptr<Tensor<T>>> children_;
 };
 
