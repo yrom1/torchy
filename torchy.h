@@ -27,7 +27,8 @@ class AutogradFunction {
  public:
   virtual ~AutogradFunction() {}
   virtual void apply(const Tensor<T> &grad_output,
-                     std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;
+                     std::vector<std::shared_ptr<Tensor<T>>>
+                         &grad_inputs) = 0;  // NOLINT (runtime/reference)
   virtual char op() const { return '?'; }
 };
 
@@ -675,8 +676,11 @@ class Tensor {
   }
 
   void _print_tensor_graph_helper(
-      Tensor<T> &tensor, int level,
-      std::unordered_set<const Tensor<T> *> &visited) {
+      Tensor<T> &tensor,  // NOLINT (runtime/reference)
+      int level,
+      std::unordered_set<const Tensor<T> *>
+          &visited)  // NOLINT (runtime/reference)
+  {                  // NOLINT (whitespace/braces)
     if (visited.find(&tensor) != visited.end()) return;
     visited.insert(&tensor);
 
