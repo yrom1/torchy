@@ -301,6 +301,10 @@ class Tensor {
     return os;
   }
 
+  // TODO(yrom1) binaryOperator needs to be passed a generic AutogradFunction
+  //             instead of AddBackward0
+  //             we also need to implement SubBackward MulBackward DivBackward...
+
   // Overloaded binaryOperator for tensors
   Tensor<T> binaryOperator(const Tensor<T> &other,
                            const std::function<T(T, T)> &operation) const {
