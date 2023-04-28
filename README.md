@@ -10,67 +10,41 @@ A small tensor-valued autograd engine, inspired by PyTorch and micrograd.
 #include "torchy.h"
 
 int main() {
-  using namespace std;
   Tensor<int> t({1}, {42}); // Tensor of 1 element holding 42
-  cout << t; // [42]
+  std::cout << t << std::endl; // [42]
 }
 ```
 
-The next examples use a C++ interpreter called [Cling](https://github.com/root-project/cling) ([`brew install cling`](https://formulae.brew.sh/formula/cling)).
+The next example uses a C++ interpreter called [Cling](https://github.com/root-project/cling) ([`brew install cling`](https://formulae.brew.sh/formula/cling)):
 
 ```c++
 [cling]$ #include "torchy.h"
 [cling]$ Tensor<int> t({2,2}, {0,1,2,3});
-[cling]$ using namespace std;
-[clnig]$ cout << t << endl;
+[cling]$ std::cout << t << std::endl;
 [[0, 1],
  [2, 3]]
+```
+
+## Autograd
+
+```c++
+[cling]$ Tensor<float> a({1}, {42.0}, true);
+[cling]$ float b = 2.0;
+[cling]$ auto c = a + b;
+[cling]$ c.backward()
+[cling]$ c.graph()
+Tensor@0x10594c770 (+)
+  Tensor@0x60000160d198
+  Tensor@0x60000160d318
+[cling]$ c.storage_.get()->data_
+(std::vector<float> &) { 44.0000f }
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 1.00000f }
 ```
 
 ## Design
 
 The plan is to be similar to PyTorch's internals, particularily the [Variable/Tensor Merge Proposal](https://github.com/pytorch/pytorch/issues/13638) design.
-
-```
-Storage<T> has-a [
-  vector<T> data_;
-]
-
-AutogradMeta<T> has-a [
-  Tensor<T> grad_;
-]
-
-Tensor<T> has-a [
-  vector<size_t> sizes_;
-  shared_ptr<Storage<T>> storage_;
-  size_t offset_;
-  vector<size_t> strides_;
-  bool requires_grad_;
-  std::shared_ptr<AutogradMeta<T>> autograd_meta_;
-]
-```
-## Mathematical Operations
-
-```c++
-[cling]$ cout << t << endl;
-[[0, 1],
- [2, 3]]
-[cling]$ cout << t + t << endl;
-[[0, 2],
- [4, 6]]
-[cling]$ cout << t - t << endl;
-[[0, 0],
- [0, 0]]
-[cling]$ cout << t / t << endl;
-[[0, 1],
- [1, 1]]
-[cling]$ cout << t * t << endl; // Hadamard product
-[[0, 1],
- [4, 9]]
-[cling]$ cout << t.matmul(t) << endl;
-[[2, 3],
- [6, 11]]
-```
 
 ## Goals
 
