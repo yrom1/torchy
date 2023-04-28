@@ -345,11 +345,11 @@ class Tensor {
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
-    return applyElementwiseWithBroadcast(other, std::minus<T>());
+    return binaryOperator(other, std::minus<T>());
   }
 
   Tensor<T> operator-(const T &scalar) const {
-    return applyElementwise(scalar, std::minus<T>());
+    return binaryOperator(scalar, std::minus<T>());
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
