@@ -298,9 +298,11 @@ class Tensor {
     return os;
   }
 
-  // TODO(yrom1) if same shape just add the underlying vectors?
-  Tensor<T> operator+(const Tensor<T> &other) const {
-    auto t = applyElementwiseWithBroadcast(other, std::plus<T>());
+  // WARNING addition is associative, subtraction is not
+  //         you must carefully not flip the order in binaryOperator
+
+  Tensor<T> binaryOperator(const Tensor<T> &other, std::function<T(const T&, const T&)>& func) const {
+    auto t = applyElementwiseWithBroadcast(other, func);
     if (t.requires_grad_) {
       std::cout << "operator+ grad_fn_ before: "
                 << t.autograd_meta_.get()->grad_fn_ << std::endl;
@@ -315,15 +317,24 @@ class Tensor {
     return t;
   }
 
-  Tensor<T> operator+(const T &scalar) const {
+  Tensor<T> binaryOperator(const T &scalar, std::function<T(const T&, const T&)>& func) const {
     // auto t = applyElementwise(scalar, std::plus<T>());
     std::cout << "scalar+ begin" << std::endl;
     auto expandedTensor = Tensor<T>::expand(scalar, (*this).sizes_, true);
-    auto t = expandedTensor + (*this);
+    auto t = func((*this), expandedTensor);
     // std::cout << t.autograd_meta_.get()->children_;
     // t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(expandedTensor));
     std::cout << "scalar+ after" << std::endl;
     return t;  // std::ref(t);
+  }
+
+  // TODO(yrom1) if same shape just add the underlying vectors?
+  Tensor<T> operator+(const Tensor<T> &other) const {
+    return binaryOperator(other, std::plus<Tensor<T>>());
+  }
+
+  Tensor<T> operator+(const T &scalar) const {
+    return binaryOperator(scalar, std::plus<Tensor<T>>());
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
