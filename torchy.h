@@ -214,16 +214,12 @@ class Tensor {
 
   static Tensor ones(const std::vector<size_t> &dimensions,
                      const bool requires_grad = false) {
-    size_t size = computeSizeFromDimensions(dimensions);
-    std::vector<T> values(size, static_cast<T>(1));
-    return Tensor(dimensions, std::move(values), requires_grad);
+    return Tensor::expand(static_cast<T>(1), dimensions, requires_grad);
   }
 
   static Tensor zeros(const std::vector<size_t> &dimensions,
                       const bool requires_grad = false) {
-    size_t size = computeSizeFromDimensions(dimensions);
-    std::vector<T> values(size, static_cast<T>(0));
-    return Tensor(dimensions, std::move(values), requires_grad);
+    return Tensor::expand(static_cast<T>(0), dimensions, requires_grad);
   }
 
   // Create a view on the tensor by slicing along a dimension
@@ -303,7 +299,8 @@ class Tensor {
 
   // TODO(yrom1) binaryOperator needs to be passed a generic AutogradFunction
   //             instead of AddBackward0
-  //             we also need to implement SubBackward MulBackward DivBackward...
+  //             we also need to implement SubBackward MulBackward
+  //             DivBackward...
 
   // Overloaded binaryOperator for tensors
   Tensor<T> binaryOperator(const Tensor<T> &other,
