@@ -19,7 +19,7 @@ int main() {
 
 The next example uses a C++ interpreter called [Cling](https://github.com/root-project/cling):
 
-```c
+```c++
 [cling]$ #include "torchy.h"
 [cling]$ Tensor<std::string> t({2,2}, {"one", "two", "three", "four"});
 [cling]$ std::cout << t << std::endl; // Row-major order
