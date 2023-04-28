@@ -1,3 +1,50 @@
+# graph operations
+
+```
+[cling]$ Tensor<float> a({1}, {42.0}, true);
+[cling]$ Tensor<float> b({1}, {42.0}, true);
+[cling]$ auto c = a + b;
+operator+ grad_fn_ before: 0x0
+operator+ grad_fn_ after: 0x600002f502f8
+[cling]$ c
+(Tensor<float> &) @0x1072f04d8
+[cling]$ c.backward()
+0
+1
+2
+3
+4
+2
+children: 0x6000001a6398
+children: 0x6000001a7d98
+Before apply()
+autograd_meta_: 0x600001e40d38
+grad_fn_: 0x600002f502f8
+Inside AddBackward0::apply before
+input vec size: 2
+-1
+[1]
+size: 1
+1
+a0
+a1
+a2
+a0
+a1
+a2
+Inside AddBackward0::apply after
+After apply()
+5
+6
+6
+[cling]$ c
+(Tensor<float> &) @0x1072f04d8
+[cling]$ print_tensor_graph(c)
+Tensor@0x1072f04d8 (+)
+  Tensor@0x6000001a6398
+  Tensor@0x6000001a7d98
+```
+
 # graph
 ```cpp
 (main) Ryans-MacBook-Air:torchy ryan$ sh cling.sh

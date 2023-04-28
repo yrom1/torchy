@@ -683,7 +683,15 @@ void print_tensor_graph_helper(Tensor<T> &tensor, int level,
   for (int i = 0; i < level; ++i) {
     std::cout << "  ";
   }
-  std::cout << "Tensor@" << &tensor << std::endl;
+  std::cout << "Tensor@" << &tensor;
+  if (tensor.autograd_meta_.get()->grad_fn_.get() != nullptr) {
+   std::cout << " (" << tensor.autograd_meta_.get()->grad_fn_.get()->op() << ")" << std::endl;
+  }
+  else {
+    // std::string leaf = "🍁";
+    // std::cout << leaf << std::endl;
+    std::cout << std::endl;
+  }
 
   if (!tensor.autograd_meta_) return;
 
