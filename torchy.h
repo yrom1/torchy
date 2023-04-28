@@ -28,7 +28,7 @@ class AutogradFunction {
   virtual ~AutogradFunction() {}
   virtual void apply(const Tensor<T> &grad_output,
                      std::vector<std::shared_ptr<Tensor<T>>> &grad_inputs) = 0;
-  virtual char op() const { return '?'; };
+  virtual char op() const { return '?'; }
 };
 
 template <typename T>
@@ -64,7 +64,7 @@ class AddBackward0 : public AutogradFunction<T> {
 
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
     std::cout << grad_output_size << std::endl;
-    // TODO check inputs outputs same length vector
+    // TODO(yrom1) check inputs outputs same length vector
     for (auto &grad_input : grad_inputs) {
       std::cout << "a0" << std::endl;
       for (size_t i = 0; i < grad_output_size; ++i) {
@@ -136,7 +136,7 @@ class AutogradMeta {
   explicit AutogradMeta(std::vector<size_t> dimensions)
       : grad_(Tensor<T>::zeros(dimensions)) {}
 
-  // TODO remove pointless getter setters...
+  // TODO(yrom1) remove pointless getter setters...
   const Tensor<T> &grad() const { return grad_; }
   Tensor<T> &grad() { return grad_; }
 
@@ -217,7 +217,7 @@ class Tensor {
   }
 
   // Create a view on the tensor by slicing along a dimension
-  // TODO this is broken to my knowledge in terms of not changing
+  // TODO(yrom1) this is broken to my knowledge in terms of not changing
   //      the strides, offsets...
   //      it's also not essential at the moment
   // Tensor slice(size_t dimension, size_t start, size_t end) const {
@@ -422,7 +422,8 @@ class Tensor {
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 
-  // TODO  we also have to change this so that when you perform an operation on
+  // TODO(yrom1)  we also have to change this so that when you perform an
+  // operation on
   // a
   //       tensor with autograd_meta_ set, and do an operation like operator+
   //       we set it's t.autograd_meta_.get()->children_, which we can use a
@@ -480,7 +481,7 @@ class Tensor {
     std::cout << "5" << std::endl;
 
     // Call the backward() method on each grad_input tensor
-    // TODO need to think is this correct for more complex scenarios
+    // TODO(yrom1) need to think is this correct for more complex scenarios
     for (auto &grad_input : grad_inputs) {
       std::cout << "6" << std::endl;
       if (grad_input->autograd_meta_.get()->children_.size() != 0) {
@@ -673,8 +674,9 @@ class Tensor {
     }
   }
 
-  void _print_tensor_graph_helper(Tensor<T> &tensor, int level,
-                                std::unordered_set<const Tensor<T> *> &visited) {
+  void _print_tensor_graph_helper(
+      Tensor<T> &tensor, int level,
+      std::unordered_set<const Tensor<T> *> &visited) {
     if (visited.find(&tensor) != visited.end()) return;
     visited.insert(&tensor);
 
@@ -683,9 +685,9 @@ class Tensor {
     }
     std::cout << "Tensor@" << &tensor;
     if (tensor.autograd_meta_.get()->grad_fn_.get() != nullptr) {
-    std::cout << " (" << tensor.autograd_meta_.get()->grad_fn_.get()->op() << ")" << std::endl;
-    }
-    else {
+      std::cout << " (" << tensor.autograd_meta_.get()->grad_fn_.get()->op()
+                << ")" << std::endl;
+    } else {
       // std::string leaf = "🍁";
       // std::cout << leaf << std::endl;
       std::cout << std::endl;
@@ -702,10 +704,6 @@ class Tensor {
     std::unordered_set<const Tensor<T> *> visited;
     _print_tensor_graph_helper(*this, 0, visited);
   }
-
 };
-
-
-
 
 #endif  // TORCHY_H_
