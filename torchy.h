@@ -321,7 +321,7 @@ class Tensor {
     auto expandedTensor = Tensor<T>::expand(scalar, (*this).sizes_, true);
     auto t = expandedTensor + (*this);
     // std::cout << t.autograd_meta_.get()->children_;
-    t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(expandedTensor));
+    // t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(expandedTensor));
     std::cout << "scalar+ after" << std::endl;
     return t;  // std::ref(t);
   }
