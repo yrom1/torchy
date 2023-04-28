@@ -205,22 +205,22 @@ class Tensor {
   //   }
   // }
 
-  static Tensor expand(const T &x, const std::vector<size_t> &dimensions) {
+  static Tensor expand(const T &x, const std::vector<size_t> &dimensions, const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(x));
-    return Tensor(dimensions, std::move(values));
+    return Tensor(dimensions, std::move(values), requires_grad);
   }
 
-  static Tensor ones(const std::vector<size_t> &dimensions) {
+  static Tensor ones(const std::vector<size_t> &dimensions, const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(1));
-    return Tensor(dimensions, std::move(values));
+    return Tensor(dimensions, std::move(values), requires_grad);
   }
 
-  static Tensor zeros(const std::vector<size_t> &dimensions) {
+  static Tensor zeros(const std::vector<size_t> &dimensions, const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(0));
-    return Tensor(dimensions, std::move(values));
+    return Tensor(dimensions, std::move(values), requires_grad);
   }
 
   // Create a view on the tensor by slicing along a dimension
@@ -316,11 +316,13 @@ class Tensor {
   }
 
   Tensor<T> operator+(const T &scalar) const {
-    auto t = applyElementwise(scalar, std::plus<T>());
-    // if (requires_grad()) {
-    //   auto new_grad_fn = std::make_shared<AddBackward0<T>>();
-    //   t.autograd_meta_.get()->grad_fn_ = new_grad_fn;
-    // }
+    // auto t = applyElementwise(scalar, std::plus<T>());
+    std::cout << "scalar+ begin" << std::endl;
+    auto expandedTensor = Tensor<T>::expand(scalar, (*this).sizes_, true);
+    auto t = expandedTensor + (*this);
+    // std::cout << t.autograd_meta_.get()->children_;
+    t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(expandedTensor));
+    std::cout << "scalar+ after" << std::endl;
     return t;  // std::ref(t);
   }
 
