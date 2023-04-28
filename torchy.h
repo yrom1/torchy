@@ -353,19 +353,19 @@ class Tensor {
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
-    return applyElementwiseWithBroadcast(other, std::multiplies<T>());
+    return binaryOperator(other, std::multiplies<T>());
   }
 
   Tensor<T> operator*(const T &scalar) const {
-    return applyElementwise(scalar, std::multiplies<T>());
+    return binaryOperator(scalar, std::multiplies<T>());
   }
 
   Tensor<T> operator/(const Tensor<T> &other) const {
-    return applyElementwiseWithBroadcast(other, std::divides<T>());
+    return binaryOperator(other, std::divides<T>());
   }
 
   Tensor<T> operator/(const T &scalar) const {
-    return applyElementwise(scalar, std::divides<T>());
+    return binaryOperator(scalar, std::divides<T>());
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
