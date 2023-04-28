@@ -298,43 +298,36 @@ class Tensor {
     return os;
   }
 
-  // WARNING addition is associative, subtraction is not
-  //         you must carefully not flip the order in binaryOperator
 
-  Tensor<T> binaryOperator(const Tensor<T> &other, std::function<T(const T&, const T&)>& func) const {
-    auto t = applyElementwiseWithBroadcast(other, func);
+  // Overloaded binaryOperator for tensors
+  Tensor<T> binaryOperator(const Tensor<T> &other, const std::function<T(T, T)> &operation) const {
+    // WARNING addition is associative, subtraction is not
+    //         you must carefully not flip the order in binaryOperator
+    // TODO(yrom1) check this is right for subtraction!
+    auto t = applyElementwiseWithBroadcast(operation, other);
     if (t.requires_grad_) {
-      std::cout << "operator+ grad_fn_ before: "
-                << t.autograd_meta_.get()->grad_fn_ << std::endl;
       t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
-      std::cout << "operator+ grad_fn_ after: "
-                << t.autograd_meta_.get()->grad_fn_ << std::endl;
-      t.autograd_meta_.get()->children_.push_back(
-          std::make_shared<Tensor<T>>(*this));
-      t.autograd_meta_.get()->children_.push_back(
-          std::make_shared<Tensor<T>>(other));
+      t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(*this));
+      t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(other));
     }
     return t;
   }
 
-  Tensor<T> binaryOperator(const T &scalar, std::function<T(const T&, const T&)>& func) const {
-    // auto t = applyElementwise(scalar, std::plus<T>());
-    std::cout << "scalar+ begin" << std::endl;
+  // Overloaded binaryOperator for scalars
+  Tensor<T> binaryOperator(const T &scalar, const std::function<T(T, T)> &operation) const {
     auto expandedTensor = Tensor<T>::expand(scalar, (*this).sizes_, true);
-    auto t = func((*this), expandedTensor);
-    // std::cout << t.autograd_meta_.get()->children_;
-    // t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(expandedTensor));
-    std::cout << "scalar+ after" << std::endl;
-    return t;  // std::ref(t);
+    auto t = binaryOperator(expandedTensor, operation);
+    return t;
   }
 
-  // TODO(yrom1) if same shape just add the underlying vectors?
+  // Tensor operator+ overload for tensors
   Tensor<T> operator+(const Tensor<T> &other) const {
-    return binaryOperator(other, std::plus<Tensor<T>>());
+    return binaryOperator(other, std::plus<T>());
   }
 
+  // Tensor operator+ overload for scalars
   Tensor<T> operator+(const T &scalar) const {
-    return binaryOperator(scalar, std::plus<Tensor<T>>());
+    return binaryOperator(scalar, std::plus<T>());
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
