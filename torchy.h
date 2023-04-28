@@ -353,19 +353,27 @@ class Tensor {
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
-    return applyElementwiseWithBroadcast(other, std::multiplies<T>());
+    return binaryOperator(other, std::multiplies<T>());
   }
 
   Tensor<T> operator*(const T &scalar) const {
-    return applyElementwise(scalar, std::multiplies<T>());
+    return binaryOperator(scalar, std::multiplies<T>());
   }
 
   Tensor<T> operator/(const Tensor<T> &other) const {
-    return applyElementwiseWithBroadcast(other, std::divides<T>());
+    if (std::find(other.storage_.get()->data_.begin(),
+                  other.storage_.get()->data_.end(),
+                  0) != other.storage_.get()->data_.end()) {
+      throw std::runtime_error("Tensor division by zero.");
+    }
+    return binaryOperator(other, std::divides<T>());
   }
 
   Tensor<T> operator/(const T &scalar) const {
-    return applyElementwise(scalar, std::divides<T>());
+    if (scalar == 0) {
+      throw std::runtime_error("Scalar division by zero.");
+    }
+    return binaryOperator(scalar, std::divides<T>());
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
@@ -549,10 +557,10 @@ class Tensor {
 
       T this_value = (*this)(this_indices);
       T other_value = other(other_indices);
-      if (func.target_type().name() == typeid(std::divides<T>).name() &&
-          other_value == static_cast<T>(0)) {
-        throw std::runtime_error("Division by zero.");
-      }
+      // if (func.target_type().name() == typeid(std::divides<T>).name() &&
+      //     other_value == static_cast<T>(0)) {
+      //   throw std::runtime_error("Division by zero.");
+      // }
       result(result_indices) = func(this_value, other_value);
     }
 
@@ -614,10 +622,10 @@ class Tensor {
     for (size_t i = 0; i < result_values.size(); ++i) {
       std::vector<size_t> indices = unravelIndex(i);
       T other_value = other(indices);
-      if (func.target_type().name() == typeid(std::divides<T>).name() &&
-          other_value == static_cast<T>(0)) {
-        throw std::runtime_error("Division by zero.");
-      }
+      // if (func.target_type().name() == typeid(std::divides<T>).name() &&
+      //     other_value == static_cast<T>(0)) {
+      //   throw std::runtime_error("Division by zero.");
+      // }
       result_values[i] = func((*this)(indices), other_value);
     }
 
@@ -628,10 +636,10 @@ class Tensor {
   Tensor<T> applyElementwise(
       const T &scalar,
       const std::function<T(const T &, const T &)> &func) const {
-    if (func.target_type().name() == typeid(std::divides<T>).name() &&
-        scalar == static_cast<T>(0)) {
-      throw std::runtime_error("Division by zero.");
-    }
+    // if (func.target_type().name() == typeid(std::divides<T>).name() &&
+    //     scalar == static_cast<T>(0)) {
+    //   throw std::runtime_error("Division by zero.");
+    // }
 
     std::vector<T> result_values(computeSize());
     for (size_t i = 0; i < result_values.size(); ++i) {
