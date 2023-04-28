@@ -205,6 +205,12 @@ class Tensor {
   //   }
   // }
 
+  static Tensor expand(const T &x, const std::vector<size_t> &dimensions) {
+    size_t size = computeSizeFromDimensions(dimensions);
+    std::vector<T> values(size, static_cast<T>(x));
+    return Tensor(dimensions, std::move(values));
+  }
+
   static Tensor ones(const std::vector<size_t> &dimensions) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(1));
