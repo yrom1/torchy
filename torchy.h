@@ -205,19 +205,22 @@ class Tensor {
   //   }
   // }
 
-  static Tensor expand(const T &x, const std::vector<size_t> &dimensions, const bool requires_grad = false) {
+  static Tensor expand(const T &x, const std::vector<size_t> &dimensions,
+                       const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(x));
     return Tensor(dimensions, std::move(values), requires_grad);
   }
 
-  static Tensor ones(const std::vector<size_t> &dimensions, const bool requires_grad = false) {
+  static Tensor ones(const std::vector<size_t> &dimensions,
+                     const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(1));
     return Tensor(dimensions, std::move(values), requires_grad);
   }
 
-  static Tensor zeros(const std::vector<size_t> &dimensions, const bool requires_grad = false) {
+  static Tensor zeros(const std::vector<size_t> &dimensions,
+                      const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
     std::vector<T> values(size, static_cast<T>(0));
     return Tensor(dimensions, std::move(values), requires_grad);
@@ -298,32 +301,47 @@ class Tensor {
     return os;
   }
 
-  // TODO(yrom1) if same shape just add the underlying vectors?
-  Tensor<T> operator+(const Tensor<T> &other) const {
-    auto t = applyElementwiseWithBroadcast(other, std::plus<T>());
+  // Overloaded binaryOperator for tensors
+  Tensor<T> binaryOperator(const Tensor<T> &other,
+                           const std::function<T(T, T)> &operation) const {
+    std::cout << "tensor binop 0" << std::endl;
+    // WARNING addition is associative, subtraction is not
+    //         you must carefully not flip the order in binaryOperator
+    // TODO(yrom1) check this is right for subtraction!
+    auto t = applyElementwiseWithBroadcast(other, operation);
+    std::cout << "tensor binop 1" << std::endl;
     if (t.requires_grad_) {
-      std::cout << "operator+ grad_fn_ before: "
-                << t.autograd_meta_.get()->grad_fn_ << std::endl;
+      std::cout << "tensor binop 2" << std::endl;
       t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
-      std::cout << "operator+ grad_fn_ after: "
-                << t.autograd_meta_.get()->grad_fn_ << std::endl;
       t.autograd_meta_.get()->children_.push_back(
           std::make_shared<Tensor<T>>(*this));
       t.autograd_meta_.get()->children_.push_back(
           std::make_shared<Tensor<T>>(other));
+      std::cout << "tensor binop 3" << std::endl;
     }
     return t;
   }
 
+  // Overloaded binaryOperator for scalars
+  Tensor<T> binaryOperator(const T &scalar,
+                           const std::function<T(T, T)> &operation) const {
+    std::cout << "scalar binop 0" << std::endl;
+    auto expandedTensor =
+        Tensor<T>::expand(scalar, (*this).sizes_, (*this).requires_grad_);
+    std::cout << "scalar binop 1" << std::endl;
+    auto t = binaryOperator(expandedTensor, operation);
+    std::cout << "scalar binop 2" << std::endl;
+    return t;
+  }
+
+  // Tensor operator+ overload for tensors
+  Tensor<T> operator+(const Tensor<T> &other) const {
+    return binaryOperator(other, std::plus<T>());
+  }
+
+  // Tensor operator+ overload for scalars
   Tensor<T> operator+(const T &scalar) const {
-    // auto t = applyElementwise(scalar, std::plus<T>());
-    std::cout << "scalar+ begin" << std::endl;
-    auto expandedTensor = Tensor<T>::expand(scalar, (*this).sizes_, true);
-    auto t = expandedTensor + (*this);
-    // std::cout << t.autograd_meta_.get()->children_;
-    // t.autograd_meta_.get()->children_.push_back(std::make_shared<Tensor<T>>(expandedTensor));
-    std::cout << "scalar+ after" << std::endl;
-    return t;  // std::ref(t);
+    return binaryOperator(scalar, std::plus<T>());
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
