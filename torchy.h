@@ -33,53 +33,20 @@ class AutogradFunction {
 };
 
 template <typename T>
-class AddBackward0 : public AutogradFunction<T> {
+class AddBackward : public AutogradFunction<T> {
  public:
-  AddBackward0() = default;
+  AddBackward() = default;
   void apply(const Tensor<T> &grad_output,
              std::vector<std::shared_ptr<Tensor<T>>>
                  &grad_inputs)  // NOLINT (runtime/references)
       override {
-    std::cout << "Inside AddBackward0::apply before" << std::endl;
-    std::cout << "input vec size: " << grad_inputs.size() << std::endl;
-    // std::cout << "grad output data " <<
-    // grad_output.autograd_meta_.get()->grad_.storage_.get()->data_ <<
-    // std::endl; for (auto& grad_input : grad_inputs) {
-    //   grad_input = grad_input +
-    //   grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
-    // }
-
-    // for (auto &grad_input : grad_inputs) {
-    //   std::cout << "iter " << std::endl;
-    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ =
-    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ +
-    //   grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
-    // }
-
-    // size_t grad_input_size =
-    // grad_input->autograd_meta_.get()->grad_.storage_.get()->data_.size();
-    std::cout << "-1" << std::endl;
-    std::cout << grad_output << std::endl;
-    std::cout << "size: " << grad_output.storage_.get()->data_.size()
-              << std::endl;
-
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
-    std::cout << grad_output_size << std::endl;
     // TODO(yrom1) check inputs outputs same length vector
     for (auto &grad_input : grad_inputs) {
-      std::cout << "a0" << std::endl;
       for (size_t i = 0; i < grad_output_size; ++i) {
-        std::cout << "a1" << std::endl;
         grad_input->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
-            grad_output.storage_.get()->data_[i];
-        std::cout << "a2" << std::endl;
-      }
+            grad_output.storage_.get()->data_[i];      }
     }
-
-    // grad_inputs[0] =
-    // grad_output.autograd_meta_.get()->grad_.storage_.get()->data_
-    // grad_inputs[1] = std::make_shared<Tensor<T>>(grad_output);
-    std::cout << "Inside AddBackward0::apply after" << std::endl;
   }
   char op() const override { return '+'; };
 };
@@ -101,7 +68,7 @@ class AddBackward0 : public AutogradFunction<T> {
 
 // Tensor add(const Tensor& tensor1, const Tensor& tensor2) {
 //     at::Tensor result_data = tensor1.data + tensor2.data;
-//     auto result_grad_fn = std::make_shared<AddBackward0>(); // wrong
+//     auto result_grad_fn = std::make_shared<AddBackward>(); // wrong
 //     return Tensor(result_data, result_grad_fn);
 // }
 
@@ -298,7 +265,7 @@ class Tensor {
   }
 
   // TODO(yrom1) binaryOperator needs to be passed a generic AutogradFunction
-  //             instead of AddBackward0
+  //             instead of AddBackward
   //             we also need to implement SubBackward MulBackward
   //             DivBackward...
 
@@ -313,7 +280,7 @@ class Tensor {
     std::cout << "tensor binop 1" << std::endl;
     if (t.requires_grad_) {
       std::cout << "tensor binop 2" << std::endl;
-      t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
+      t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward<T>>();
       t.autograd_meta_.get()->children_.push_back(
           std::make_shared<Tensor<T>>(*this));
       t.autograd_meta_.get()->children_.push_back(
