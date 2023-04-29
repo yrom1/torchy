@@ -1,3 +1,11 @@
+# Derivatives of vector element-wise binary operators
+
+I think my `AddBackward` should be identity not torch.ones? Not sure yet.
+
+![](https://explained.ai/matrix-calculus/images/blkeqn-71B7180689F0C8BB7D610CFD5C41CCD8.svg)
+
+![](https://explained.ai/matrix-calculus/images/blkeqn-B50DDF4EB7C7148BD5EED63AE5B83271.svg)
+
 # Jacobian of identity
 
 > The Jacobian of the identity function , with , has n functions and each function has n parameters held in a single vector x. The Jacobian is, therefore, a square matrix since :
