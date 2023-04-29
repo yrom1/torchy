@@ -1,3 +1,76 @@
+# c = a + b vs b = a + a
+
+```py
+>>> a = torch.tensor((1.0), requires_grad=True)
+>>> a
+tensor(1., requires_grad=True)
+>>> b = a + a
+>>> b
+tensor(2., grad_fn=<AddBackward0>)
+>>> b.backward()
+>>> a.grad
+tensor(2.)
+>>> a = torch.tensor((1.0), requires_grad=True)
+>>> b = torch.tensor((1.0), requires_grad=True)
+>>> c = a + b
+>>> c
+tensor(2., grad_fn=<AddBackward0>)
+>>> c.backward()
+>>> c
+tensor(2., grad_fn=<AddBackward0>)
+>>> a.grad
+tensor(1.)
+>>> b.grad
+tensor(1.)
+```
+
+Wow we're actually handling it correctly right now must of been by accident:
+
+```
+[cling]$ Tensor<float> a({1},{1},true)
+(Tensor<float> &) @0x108f44460
+[cling]$ a
+(Tensor<float> &) @0x108f44460
+[cling]$ auto b = a + a
+tensor binop 0
+tensor binop 1
+tensor binop 2
+tensor binop 3
+(Tensor<float> &) @0x108f70690
+[cling]$ b.backward()
+0
+1
+2
+3
+4
+2
+children: 0x600001ee3f98
+children: 0x600001ee0598
+Before apply()
+autograd_meta_: 0x6000001f80b8
+grad_fn_: 0x6000030b6a18
+After apply()
+5
+6
+6
+[cling]$ a
+(Tensor<float> &) @0x108f44460
+[cling]$ a.autograd_meta_
+(std::shared_ptr<AutogradMeta<float> > &) std::shared_ptr -> 0x6000001a4ab8
+[cling]$ a.autograd_meta_.get()
+(std::shared_ptr<AutogradMeta<float> >::element_type *) 0x6000001a4ab8
+[cling]$ a.autograd_meta_.get()->grad_
+(Tensor<float> &) @0x6000001a4ab8
+[cling]$ a.autograd_meta_.get()->grad_.storage_
+(std::shared_ptr<Storage<float> > &) std::shared_ptr -> 0x600003ee4078
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()
+(std::shared_ptr<Storage<float> >::element_type *) 0x600003ee4078
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 2.00000f }
+```
+
+Maybe make a grad method? This is kinda annoying to type out.
+
 # Derivatives of vector element-wise binary operators
 
 I think my `AddBackward` should be identity not torch.ones? Not sure yet.
