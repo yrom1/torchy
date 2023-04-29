@@ -1,3 +1,13 @@
+# Jacobian of identity
+
+> The Jacobian of the identity function , with , has n functions and each function has n parameters held in a single vector x. The Jacobian is, therefore, a square matrix since :
+
+![](https://explained.ai/matrix-calculus/images/latex-FEFCAA3AA3D0B051E4960CE52D92A7C0.svg)
+
+![](https://explained.ai/matrix-calculus/images/latex-A936169BDEA3E18A4B377A21C743CB21.svg)
+
+I get it!
+
 # graph operations
 
 ```
