@@ -51,6 +51,25 @@ class AddBackward : public AutogradFunction<T> {
   char op() const override { return '+'; };
 };
 
+template <typename T>
+class SubBackward : public AutogradFunction<T> {
+ public:
+  SubBackward() = default;
+  void apply(const Tensor<T> &grad_output,
+             std::vector<std::shared_ptr<Tensor<T>>>
+                 &grad_inputs)  // NOLINT (runtime/references)
+      override {
+    size_t grad_output_size = grad_output.storage_.get()->data_.size();
+    // TODO(yrom1) check inputs outputs same length vector
+    for (auto &grad_input : grad_inputs) {
+      for (size_t i = 0; i < grad_output_size; ++i) {
+        grad_input->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+            grad_output.storage_.get()->data_[i];      }
+    }
+  }
+  char op() const override { return '-'; };
+};
+
 // wrong
 // Tensor::Tensor(at::Tensor data, std::shared_ptr<AutogradFunction> grad_fn) :
 // data(data), grad_fn(grad_fn) {}
