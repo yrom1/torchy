@@ -61,7 +61,7 @@ class AddBackward0 : public AutogradFunction<T> {
       override {
     debug << "Inside AddBackward0::apply before" << std::endl;
     debug << "input vec size: " << grad_inputs.size() << std::endl;
-    debug << "-1" << std::endl;
+    debug << "a-1" << std::endl;
     debug << grad_output << std::endl;
     debug << "size: " << grad_output.storage_.get()->data_.size() << std::endl;
 
@@ -83,14 +83,50 @@ class AddBackward0 : public AutogradFunction<T> {
 };
 
 template <typename T>
+class SubBackward0 : public AutogradFunction<T> {
+ public:
+  SubBackward0() = default;
+  void apply(const Tensor<T> &grad_output,
+             std::vector<std::shared_ptr<Tensor<T>>>
+                 &grad_inputs)  // NOLINT (runtime/references)
+      override {
+    debug << "Inside SubBackward0::apply before" << std::endl;
+    debug << "input vec size: " << grad_inputs.size() << std::endl;
+    debug << "s-1" << std::endl;
+    debug << grad_output << std::endl;
+    debug << "size: " << grad_output.storage_.get()->data_.size() << std::endl;
+
+    size_t grad_output_size = grad_output.storage_.get()->data_.size();
+    debug << grad_output_size << std::endl;
+    // TODO(yrom1) check inputs outputs same length vector
+
+    for (size_t i = 0; i < grad_output_size; ++i) {
+      debug << "s0" << std::endl;
+      grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+          grad_output.storage_.get()->data_[i];
+      debug << "s1" << std::endl;
+      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] -=
+          grad_output.storage_.get()->data_[i];
+      debug << "s2" << std::endl;
+    }
+    debug << "Inside SubBackward0::apply after" << std::endl;
+  }
+  char op() const override { return '-'; };
+};
+
+template <typename T>
 class DummyBackward0 : public AutogradFunction<T> {
  public:
   DummyBackward0() = default;
   void apply(const Tensor<T> &grad_output,
              std::vector<std::shared_ptr<Tensor<T>>>
                  &grad_inputs)  // NOLINT (runtime/references)
-      override {}
-  char op() const override { return '!'; };
+      override {
+    throw std::runtime_error("You called DummyBackward0 dummy!");
+  }
+  char op() const override {
+    throw std::runtime_error("You called DummyBackward0 dummy!");
+  };
 };
 
 template <typename T>
@@ -337,11 +373,11 @@ class Tensor {
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
-    return binaryOperator<DummyBackward0>(other, std::minus<T>());
+    return binaryOperator<SubBackward0>(other, std::minus<T>());
   }
 
   Tensor<T> operator-(const T &scalar) const {
-    return binaryOperator<DummyBackward0>(scalar, std::minus<T>());
+    return binaryOperator<SubBackward0>(scalar, std::minus<T>());
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
