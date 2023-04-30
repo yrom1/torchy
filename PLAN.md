@@ -5,7 +5,7 @@ Based on your current progress and the fact that you are working nights and week
 - [x] April 6 - April 12: Implement subtraction, multiplication, and division (both scalar and tensor-wise)
 - [x] April 13 - April 19: Implement element-wise operations and broadcasting
 3. Implement autograd functionality for simple operations:
-- [ ] April 20 - April 26: Implement the basic autograd system and support for addition and subtraction
+- [x] April 20 - April 26: Implement the basic autograd system and support for addition and subtraction
 - [ ] April 27 - May 3: Extend autograd support to multiplication, division, and element-wise operations
 4. Add support for advanced tensor operations:
 - [ ] May 4 - May 17: Implement functions such as reduction, indexing, sorting, and other advanced operations
