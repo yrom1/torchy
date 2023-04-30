@@ -61,22 +61,6 @@ class AddBackward0 : public AutogradFunction<T> {
       override {
     debug << "Inside AddBackward0::apply before" << std::endl;
     debug << "input vec size: " << grad_inputs.size() << std::endl;
-    // debug << "grad output data " <<
-    // grad_output.autograd_meta_.get()->grad_.storage_.get()->data_ <<
-    // std::endl; for (auto& grad_input : grad_inputs) {
-    //   grad_input = grad_input +
-    //   grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
-    // }
-
-    // for (auto &grad_input : grad_inputs) {
-    //   debug << "iter " << std::endl;
-    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ =
-    //   grad_input->autograd_meta_.get()->grad_.storage_.get()->data_ +
-    //   grad_output.autograd_meta_.get()->grad_.storage_.get()->data_;
-    // }
-
-    // size_t grad_input_size =
-    // grad_input->autograd_meta_.get()->grad_.storage_.get()->data_.size();
     debug << "-1" << std::endl;
     debug << grad_output << std::endl;
     debug << "size: " << grad_output.storage_.get()->data_.size()
@@ -94,35 +78,10 @@ class AddBackward0 : public AutogradFunction<T> {
         debug << "a2" << std::endl;
       }
     }
-
-    // grad_inputs[0] =
-    // grad_output.autograd_meta_.get()->grad_.storage_.get()->data_
-    // grad_inputs[1] = std::make_shared<Tensor<T>>(grad_output);
     debug << "Inside AddBackward0::apply after" << std::endl;
   }
   char op() const override { return '+'; };
 };
-
-// wrong
-// Tensor::Tensor(at::Tensor data, std::shared_ptr<AutogradFunction> grad_fn) :
-// data(data), grad_fn(grad_fn) {}
-
-// void Tensor::backward(const at::Tensor& grad_output) {
-//     if (!grad_fn) {
-//         return;
-//     }
-//     std::vector<Tensor> grad_inputs(2);
-//     grad_fn->apply(grad_output, grad_inputs);
-//     for (auto& grad_input : grad_inputs) {
-//         grad_input.backward(grad_input.data);
-//     }
-// }
-
-// Tensor add(const Tensor& tensor1, const Tensor& tensor2) {
-//     at::Tensor result_data = tensor1.data + tensor2.data;
-//     auto result_grad_fn = std::make_shared<AddBackward0>(); // wrong
-//     return Tensor(result_data, result_grad_fn);
-// }
 
 template <typename T>
 class Storage {
@@ -479,12 +438,6 @@ class Tensor {
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
 
-  // TODO(yrom1)  we also have to change this so that when you perform an
-  // operation on
-  // a
-  //       tensor with autograd_meta_ set, and do an operation like operator+
-  //       we set it's t.autograd_meta_.get()->children_, which we can use a
-  //       vector for now
   void backward() {
     /* called on the scalar output tensor calculated in the forward pass
     0) we check this tensor is a scalar
