@@ -59,25 +59,14 @@ class AddBackward0 : public AutogradFunction<T> {
              std::vector<std::shared_ptr<Tensor<T>>>
                  &grad_inputs)  // NOLINT (runtime/references)
       override {
-    debug << "Inside AddBackward0::apply before" << std::endl;
-    debug << "input vec size: " << grad_inputs.size() << std::endl;
-    debug << "a-1" << std::endl;
-    debug << grad_output << std::endl;
-    debug << "size: " << grad_output.storage_.get()->data_.size() << std::endl;
-
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
-    debug << grad_output_size << std::endl;
     // TODO(yrom1) check inputs outputs same length vector
     for (auto &grad_input : grad_inputs) {
-      debug << "a0" << std::endl;
       for (size_t i = 0; i < grad_output_size; ++i) {
-        debug << "a1" << std::endl;
         grad_input->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
             grad_output.storage_.get()->data_[i];
-        debug << "a2" << std::endl;
       }
     }
-    debug << "Inside AddBackward0::apply after" << std::endl;
   }
   char op() const override { return '+'; };
 };
@@ -90,26 +79,14 @@ class SubBackward0 : public AutogradFunction<T> {
              std::vector<std::shared_ptr<Tensor<T>>>
                  &grad_inputs)  // NOLINT (runtime/references)
       override {
-    debug << "Inside SubBackward0::apply before" << std::endl;
-    debug << "input vec size: " << grad_inputs.size() << std::endl;
-    debug << "s-1" << std::endl;
-    debug << grad_output << std::endl;
-    debug << "size: " << grad_output.storage_.get()->data_.size() << std::endl;
-
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
-    debug << grad_output_size << std::endl;
     // TODO(yrom1) check inputs outputs same length vector
-
     for (size_t i = 0; i < grad_output_size; ++i) {
-      debug << "s0" << std::endl;
       grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i];
-      debug << "s1" << std::endl;
       grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] -=
           grad_output.storage_.get()->data_[i];
-      debug << "s2" << std::endl;
     }
-    debug << "Inside SubBackward0::apply after" << std::endl;
   }
   char op() const override { return '-'; };
 };
