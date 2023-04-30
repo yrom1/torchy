@@ -1,3 +1,100 @@
+# div example working scalar
+
+```py
+>>> import torch
+>>> a = torch.tensor((2.0), requires_grad=True)
+>>> b = torch.tensor((43.0), requires_grad=True)
+>>> c = a / b
+>>> c.backward()
+>>> a.grad
+tensor(0.0233)
+>>> b.grad
+tensor(-0.0011)
+>>>
+(main) Ryans-Air:torchy ryan$ sh cling.sh
+[cling]$ Tensor<float> a({1}, {2.0}, true)
+(Tensor<float> &) @0x109adc460
+[cling]$ Tensor<float> b({1}, {43.0}, true)
+(Tensor<float> &) @0x1098688e8
+[cling]$ auto c = a / b
+tensor binop 0
+tensor binop 1
+tensor binop 2
+tensor binop 3
+(Tensor<float> &) @0x109b0c6a0
+[cling]$ c.backward()
+0
+1
+2
+3
+4
+2
+children: 0x600001aa8618
+children: 0x600001aa8998
+Before apply()
+autograd_meta_: 0x6000005790f8
+grad_fn_: 0x600003435658
+After apply()
+5
+6
+6
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 0.0232558f }
+[cling]$ b.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { -0.00108167f }
+```
+
+# mul example working scalar
+
+```py
+>>> b = torch.tensor((2.0), requires_grad=True)
+>>> a = torch.tensor((43.0), requires_grad=True)
+>>> c = a * b
+>>> c.backward()
+>>> a.grad
+tensor(2.)
+>>> b.grad
+tensor(43.)
+>>>
+```
+```cpp
+(main) Ryans-Air:torchy ryan$ sh cling.sh
+[cling]$ Tensor<float> a({1}, {43.0}, true)
+(Tensor<float> &) @0x105970460
+[cling]$ Tensor<float> b({1}, {2.0}, true)
+(Tensor<float> &) @0x1056fc8e8
+[cling]$ auto c = a * b
+tensor binop 0
+tensor binop 1
+tensor binop 2
+tensor binop 3
+(Tensor<float> &) @0x1059a0690
+[cling]$ c.backward()
+0
+1
+2
+3
+4
+2
+children: 0x600003b1c098
+children: 0x600003b1c118
+Before apply()
+autograd_meta_: 0x6000024a17d8
+grad_fn_: 0x6000015a4038
+After apply()
+5
+6
+6
+[cling]$ c.graph()
+Tensor@0x1059a0690 (*)
+  Tensor@0x600003b1c098
+  Tensor@0x600003b1c118
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 2.00000f }
+[cling]$ b.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 43.0000f }
+```
+
 # c = a + b vs b = a + a
 
 ```py
