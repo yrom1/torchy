@@ -10,10 +10,29 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <streambuf>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+struct ConditionalStreamBuffer : public std::streambuf {
+  explicit ConditionalStreamBuffer(bool &condition) : condition_(condition) {}
+
+  virtual std::streamsize xsputn(const char_type *s, std::streamsize n) {
+    return condition_ ? std::cout.rdbuf()->sputn(s, n) : n;
+  }
+
+  virtual int_type overflow(int_type ch) {
+    return condition_ ? std::cout.rdbuf()->sputc(ch) : ch;
+  }
+
+  bool &condition_;
+};
+
+bool debug_mode = true;
+ConditionalStreamBuffer debug_buffer(debug_mode);
+std::ostream debug(&debug_buffer);
 
 template <typename T>
 class Storage;
@@ -45,7 +64,8 @@ class AddBackward : public AutogradFunction<T> {
     for (auto &grad_input : grad_inputs) {
       for (size_t i = 0; i < grad_output_size; ++i) {
         grad_input->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
-            grad_output.storage_.get()->data_[i];      }
+            grad_output.storage_.get()->data_[i];
+      }
     }
   }
   char op() const override { return '+'; };
