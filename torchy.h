@@ -10,6 +10,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <cmath>
 #include <streambuf>
 #include <string>
 #include <unordered_set>
@@ -89,6 +90,50 @@ class SubBackward0 : public AutogradFunction<T> {
     }
   }
   char op() const override { return '-'; };
+};
+
+template <typename T>
+class MulBackward0 : public AutogradFunction<T> {
+ public:
+  MulBackward0() = default;
+  void apply(const Tensor<T> &grad_output,
+             std::vector<std::shared_ptr<Tensor<T>>>
+                 &grad_inputs)  // NOLINT (runtime/references)
+      override {
+    size_t grad_output_size = grad_output.storage_.get()->data_.size();
+    // TODO(yrom1) check inputs outputs same length vector
+    for (size_t i = 0; i < grad_output_size; ++i) {
+      grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+          grad_output.storage_.get()->data_[i] *
+          grad_inputs[1]->storage_.get()->data_[i];
+      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+          grad_output.storage_.get()->data_[i] *
+          grad_inputs[0]->storage_.get()->data_[i];
+    }
+  }
+  char op() const override { return '*'; };
+};
+
+template <typename T>
+class DivBackward0 : public AutogradFunction<T> {
+ public:
+  DivBackward0() = default;
+  void apply(const Tensor<T> &grad_output,
+             std::vector<std::shared_ptr<Tensor<T>>>
+                 &grad_inputs)  // NOLINT (runtime/references)
+      override {
+    size_t grad_output_size = grad_output.storage_.get()->data_.size();
+    // TODO(yrom1) check inputs outputs same length vector
+    for (size_t i = 0; i < grad_output_size; ++i) {
+      grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+          grad_output.storage_.get()->data_[i] *
+          (1 / grad_inputs[1]->storage_.get()->data_[i]);
+      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] -=
+          grad_output.storage_.get()->data_[i] *
+          ((grad_inputs[0]->storage_.get()->data_[i]) / pow(grad_inputs[1]->storage_.get()->data_[i], 2.0));
+    }
+  }
+  char op() const override { return '/'; };
 };
 
 template <typename T>
@@ -358,11 +403,11 @@ class Tensor {
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
-    return binaryOperator<DummyBackward0>(other, std::multiplies<T>());
+    return binaryOperator<MulBackward0>(other, std::multiplies<T>());
   }
 
   Tensor<T> operator*(const T &scalar) const {
-    return binaryOperator<DummyBackward0>(scalar, std::multiplies<T>());
+    return binaryOperator<MulBackward0>(scalar, std::multiplies<T>());
   }
 
   Tensor<T> operator/(const Tensor<T> &other) const {
@@ -371,14 +416,14 @@ class Tensor {
                   0) != other.storage_.get()->data_.end()) {
       throw std::runtime_error("Tensor division by zero.");
     }
-    return binaryOperator<DummyBackward0>(other, std::divides<T>());
+    return binaryOperator<DivBackward0>(other, std::divides<T>());
   }
 
   Tensor<T> operator/(const T &scalar) const {
     if (scalar == 0) {
       throw std::runtime_error("Scalar division by zero.");
     }
-    return binaryOperator<DummyBackward0>(scalar, std::divides<T>());
+    return binaryOperator<DivBackward0>(scalar, std::divides<T>());
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
@@ -402,10 +447,11 @@ class Tensor {
       for (size_t j = 0; j < result_sizes[1]; ++j) {
         for (size_t k = 0; k < sizes_[1]; ++k) {
           // Access the element at (i, j) in the result_values vector by
-          // converting the 2-dimensional index (i, j) to a 1-dimensional index
-          // The formula for this conversion is:
+          // converting the 2-dimensional index (i, j) to a 1-dimensional
+          // index The formula for this conversion is:
           //   linear_index = i * number_of_columns + j
-          // where i represents the row index and j represents the column index.
+          // where i represents the row index and j represents the column
+          // index.
           result_values[i * result_sizes[1] + j] +=
               (*this)(std::vector<size_t>{i, k}) *
               other(std::vector<size_t>{k, j});
