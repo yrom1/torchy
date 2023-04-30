@@ -4,13 +4,13 @@
 #define TORCHY_H_
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
-#include <cmath>
 #include <streambuf>
 #include <string>
 #include <unordered_set>
@@ -130,7 +130,8 @@ class DivBackward0 : public AutogradFunction<T> {
           (1 / grad_inputs[1]->storage_.get()->data_[i]);
       grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] -=
           grad_output.storage_.get()->data_[i] *
-          ((grad_inputs[0]->storage_.get()->data_[i]) / pow(grad_inputs[1]->storage_.get()->data_[i], 2.0));
+          ((grad_inputs[0]->storage_.get()->data_[i]) /
+           pow(grad_inputs[1]->storage_.get()->data_[i], 2.0));
     }
   }
   char op() const override { return '/'; };
