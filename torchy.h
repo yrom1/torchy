@@ -31,7 +31,7 @@ struct ConditionalStreamBuffer : public std::streambuf {
   bool &condition_;
 };
 
-bool debug_mode = true;
+bool debug_mode = false;
 ConditionalStreamBuffer debug_buffer(debug_mode);
 std::ostream debug(&debug_buffer);
 
