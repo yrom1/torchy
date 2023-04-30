@@ -17,7 +17,7 @@ int main() {
 }
 ```
 
-The next example uses a C++ interpreter called [Cling](https://github.com/root-project/cling):
+The next example uses a C++ interpreter called [cling](https://github.com/root-project/cling):
 
 ```c++
 [cling]$ #include "torchy.h"
