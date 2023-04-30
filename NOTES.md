@@ -1,3 +1,42 @@
+# c = (a * b) - ((b / a) + b) bug
+
+```c++
+[cling]$ Tensor<float> a({1}, {2.0}, true)
+(Tensor<float> &) @0x109b60460
+[cling]$ Tensor<float> b({1}, {43.0}, true)
+(Tensor<float> &) @0x1098ec8e0
+[cling]$ auto c = (a * b) - ((b / a) + b)
+(Tensor<float> &) @0x109ba0ae0
+[cling]$ c.graph()
+Tensor@0x109ba0ae0 (-)
+  Tensor@0x6000013c1998 (*)
+    Tensor@0x6000013c1598
+    Tensor@0x6000013c1718
+  Tensor@0x6000013c1918 (+)
+    Tensor@0x6000013c1798 (/)
+      Tensor@0x6000013c1618
+      Tensor@0x6000013c1698
+    Tensor@0x6000013c1a18
+[cling]$ c.backward()
+[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 32.2500f }
+[cling]$ b.autograd_meta_.get()->grad_.storage_.get()->data_
+(std::vector<float> &) { 3.50000f }
+```
+```py
+Python 3.11.1 (main, Apr 19 2023, 18:41:42) [Clang 14.0.3 (clang-1403.0.22.14.1)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import torch
+>>> a = torch.tensor((2.0), requires_grad=True)
+>>> b = torch.tensor((43.0), requires_grad=True)
+>>> c = (a * b) - ((b / a) + b)
+>>> c.backward()
+>>> a.grad
+tensor(53.7500)
+>>> b.grad
+tensor(0.5000)
+```
+
 # div example working scalar
 
 ```py
