@@ -63,8 +63,7 @@ class AddBackward0 : public AutogradFunction<T> {
     debug << "input vec size: " << grad_inputs.size() << std::endl;
     debug << "-1" << std::endl;
     debug << grad_output << std::endl;
-    debug << "size: " << grad_output.storage_.get()->data_.size()
-              << std::endl;
+    debug << "size: " << grad_output.storage_.get()->data_.size() << std::endl;
 
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
     debug << grad_output_size << std::endl;
@@ -81,6 +80,17 @@ class AddBackward0 : public AutogradFunction<T> {
     debug << "Inside AddBackward0::apply after" << std::endl;
   }
   char op() const override { return '+'; };
+};
+
+template <typename T>
+class DummyBackward0 : public AutogradFunction<T> {
+ public:
+  DummyBackward0() = default;
+  void apply(const Tensor<T> &grad_output,
+             std::vector<std::shared_ptr<Tensor<T>>>
+                 &grad_inputs)  // NOLINT (runtime/references)
+      override {}
+  char op() const override { return '!'; };
 };
 
 template <typename T>
@@ -281,6 +291,7 @@ class Tensor {
   //             DivBackward...
 
   // Overloaded binaryOperator for tensors
+  template <template <typename> class BackwardFunction>
   Tensor<T> binaryOperator(const Tensor<T> &other,
                            const std::function<T(T, T)> &operation) const {
     debug << "tensor binop 0" << std::endl;
@@ -291,7 +302,8 @@ class Tensor {
     debug << "tensor binop 1" << std::endl;
     if (t.requires_grad_) {
       debug << "tensor binop 2" << std::endl;
-      t.autograd_meta_.get()->grad_fn_ = std::make_shared<AddBackward0<T>>();
+      t.autograd_meta_.get()->grad_fn_ =
+          std::make_shared<BackwardFunction<T>>();
       t.autograd_meta_.get()->children_.push_back(
           std::make_shared<Tensor<T>>(*this));
       t.autograd_meta_.get()->children_.push_back(
@@ -302,41 +314,42 @@ class Tensor {
   }
 
   // Overloaded binaryOperator for scalars
+  template <template <typename> class BackwardFunction>
   Tensor<T> binaryOperator(const T &scalar,
                            const std::function<T(T, T)> &operation) const {
     debug << "scalar binop 0" << std::endl;
     auto expandedTensor =
         Tensor<T>::expand(scalar, (*this).sizes_, (*this).requires_grad_);
     debug << "scalar binop 1" << std::endl;
-    auto t = binaryOperator(expandedTensor, operation);
+    auto t = binaryOperator<BackwardFunction>(expandedTensor, operation);
     debug << "scalar binop 2" << std::endl;
     return t;
   }
 
   // Tensor operator+ overload for tensors
   Tensor<T> operator+(const Tensor<T> &other) const {
-    return binaryOperator(other, std::plus<T>());
+    return binaryOperator<AddBackward0>(other, std::plus<T>());
   }
 
   // Tensor operator+ overload for scalars
   Tensor<T> operator+(const T &scalar) const {
-    return binaryOperator(scalar, std::plus<T>());
+    return binaryOperator<AddBackward0>(scalar, std::plus<T>());
   }
 
   Tensor<T> operator-(const Tensor<T> &other) const {
-    return binaryOperator(other, std::minus<T>());
+    return binaryOperator<DummyBackward0>(other, std::minus<T>());
   }
 
   Tensor<T> operator-(const T &scalar) const {
-    return binaryOperator(scalar, std::minus<T>());
+    return binaryOperator<DummyBackward0>(scalar, std::minus<T>());
   }
 
   Tensor<T> operator*(const Tensor<T> &other) const {
-    return binaryOperator(other, std::multiplies<T>());
+    return binaryOperator<DummyBackward0>(other, std::multiplies<T>());
   }
 
   Tensor<T> operator*(const T &scalar) const {
-    return binaryOperator(scalar, std::multiplies<T>());
+    return binaryOperator<DummyBackward0>(scalar, std::multiplies<T>());
   }
 
   Tensor<T> operator/(const Tensor<T> &other) const {
@@ -345,14 +358,14 @@ class Tensor {
                   0) != other.storage_.get()->data_.end()) {
       throw std::runtime_error("Tensor division by zero.");
     }
-    return binaryOperator(other, std::divides<T>());
+    return binaryOperator<DummyBackward0>(other, std::divides<T>());
   }
 
   Tensor<T> operator/(const T &scalar) const {
     if (scalar == 0) {
       throw std::runtime_error("Scalar division by zero.");
     }
-    return binaryOperator(scalar, std::divides<T>());
+    return binaryOperator<DummyBackward0>(scalar, std::divides<T>());
   }
 
   Tensor<T> matmul(const Tensor<T> &other) const {
@@ -481,8 +494,7 @@ class Tensor {
     debug << "Before apply()" << std::endl;
 
     debug << "autograd_meta_: " << autograd_meta_.get() << std::endl;
-    debug << "grad_fn_: " << autograd_meta_.get()->grad_fn_.get()
-              << std::endl;
+    debug << "grad_fn_: " << autograd_meta_.get()->grad_fn_.get() << std::endl;
 
     autograd_meta_.get()->grad_fn_.get()->apply(autograd_meta_.get()->grad_,
                                                 grad_inputs);
