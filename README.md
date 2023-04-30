@@ -58,6 +58,10 @@ The goal of this project is to learn more about PyTorch's internals, neural netw
 
 To do this, I'll gradually add support to torchy for the mathematical operations required to create the expression graph of various neural networks. The long term goals are to implement a Multilayer perceptron by the summer of 2023, and a Transformer by end of the year.
 
+> "Maybe it's a bad idea to have really big ambitions initially. Because the bigger your ambitions, the longer they're going to take to realize, and the longer you're projecting into the future, the more likely you're going to be wrong."
+>
+> [paulg @ PyCon US 2012](https://youtu.be/R9ITLdmfdLI?t=1927)
+
 ## Running tests
 
 Taking inspiration from [micrograd's tests](https://github.com/karpathy/micrograd/blob/master/test/test_engine.py), we will use [PyTorch's C++ frontend](https://pytorch.org/cppdocs/frontend.html) for high level sanity checks using GoogleTest.
