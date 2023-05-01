@@ -85,8 +85,8 @@ class SubBackward0 : public AutogradFunction<T> {
     for (size_t i = 0; i < grad_output_size; ++i) {
       grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i];
-      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] -=
-          grad_output.storage_.get()->data_[i];
+      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+          -grad_output.storage_.get()->data_[i];
     }
   }
   char op() const override { return '-'; };
@@ -499,7 +499,7 @@ class Tensor {
 
   const std::vector<T> &data() const { return storage_.get()->data_; }
 
-  const std::vector<T>& grad() const {
+  const std::vector<T> &grad() const {
     if (!requires_grad_) {
       throw std::runtime_error("This tensor does not require gradients.");
     }
