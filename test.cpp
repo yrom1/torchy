@@ -229,8 +229,8 @@ TEST(Torch, AddBackward0Scalar) {
   Tensor<float> b({1}, {13.37}, true);
   auto c = a + b;
   c.backward();
-  auto a_v = c.autograd_meta_.get()->grad_.storage_.get()->data_;
-  auto b_v = c.autograd_meta_.get()->grad_.storage_.get()->data_;
+  auto a_v = a.autograd_meta_.get()->grad_.storage_.get()->data_;
+  auto b_v = b.autograd_meta_.get()->grad_.storage_.get()->data_;
 
   torch::Tensor a_t = torch::tensor({4.20}, torch::requires_grad(true));
   torch::Tensor b_t = torch::tensor({13.37}, torch::requires_grad(true));
