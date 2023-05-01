@@ -390,7 +390,7 @@ TEST(Torch, ScalarMultiOperatorSubtest2) {
 TEST(Torch, ScalarMultiOperatorSubtest3) {
   Tensor<float> a({1}, {4.20}, true);
   Tensor<float> b({1}, {13.37}, true);
-  auto c = b / a;
+  auto c = (b / a) + b;
   c.backward();
   auto a_v = a.autograd_meta_.get()->grad_.storage_.get()->data_;
   auto b_v = b.autograd_meta_.get()->grad_.storage_.get()->data_;
@@ -398,7 +398,7 @@ TEST(Torch, ScalarMultiOperatorSubtest3) {
 
   torch::Tensor a_t = torch::tensor({4.20}, torch::requires_grad(true));
   torch::Tensor b_t = torch::tensor({13.37}, torch::requires_grad(true));
-  torch::Tensor c_t = b_t / a_t;
+  torch::Tensor c_t = (b_t / a_t) + b_t;
   c_t.backward();
   auto a_v_t = tensorToVector<float>(a_t.grad());
   auto b_v_t = tensorToVector<float>(b_t.grad());
@@ -414,6 +414,43 @@ TEST(Torch, ScalarMultiOperatorSubtest3) {
   for (size_t i = 0; i < c_v.size(); ++i) {
     EXPECT_NEAR(c_v[i], c_v_t[i], tolerance);
   }
+}
+
+TEST(Torch, ScalarMultiOperatorUnique) {
+  Tensor<float> a({1}, {2.1}, true);
+  Tensor<float> b({1}, {3.2}, true);
+  Tensor<float> c({1}, {4.3}, true);
+  Tensor<float> d({1}, {5.4}, true);
+  Tensor<float> e({1}, {6.5}, true);
+  auto l = (a * b) - ((c / d) + e);
+  l.backward();
+  auto a_v = a.grad();
+  auto b_v = b.grad();
+  auto c_v = c.grad();
+  auto d_v = d.grad();
+  auto e_v = e.grad();
+  auto l_v = l.data();
+
+  torch::Tensor a_t = torch::tensor({2.1}, torch::requires_grad(true));
+  torch::Tensor b_t = torch::tensor({3.2}, torch::requires_grad(true));
+  torch::Tensor c_t = torch::tensor({4.3}, torch::requires_grad(true));
+  torch::Tensor d_t = torch::tensor({5.4}, torch::requires_grad(true));
+  torch::Tensor e_t = torch::tensor({6.5}, torch::requires_grad(true));
+  torch::Tensor l_t = (a_t * b_t) - ((c_t / d_t) + e_t);
+  l_t.backward();
+  auto a_v_t = tensorToVector<float>(a_t.grad());
+  auto b_v_t = tensorToVector<float>(a_t.grad());
+  auto c_v_t = tensorToVector<float>(a_t.grad());
+  auto d_v_t = tensorToVector<float>(a_t.grad());
+  auto e_v_t = tensorToVector<float>(a_t.grad());
+  auto l_v_t = tensorToVector<float>(l_t.data());
+
+  EXPECT_EQ(a_v, a_v_t);
+  EXPECT_EQ(b_v, b_v_t);
+  EXPECT_EQ(c_v, c_v_t);
+  EXPECT_EQ(d_v, d_v_t);
+  EXPECT_EQ(e_v, e_v_t);
+  EXPECT_EQ(l_v, l_v_t);
 }
 
 TEST(Torch, ScalarMultiOperator) {
