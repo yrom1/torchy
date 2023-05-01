@@ -489,20 +489,6 @@ class Tensor {
   // std::shared_ptr<AutogradMeta<T>> autograd_meta() const { return
   // autograd_meta_; }
 
-  Tensor<T> grad() const {
-    if (!requires_grad_) {
-      throw std::runtime_error("This tensor does not require gradients.");
-    }
-    return autograd_meta_->grad();
-  }
-
-  void set_grad(const Tensor<T> &grad) {
-    if (!requires_grad_) {
-      throw std::runtime_error("This tensor does not require gradients.");
-    }
-    autograd_meta_->grad() = grad;
-  }
-
   //  private:
   std::vector<size_t> sizes_;
   std::shared_ptr<Storage<T>> storage_;
@@ -510,6 +496,15 @@ class Tensor {
   std::vector<size_t> strides_;
   bool requires_grad_;
   std::shared_ptr<AutogradMeta<T>> autograd_meta_;
+
+  const std::vector<T> &data() const { return storage_.get()->data_; }
+
+  const std::vector<T>& grad() const {
+    if (!requires_grad_) {
+      throw std::runtime_error("This tensor does not require gradients.");
+    }
+    return autograd_meta_.get()->grad_.storage_.get()->data_;
+  }
 
   void backward() {
     /* called on the scalar output tensor calculated in the forward pass
