@@ -361,7 +361,7 @@ TEST(Torch, ScalarMultiOperatorSubtest1) {
 TEST(Torch, ScalarMultiOperator) {
   Tensor<float> a({1}, {4.20}, true);
   Tensor<float> b({1}, {13.37}, true);
-  auto c = (a * b) - (b);
+  auto c = (a * b) - ((b / a) + b);
   c.backward();
   auto a_v = a.autograd_meta_.get()->grad_.storage_.get()->data_;
   auto b_v = b.autograd_meta_.get()->grad_.storage_.get()->data_;
