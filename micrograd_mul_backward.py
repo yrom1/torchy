@@ -38,6 +38,7 @@ class Value:
 
         # go one variable at a time and apply the chain rule to get its gradient
         self.grad = 1
+        print(f"{topo=}", "_backward()s is called in reverse topo order")
         for v in reversed(topo):
             v._backward()
 
