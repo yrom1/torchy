@@ -751,6 +751,42 @@ class Tensor {
     }
   }
 
+  char _print_vec(const std::vector<T>& x) {
+    for (const auto& e : x) {
+      std::cout << e << " " << std::endl;
+    }
+    return ' ';
+  }
+
+  void _print_tensor_graph_helper_grad(
+      Tensor<T> &tensor,  // NOLINT (runtime/reference)
+      int level,
+      std::unordered_set<const Tensor<T> *>
+          &visited)  // NOLINT (runtime/reference)
+  {                  // NOLINT (whitespace/braces)
+    if (visited.find(&tensor) != visited.end()) return;
+    visited.insert(&tensor);
+
+    for (int i = 0; i < level; ++i) {
+      std::cout << "  ";
+    }
+    std::cout << "Tensor@" << &tensor << std::endl;
+    for (int i = 0; i < level; ++i) {
+      std::cout << "  ";
+    }
+    _print_vec((*this).data());
+    for (int i = 0; i < level; ++i) {
+      std::cout << "  ";
+    }
+    _print_vec((*this).grad());
+
+    if (!tensor.autograd_meta_) return;
+
+    for (const auto &child : tensor.autograd_meta_->children_) {
+      _print_tensor_graph_helper_grad(*child, level + 1, visited);
+    }
+  }
+
   void _print_tensor_graph_helper(
       Tensor<T> &tensor,  // NOLINT (runtime/reference)
       int level,
@@ -783,6 +819,11 @@ class Tensor {
   void graph() {
     std::unordered_set<const Tensor<T> *> visited;
     _print_tensor_graph_helper(*this, 0, visited);
+  }
+
+  void graphGrad() {
+    std::unordered_set<const Tensor<T> *> visited;
+    _print_tensor_graph_helper_grad(*this, 0, visited);
   }
 };
 
