@@ -15,9 +15,9 @@ class Value:
 
         def _backward():
             print("_backward")
-            print(f"+=", f"{other.data=}", f"{out.grad=}")
+            print(f"{self.grad=}", f"+=", f"{other.data=}", f"{out.grad=}")
             self.grad += other.data * out.grad
-            print(f"+=", f"{self.data=}", f"{out.grad=}")
+            print(f"{other.grad=}", f"+=", f"{self.data=}", f"{out.grad=}")
             other.grad += self.data * out.grad
         out._backward = _backward
 
