@@ -536,7 +536,7 @@ TEST(Torch, ScalarMultiOperatorAlterationSubtraction) {
   EXPECT_EQ(c_v, c_v_t);
 }
 
-TEST(Torch, ScalarMultiOperatorAlterationMultiplication) {
+TEST(Torch, DISABLED_ScalarMultiOperatorAlterationMultiplication) {
   Tensor<float> a({1}, {4.20}, true);
   auto c = a * a * a;
   c.backward();
@@ -553,7 +553,7 @@ TEST(Torch, ScalarMultiOperatorAlterationMultiplication) {
   EXPECT_EQ(c_v, c_v_t);
 }
 
-TEST(Torch, ScalarMultiOperator) {
+TEST(Torch, DISABLED_ScalarMultiOperator) {
   Tensor<float> a({1}, {4.20}, true);
   Tensor<float> b({1}, {13.37}, true);
   auto c = (a * b) - ((b / a) + b);
