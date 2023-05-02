@@ -31,7 +31,7 @@ struct ConditionalStreamBuffer : public std::streambuf {
   bool &condition_;
 };
 
-bool debug_mode = false;
+bool debug_mode = true;
 ConditionalStreamBuffer debug_buffer(debug_mode);
 std::ostream debug(&debug_buffer);
 
@@ -103,9 +103,11 @@ class MulBackward0 : public AutogradFunction<T> {
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
     // TODO(yrom1) check inputs outputs same length vector
     for (size_t i = 0; i < grad_output_size; ++i) {
+      debug << "+= " << grad_output.storage_.get()->data_[i] << "*" << grad_inputs[1]->storage_.get()->data_[i] << std::endl;
       grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i] *
           grad_inputs[1]->storage_.get()->data_[i];
+      debug << "+= " << grad_output.storage_.get()->data_[i] << "*" << grad_inputs[0]->storage_.get()->data_[i] << std::endl;
       grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i] *
           grad_inputs[0]->storage_.get()->data_[i];
