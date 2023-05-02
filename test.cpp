@@ -527,7 +527,7 @@ TEST(Torch, ScalarMultiOperatorAlterationSubtraction) {
   auto c_v = c.data();
 
   torch::Tensor a_t = torch::tensor({4.20}, torch::requires_grad(true));
-  torch::Tensor c_t = a_t + a_t + a_t;
+  torch::Tensor c_t = a_t - a_t - a_t;
   c_t.backward();
   auto a_v_t = tensorToVector<float>(a_t.grad());
   auto c_v_t = tensorToVector<float>(c_t.data());
