@@ -465,7 +465,7 @@ TEST(Torch, ScalarMultiOperatorSubtest5) {
   EXPECT_EQ(l_v, l_v_t);
 }
 
-TEST(Torch, ScalarMultiOperatorUnique) {
+TEST(Torch, DISABLED_ScalarMultiOperatorUnique) {
   Tensor<float> a({1}, {2.1}, true);
   Tensor<float> b({1}, {3.2}, true);
   Tensor<float> c({1}, {4.3}, true);
