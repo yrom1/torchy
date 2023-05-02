@@ -128,8 +128,8 @@ class DivBackward0 : public AutogradFunction<T> {
       grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i] *
           (1 / grad_inputs[1]->storage_.get()->data_[i]);
-      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] -=
-          grad_output.storage_.get()->data_[i] *
+      grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
+          -grad_output.storage_.get()->data_[i] *
           ((grad_inputs[0]->storage_.get()->data_[i]) /
            pow(grad_inputs[1]->storage_.get()->data_[i], 2.0));
     }
