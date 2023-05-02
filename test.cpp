@@ -621,6 +621,23 @@ TEST(Torch, ScalarMultiOperatorAlterationMultiplicationOne) {
   EXPECT_EQ(c_v, c_v_t);
 }
 
+TEST(Torch, ScalarMultiOperatorAlterationMultiplicationTwo) {
+  Tensor<float> a({1}, {2.0}, true);
+  auto c = a * a * a;
+  c.backward();
+  auto a_v = a.grad();
+  auto c_v = c.data();
+
+  torch::Tensor a_t = torch::tensor({2.0}, torch::requires_grad(true));
+  torch::Tensor c_t = a_t * a_t * a_t;
+  c_t.backward();
+  auto a_v_t = tensorToVector<float>(a_t.grad());
+  auto c_v_t = tensorToVector<float>(c_t.data());
+
+  EXPECT_EQ(a_v, a_v_t);
+  EXPECT_EQ(c_v, c_v_t);
+}
+
 TEST(Torch, DISABLED_ScalarMultiOperator) {
   Tensor<float> a({1}, {4.20}, true);
   Tensor<float> b({1}, {13.37}, true);
