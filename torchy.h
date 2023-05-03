@@ -200,8 +200,10 @@ class AutogradMeta {
   std::vector<std::shared_ptr<Tensor<T>>> children_;
 };
 
+// #include <memory>
+
 template <typename T>
-class Tensor {
+class Tensor : public std::enable_shared_from_this<Tensor<T>> {
  public:
   typedef T dtype;
 
@@ -253,6 +255,10 @@ class Tensor {
   //     std::make_shared<AutogradMeta<T>>(*other.autograd_meta_);
   //   }
   // }
+
+  std::shared_ptr<Tensor<T>> shared_from_this() {
+    return std::enable_shared_from_this<Tensor<T>>::shared_from_this();
+  }
 
   static Tensor expand(const T &x, const std::vector<size_t> &dimensions,
                        const bool requires_grad = false) {
