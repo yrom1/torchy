@@ -1,3 +1,39 @@
+# building cling from source
+
+```
+(master) Ryans-Air:packaging ryan$ chmod +x cpt.py
+(master) Ryans-Air:packaging ryan$
+(master) Ryans-Air:packaging ryan$ ./cpt.py --check-requirements && ./cpt.py --create-dev-env Debug --with-workdir=./cling-build/
+
+Cling Packaging Tool (CPT)
+Arguments vector: ['./cpt.py', '--check-requirements']
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ cling (arm64)                                Wed, 03 May 2023 01:24:14 -0400 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+Thread Model: POSIX
+Operating System: Darwin
+Distribution: MacOSX
+Release: 22.3.0
+Revision: 13.2.1
+Architecture: arm64
+
++-----------------------------------------------------------------------------+
+| Check availability of required softwares                                    |
++-----------------------------------------------------------------------------+
+git                 [OK]
+cmake               [OK]
+clang               [OK]
+clang++             [OK]
+subprocess.CalledProcessError: Command 'type -p zlib*' returned non-zero exit status 1
+```
+
+```
++-----------------------------------------------------------------------------+
+| Building cling (using 8 cores)                                              |
++-----------------------------------------------------------------------------+
+```
+
 # enabled shared from this
 
 ```cpp
