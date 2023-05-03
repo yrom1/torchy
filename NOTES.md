@@ -1,3 +1,41 @@
+# enabled shared from this
+
+```cpp
+#include <iostream>
+#include <memory>
+
+class MyClass : public std::enable_shared_from_this<MyClass> {
+public:
+    MyClass() {
+        std::cout << "MyClass constructor called" << std::endl;
+    }
+    ~MyClass() {
+        std::cout << "MyClass destructor called" << std::endl;
+    }
+
+    std::shared_ptr<MyClass> getSharedPtr() {
+        return shared_from_this();
+    }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>();
+    std::shared_ptr<MyClass> ptr2 = ptr1->getSharedPtr();
+
+    std::cout << "ptr1 address: " << ptr1.get() << std::endl;
+    std::cout << "ptr2 address: " << ptr2.get() << std::endl;
+
+    return 0;
+}
+```
+
+```
+MyClass constructor called
+ptr1 address: 0x6000009dc258
+ptr2 address: 0x6000009dc258
+MyClass destructor called
+```
+
 # c = (a * b) - ((b / a) + b) bug
 
 ```c++

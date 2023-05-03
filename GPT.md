@@ -1,3 +1,154 @@
+# std::enable_shared_from_this
+
+an you show me how to use c++ shared from this standard template and what that does with the printed address output i want to have the shared pointer be the same in multiple places
+ChatGPT
+Sure! The C++ Standard Library provides the std::shared_ptr class template, which is a smart pointer that allows multiple pointers to share ownership of a single object. When the last shared pointer that owns the object is destroyed, the object is automatically deleted. To use std::shared_ptr, you'll need to include the <memory> header.
+
+Here's an example of how you can use std::shared_ptr to have multiple pointers sharing ownership of an object, and how to print the memory address that they point to:
+
+```cpp
+#include <iostream>
+#include <memory>
+
+class MyClass {
+public:
+    MyClass() {
+        std::cout << "MyClass constructor called" << std::endl;
+    }
+    ~MyClass() {
+        std::cout << "MyClass destructor called" << std::endl;
+    }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>();
+    std::shared_ptr<MyClass> ptr2 = ptr1;
+    std::shared_ptr<MyClass> ptr3 = ptr1;
+
+    std::cout << "ptr1 address: " << ptr1.get() << std::endl;
+    std::cout << "ptr2 address: " << ptr2.get() << std::endl;
+    std::cout << "ptr3 address: " << ptr3.get() << std::endl;
+
+    return 0;
+}
+```
+In this example, we have a class called MyClass. We create a std::shared_ptr called ptr1 and initialize it using std::make_shared, which creates a new object of MyClass and shares its ownership with ptr1. We then create two more shared pointers, ptr2 and ptr3, and initialize them with ptr1. This makes all three pointers share the ownership of the same object.
+
+We then print the memory addresses held by each pointer using the get() member function. All three addresses should be the same, indicating that they point to the same object.
+
+The program output should look something like this:
+
+```
+MyClass constructor called
+ptr1 address: 0x55c92f395e70
+ptr2 address: 0x55c92f395e70
+ptr3 address: 0x55c92f395e70
+MyClass destructor called
+```
+
+The memory addresses may vary in different runs, but they should be the same for all three pointers in a single run.
+
+---
+
+User
+what does inheriting from std enable shared from this do
+
+---
+
+ChatGPT
+When a class inherits from std::enable_shared_from_this, it provides the ability to create std::shared_ptr instances that share ownership of this (the current object) from within member functions of the class. This is useful when you want to create a shared_ptr to an object that is already managed by a shared_ptr, especially when you're working with callbacks or asynchronous operations.
+
+Here's an example demonstrating how to use std::enable_shared_from_this:
+
+```cpp
+#include <iostream>
+#include <memory>
+
+class MyClass : public std::enable_shared_from_this<MyClass> {
+public:
+    MyClass() {
+        std::cout << "MyClass constructor called" << std::endl;
+    }
+    ~MyClass() {
+        std::cout << "MyClass destructor called" << std::endl;
+    }
+
+    std::shared_ptr<MyClass> getSharedPtr() {
+        return shared_from_this();
+    }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>();
+    std::shared_ptr<MyClass> ptr2 = ptr1->getSharedPtr();
+
+    std::cout << "ptr1 address: " << ptr1.get() << std::endl;
+    std::cout << "ptr2 address: " << ptr2.get() << std::endl;
+
+    return 0;
+}
+```
+
+In this example, MyClass inherits from std::enable_shared_from_this<MyClass>. We added a member function called getSharedPtr(), which returns a new shared_ptr that shares ownership of this with any existing shared_ptr instances.
+
+In the main function, we create a shared_ptr called ptr1 and initialize it using std::make_shared. Then, we create another shared_ptr called ptr2 by calling the getSharedPtr() function on ptr1. This creates a new shared_ptr that shares ownership of the object with ptr1.
+
+When we print the memory addresses held by each pointer using the get() member function, we can see that they are the same, indicating that they point to the same object.
+
+The program output should look something like this:
+
+```
+MyClass constructor called
+ptr1 address: 0x55c92f395e70
+ptr2 address: 0x55c92f395e70
+MyClass destructor called
+```
+
+Again, the memory addresses may vary in different runs, but they should be the same for both pointers in a single run.
+
+---
+
+User
+is sharing shared pointers not possible without this like what would you do without this
+
+---
+
+ChatGPT
+Sharing std::shared_ptr instances without using std::enable_shared_from_this is definitely possible. In fact, std::enable_shared_from_this is used for specific cases when you need to obtain a new std::shared_ptr to the current object (this) from within a member function.
+
+In the previous examples, we demonstrated sharing a shared_ptr without using enable_shared_from_this. You can create multiple shared_ptr instances that share ownership of an object simply by assigning one shared_ptr to another:
+
+```cpp
+#include <iostream>
+#include <memory>
+
+class MyClass {
+public:
+    MyClass() {
+        std::cout << "MyClass constructor called" << std::endl;
+    }
+    ~MyClass() {
+        std::cout << "MyClass destructor called" << std::endl;
+    }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>();
+    std::shared_ptr<MyClass> ptr2 = ptr1;
+    std::shared_ptr<MyClass> ptr3 = ptr1;
+
+    std::cout << "ptr1 address: " << ptr1.get() << std::endl;
+    std::cout << "ptr2 address: " << ptr2.get() << std::endl;
+    std::cout << "ptr3 address: " << ptr3.get() << std::endl;
+
+    return 0;
+}
+```
+
+In this example, ptr2 and ptr3 are created by assigning ptr1 to them, which results in all three pointers sharing ownership of the same object. The addresses printed for all three pointers should be the same.
+
+std::enable_shared_from_this is helpful in specific scenarios, such as when working with callbacks or asynchronous operations, where you need to create a new shared_ptr to the current object (this) from within a member function. In general, however, you can share std::shared_ptr instances just by assigning one shared_ptr to another.
+
 # MatMulBackward
 
 i see how AddBackward to work for tensors in matrix multiplication
