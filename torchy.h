@@ -377,12 +377,10 @@ class Tensor : public std::enable_shared_from_this<Tensor<T>> {
       debug << "tensor binop 2" << std::endl;
       t.autograd_meta_.get()->grad_fn_ =
           std::make_shared<BackwardFunction<T>>();
-      // t.autograd_meta_.get()->children_.push_back(this->shared_from_this());
-      // t.autograd_meta_.get()->children_.push_back(other.shared_from_this());
       t.autograd_meta_.get()->children_.push_back(
-          std::make_shared<Tensor<T>>(*this));
+          Tensor<T>>(this->shared_from_this());
       t.autograd_meta_.get()->children_.push_back(
-          std::make_shared<Tensor<T>>(other));
+          Tensor<T>>(other.shared_from_this());
       debug << "tensor binop 3" << std::endl;
     }
     return t;
