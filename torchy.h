@@ -103,11 +103,13 @@ class MulBackward0 : public AutogradFunction<T> {
     size_t grad_output_size = grad_output.storage_.get()->data_.size();
     // TODO(yrom1) check inputs outputs same length vector
     for (size_t i = 0; i < grad_output_size; ++i) {
-      debug << "+= " << grad_output.storage_.get()->data_[i] << "*" << grad_inputs[1]->storage_.get()->data_[i] << std::endl;
+      debug << "+= " << grad_output.storage_.get()->data_[i] << "*"
+            << grad_inputs[1]->storage_.get()->data_[i] << std::endl;
       grad_inputs[0]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i] *
           grad_inputs[1]->storage_.get()->data_[i];
-      debug << "+= " << grad_output.storage_.get()->data_[i] << "*" << grad_inputs[0]->storage_.get()->data_[i] << std::endl;
+      debug << "+= " << grad_output.storage_.get()->data_[i] << "*"
+            << grad_inputs[0]->storage_.get()->data_[i] << std::endl;
       grad_inputs[1]->autograd_meta_.get()->grad_.storage_.get()->data_[i] +=
           grad_output.storage_.get()->data_[i] *
           grad_inputs[0]->storage_.get()->data_[i];
@@ -260,6 +262,10 @@ class Tensor : public std::enable_shared_from_this<Tensor<T>> {
     return std::enable_shared_from_this<Tensor<T>>::shared_from_this();
   }
 
+  std::shared_ptr<const Tensor<T>> shared_from_this() const {
+    return std::enable_shared_from_this<Tensor<T>>::shared_from_this();
+  }
+
   static Tensor expand(const T &x, const std::vector<size_t> &dimensions,
                        const bool requires_grad = false) {
     size_t size = computeSizeFromDimensions(dimensions);
@@ -371,6 +377,8 @@ class Tensor : public std::enable_shared_from_this<Tensor<T>> {
       debug << "tensor binop 2" << std::endl;
       t.autograd_meta_.get()->grad_fn_ =
           std::make_shared<BackwardFunction<T>>();
+      // t.autograd_meta_.get()->children_.push_back(this->shared_from_this());
+      // t.autograd_meta_.get()->children_.push_back(other.shared_from_this());
       t.autograd_meta_.get()->children_.push_back(
           std::make_shared<Tensor<T>>(*this));
       t.autograd_meta_.get()->children_.push_back(
