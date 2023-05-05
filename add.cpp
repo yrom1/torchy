@@ -25,7 +25,7 @@ public:
 
   void children() {
     for (const auto & x : children_) {
-      std::cout << x->value_ << std::endl; // Print the value of each child
+      std::cout << x << std::endl; // Print the value of each child
     }
   }
 };
@@ -34,9 +34,14 @@ int main() {
   auto foo1 = std::make_shared<Foo>(5);
   auto foo2 = std::make_shared<Foo>(7);
   auto foo3 = std::make_shared<Foo>(4);
+
   auto result = *foo1 + 3;
   auto resultc = *foo1 + foo3;
+
+  std::cout << "Foo(5) + 3" << std::endl;
   std::cout << result->value_ << std::endl;
+  std::cout << "Foo(5) + Foo(4)" << std::endl;
   std::cout << resultc->value_ << std::endl;
+  std::cout << "children" << std::endl;
   foo1->children();
 }
