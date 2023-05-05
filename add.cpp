@@ -51,13 +51,18 @@ public:
 
     void children() {
         for (const auto& x : children_) {
+            std::cout << x << std::endl;
             std::cout << x->value_ << std::endl;
+            for (auto x : x->children_) {
+              std::cout << "" << std::endl;
+            }
         }
     }
 };
 
-std::shared_ptr<Foo> operator+(int value, const Foo& other) {
-    return std::make_shared<Foo>(value + other.value_);
+std::shared_ptr<Foo> operator+(int value, Foo& other) {
+    Foo tmp(value);
+    return other.binaryAdd(std::make_shared<Foo>(tmp));
 }
 
 int main() {
