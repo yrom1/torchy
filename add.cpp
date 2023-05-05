@@ -9,54 +9,45 @@ public:
 
     Foo(int value = 0) : value_(value) {}
 
-    std::shared_ptr<Foo> binaryAdd(const std::shared_ptr<Foo>& other) {
+    void addChild(const std::shared_ptr<Foo>& other) {
         children_.push_back(other);
-        return std::make_shared<Foo>(value_ + other->value_);
     }
 
-    std::shared_ptr<Foo> operator+(const std::shared_ptr<Foo>& other) {
-        return binaryAdd(other);
-    }
-
-    std::shared_ptr<Foo> operator+(int value) {
-        Foo tmp(value);
-        return binaryAdd(std::make_shared<Foo>(tmp));
-    }
-
-    std::shared_ptr<Foo> operator+(const Foo& other) {
-        return *this + std::make_shared<Foo>(other);
-    }
-
-    void children() {
-        for (const auto& x : children_) {
-            std::cout << x << std::endl;
-            std::cout << x->value_ << std::endl;
+    void printChildren() const {
+        std::cout << "Node value: " << value_ << ", children: ";
+        for (const auto& child : children_) {
+            std::cout << child->value_ << " ";
+            std::cout << child.get() << " ";
         }
+        std::cout << std::endl;
     }
 };
 
-std::shared_ptr<Foo> operator+(int value, Foo& other) {
-    Foo tmp(value);
-    return other.binaryAdd(std::make_shared<Foo>(tmp));
-}
+class FooWrapper {
+public:
+    static std::shared_ptr<Foo> create(int value = 0) {
+        return std::make_shared<Foo>(value);
+    }
+};
 
 int main() {
-    Foo foo1(5);
-    Foo foo2(7);
-    Foo foo3(4);
+    auto node1 = FooWrapper::create(1);
+    auto node2 = FooWrapper::create(2);
+    auto node3 = FooWrapper::create(3);
+    auto node4 = FooWrapper::create(4);
+    auto node5 = FooWrapper::create(5);
 
-    auto result = foo1 + 3;
-    auto resultc = foo1 + foo3;
-    auto resulti = foo1 + Foo(3);
-    auto resultl = 2 + foo1;
-    auto resultc2 = foo1 + foo3;
+    node1->addChild(node2);
+    node1->addChild(node3);
+    node1->addChild(node2);
+    node2->addChild(node4);
+    node2->addChild(node5);
 
-    std::cout << "Foo(5) + 3" << std::endl;
-    std::cout << result->value_ << std::endl;
-    std::cout << "Foo(5) + Foo(4)" << std::endl;
-    std::cout << resultc->value_ << std::endl;
-    std::cout << "Foo(5) + Foo(3)" << std::endl;
-    std::cout << resulti->value_ << std::endl;
-    std::cout << "children" << std::endl;
-    foo1.children();
+    node1->printChildren();
+    node2->printChildren();
+    node3->printChildren();
+    node4->printChildren();
+    node5->printChildren();
+
+    return 0;
 }
