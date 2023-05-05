@@ -1,3 +1,25 @@
+/**
+ * The class Foo represents a simple integer value with a vector of child Foo objects.
+ * This class provides three different operator+ methods for adding two Foo objects or an integer value
+ * to a Foo object:
+ *
+ * - operator+(const std::shared_ptr<Foo>& other):
+ *   Adds two Foo objects together and returns a shared_ptr<Foo> that represents the sum.
+ *   Used when adding two Foo objects together.
+ *
+ * - operator+(int value):
+ *   Adds an integer value to a Foo object and returns a shared_ptr<Foo> that represents the sum.
+ *   Used when adding an integer value to a Foo object.
+ *
+ * - operator+(const Foo& other):
+ *   Adds two Foo objects together using the + operator and returns a shared_ptr<Foo> that represents the sum.
+ *   Used when adding two Foo objects together using the + operator.
+ *
+ * In each of these methods, a new Foo object is created to represent the sum of the original Foo object(s)
+ * and the input parameter(s), and both the original Foo object(s) and the new Foo object are added to the
+ * child vector of the first Foo object.
+ */
+
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -34,6 +56,10 @@ public:
     }
 };
 
+std::shared_ptr<Foo> operator+(int value, const Foo& other) {
+    return std::make_shared<Foo>(value + other.value_);
+}
+
 int main() {
     Foo foo1(5);
     Foo foo2(7);
@@ -42,6 +68,7 @@ int main() {
     auto result = foo1 + 3;
     auto resultc = foo1 + foo3;
     auto resulti = foo1 + Foo(3);
+    auto resultl = 2 + foo1;
 
     std::cout << "Foo(5) + 3" << std::endl;
     std::cout << result->value_ << std::endl;
