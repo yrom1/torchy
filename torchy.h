@@ -149,10 +149,10 @@ class DummyBackward0 : public AutogradFunction<T> {
              std::vector<std::shared_ptr<Tensor<T>>>
                  &grad_inputs)  // NOLINT (runtime/references)
       override {
-    throw std::runtime_error("You called DummyBackward0 dummy!");
+    // throw std::runtime_error("You called DummyBackward0 dummy!");
   }
-  char op() const override {
-    throw std::runtime_error("You called DummyBackward0 dummy!");
+  char op() const override{
+      // throw std::runtime_error("You called DummyBackward0 dummy!");
   };
 };
 
@@ -262,9 +262,9 @@ class Tensor : public std::enable_shared_from_this<Tensor<T>> {
     return std::enable_shared_from_this<Tensor<T>>::shared_from_this();
   }
 
-  std::shared_ptr<const Tensor<T>> shared_from_this() const {
-    return std::enable_shared_from_this<Tensor<T>>::shared_from_this();
-  }
+  // std::shared_ptr<const Tensor<T>> shared_from_this() const {
+  //   return std::enable_shared_from_this<Tensor<T>>::shared_from_this();
+  // }
 
   static Tensor expand(const T &x, const std::vector<size_t> &dimensions,
                        const bool requires_grad = false) {
@@ -363,69 +363,108 @@ class Tensor : public std::enable_shared_from_this<Tensor<T>> {
   //             we also need to implement SubBackward MulBackward
   //             DivBackward...
 
-  // Overloaded binaryOperator for tensors
   template <template <typename> class BackwardFunction>
-  Tensor<T> binaryOperator(const Tensor<T> &other,
-                           const std::function<T(T, T)> &operation) const {
-    debug << "tensor binop 0" << std::endl;
+  Tensor<T> binaryOperator(Tensor<T> &other,  // NOLINT (runtime/reference)
+                           const std::function<T(T, T)> &operation) {
     // WARNING addition is associative, subtraction is not
     //         you must carefully not flip the order in binaryOperator
     // TODO(yrom1) check this is right for subtraction!
     auto t = applyElementwiseWithBroadcast(other, operation);
-    debug << "tensor binop 1" << std::endl;
     if (t.requires_grad_) {
-      debug << "tensor binop 2" << std::endl;
       t.autograd_meta_.get()->grad_fn_ =
           std::make_shared<BackwardFunction<T>>();
-      t.autograd_meta_.get()->children_.push_back(
-          Tensor<T>>(this->shared_from_this());
-      t.autograd_meta_.get()->children_.push_back(
-          Tensor<T>>(other.shared_from_this());
-      debug << "tensor binop 3" << std::endl;
+      t.autograd_meta_.get()->children_.push_back(this->shared_from_this());
+      t.autograd_meta_.get()->children_.push_back(other.shared_from_this());
+    }
+    return t;
+  }
+
+  template <template <typename> class BackwardFunction>
+  Tensor<T> binaryOperator(
+      const Tensor<T> &other,  // NOLINT (runtime/reference)
+      const std::function<T(T, T)> &operation) {
+    // WARNING addition is associative, subtraction is not
+    //         you must carefully not flip the order in binaryOperator
+    // TODO(yrom1) check this is right for subtraction!
+    auto t = applyElementwiseWithBroadcast(other, operation);
+    if (t.requires_grad_) {
+      t.autograd_meta_.get()->grad_fn_ =
+          std::make_shared<BackwardFunction<T>>();
+      t.autograd_meta_.get()->children_.push_back(this->shared_from_this());
+      t.autograd_meta_.get()->children_.push_back(other.shared_from_this());
     }
     return t;
   }
 
   // Overloaded binaryOperator for scalars
   template <template <typename> class BackwardFunction>
-  Tensor<T> binaryOperator(const T &scalar,
-                           const std::function<T(T, T)> &operation) const {
-    debug << "scalar binop 0" << std::endl;
+  Tensor<T> binaryOperator(T &scalar,  // NOLINT (runtime/reference)
+                           const std::function<T(T, T)> &operation) {
     auto expandedTensor =
         Tensor<T>::expand(scalar, (*this).sizes_, (*this).requires_grad_);
-    debug << "scalar binop 1" << std::endl;
     auto t = binaryOperator<BackwardFunction>(expandedTensor, operation);
-    debug << "scalar binop 2" << std::endl;
     return t;
   }
 
-  // Tensor operator+ overload for tensors
-  Tensor<T> operator+(const Tensor<T> &other) const {
+  // Overloaded binaryOperator for scalars
+  template <template <typename> class BackwardFunction>
+  Tensor<T> binaryOperator(const T &scalar,  // NOLINT (runtime/reference)
+                           const std::function<T(T, T)> &operation) {
+    auto expandedTensor =
+        Tensor<T>::expand(scalar, (*this).sizes_, (*this).requires_grad_);
+    auto t = binaryOperator<BackwardFunction>(expandedTensor, operation);
+    return t;
+  }
+
+  Tensor<T> operator+(Tensor<T> &other) {  // NOLINT (runtime/reference)
     return binaryOperator<AddBackward0>(other, std::plus<T>());
   }
 
-  // Tensor operator+ overload for scalars
-  Tensor<T> operator+(const T &scalar) const {
+  Tensor<T> operator+(const Tensor<T> &other) {  // NOLINT (runtime/reference)
+    return binaryOperator<AddBackward0>(other, std::plus<T>());
+  }
+
+  Tensor<T> operator+(T &scalar) {  // NOLINT (runtime/reference)
     return binaryOperator<AddBackward0>(scalar, std::plus<T>());
   }
 
-  Tensor<T> operator-(const Tensor<T> &other) const {
+  Tensor<T> operator+(const T &scalar) {  // NOLINT (runtime/reference)
+    return binaryOperator<AddBackward0>(scalar, std::plus<T>());
+  }
+
+  Tensor<T> operator-(Tensor<T> &other) {  // NOLINT (runtime/reference)
     return binaryOperator<SubBackward0>(other, std::minus<T>());
   }
 
-  Tensor<T> operator-(const T &scalar) const {
+  Tensor<T> operator-(const Tensor<T> &other) {  // NOLINT (runtime/reference)
+    return binaryOperator<SubBackward0>(other, std::minus<T>());
+  }
+
+  Tensor<T> operator-(T &scalar) {  // NOLINT (runtime/reference)
     return binaryOperator<SubBackward0>(scalar, std::minus<T>());
   }
 
-  Tensor<T> operator*(const Tensor<T> &other) const {
+  Tensor<T> operator-(const T &scalar) {  // NOLINT (runtime/reference)
+    return binaryOperator<SubBackward0>(scalar, std::minus<T>());
+  }
+
+  Tensor<T> operator*(Tensor<T> &other) {  // NOLINT (runtime/reference)
     return binaryOperator<MulBackward0>(other, std::multiplies<T>());
   }
 
-  Tensor<T> operator*(const T &scalar) const {
+  Tensor<T> operator*(const Tensor<T> &other) {  // NOLINT (runtime/reference)
+    return binaryOperator<MulBackward0>(other, std::multiplies<T>());
+  }
+
+  Tensor<T> operator*(T &scalar) {  // NOLINT (runtime/reference)
     return binaryOperator<MulBackward0>(scalar, std::multiplies<T>());
   }
 
-  Tensor<T> operator/(const Tensor<T> &other) const {
+  Tensor<T> operator*(const T &scalar) {  // NOLINT (runtime/reference)
+    return binaryOperator<MulBackward0>(scalar, std::multiplies<T>());
+  }
+
+  Tensor<T> operator/(Tensor<T> &other) {  // NOLINT (runtime/reference)
     if (std::find(other.storage_.get()->data_.begin(),
                   other.storage_.get()->data_.end(),
                   0) != other.storage_.get()->data_.end()) {
@@ -434,7 +473,23 @@ class Tensor : public std::enable_shared_from_this<Tensor<T>> {
     return binaryOperator<DivBackward0>(other, std::divides<T>());
   }
 
-  Tensor<T> operator/(const T &scalar) const {
+  Tensor<T> operator/(const Tensor<T> &other) {  // NOLINT (runtime/reference)
+    if (std::find(other.storage_.get()->data_.begin(),
+                  other.storage_.get()->data_.end(),
+                  0) != other.storage_.get()->data_.end()) {
+      throw std::runtime_error("Tensor division by zero.");
+    }
+    return binaryOperator<DivBackward0>(other, std::divides<T>());
+  }
+
+  Tensor<T> operator/(T &scalar) {  // NOLINT (runtime/reference)
+    if (scalar == 0) {
+      throw std::runtime_error("Scalar division by zero.");
+    }
+    return binaryOperator<DivBackward0>(scalar, std::divides<T>());
+  }
+
+  Tensor<T> operator/(const T &scalar) {  // NOLINT (runtime/reference)
     if (scalar == 0) {
       throw std::runtime_error("Scalar division by zero.");
     }
