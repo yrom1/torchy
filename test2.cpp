@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "torchy.h"  // NOLINT (build/include_subdir)
+#include "torchy.hpp"  // NOLINT (build/include_subdir)
 
 TEST(Basic, Shared) {
     ag::T foo = ag::tensor(42);
