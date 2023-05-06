@@ -21,10 +21,3 @@ T tensor(float value) {
 }
 
 }
-
-int main() {
-    ag::T foo = ag::tensor(42);
-    ag::T bar = foo->get_shared();
-    std::cout << foo->value_ << " " << foo << std::endl;
-    std::cout << bar->value_ << " " << bar << std::endl;
-}
