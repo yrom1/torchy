@@ -45,8 +45,13 @@ private:
     }
 };
 
-std::shared_ptr<Tensor> tensor() {
-    Tensor t({1}, {42.0});
+std::shared_ptr<Tensor> tensor(std::initializer_list<int> size, std::initializer_list<float> data) {
+    Tensor t(size, data);
+    return std::make_shared<Tensor>(t);
+}
+
+std::shared_ptr<Tensor> tensor(std::vector<int> size, std::vector<float> data) {
+    Tensor t(size, data);
     return std::make_shared<Tensor>(t);
 }
 
