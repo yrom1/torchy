@@ -87,6 +87,8 @@
         "compare": "cpp",
         "concepts": "cpp",
         "algorithm": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "__memory": "cpp",
+        "filesystem": "cpp"
     }
 }
