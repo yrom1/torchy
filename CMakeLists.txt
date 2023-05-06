@@ -17,7 +17,7 @@ set(USE_CUDA OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/googletest)
 
 # Add the target executable
-add_executable(${PROJECT_NAME} test2.cpp)
+add_executable(${PROJECT_NAME} test.cpp)
 
 # Link the executable against the googletest and torch libraries
 target_link_libraries(${PROJECT_NAME} gtest gtest_main ${TORCH_LIBRARIES})
