@@ -1,24 +1,30 @@
 #include <iostream>
 #include <memory>
 
-class Foo : public std::enable_shared_from_this<Foo> {
+namespace ag {
+
+class Tensor : public std::enable_shared_from_this<Tensor> {
 public:
     int value_;
 
-    using dtype = std::shared_ptr<Foo>;
+    using dtype = std::shared_ptr<Tensor>;
 
-    Foo(int value = 0) : value_(value) {}
+    Tensor(int value = 0) : value_(value) {}
 
-    std::shared_ptr<Foo> getSharedFromThis() {
+    std::shared_ptr<Tensor> getSharedFromThis() {
         return shared_from_this();
     }
 };
 
+using T = std::shared_ptr<Tensor>;
+
+}
+
 int main() {
-    Foo::dtype foo = std::make_shared<Foo>(42);
-    Foo::dtype afoo = foo->getSharedFromThis();
+    ag::T foo = std::make_shared<ag::Tensor>(42);
+    ag::T bar = foo->getSharedFromThis();
     std::cout << foo->value_ << " " << foo << std::endl;
-    std::cout << afoo->value_ << " " << afoo << std::endl;
+    std::cout << bar->value_ << " " << bar << std::endl;
 }
 
 /*
