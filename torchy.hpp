@@ -68,7 +68,7 @@ std::shared_ptr<Tensor> tensor(std::initializer_list<int> size, std::initializer
 }
 
 std::shared_ptr<Tensor> tensor(std::vector<int> size, std::vector<float> data, std::vector<std::shared_ptr<Tensor>> children = {}) {
-    Tensor t(size, data, {});
+    Tensor t(size, data, children);
     return std::make_shared<Tensor>(t);
 }
 
