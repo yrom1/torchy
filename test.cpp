@@ -21,6 +21,7 @@ TEST(Basic, Add) {
   ag::T a = ag::tensor({1}, {42.0});
   ag::T b = ag::tensor({1}, {42.0});
   auto c = a + b;
+  c.get()->backward();
 
   EXPECT_EQ(c.get()->data_[0], 84.0);
   EXPECT_EQ(a.get()->grad_[0], 1.0);

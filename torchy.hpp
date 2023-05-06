@@ -61,6 +61,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 
   std::shared_ptr<Tensor> get_shared() { return this->shared_from_this(); }
 
+  void backward();
+
   void size() {
     for (auto x : size_) std::cout << x << std::endl;
   }
@@ -84,8 +86,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 
  private:
   int _product(std::vector<int> size) {
-    auto product = 1;
-    for (auto s : size) {
+    int product = 1;
+    for (int s : size) {
       product *= s;
     }
     return product;
@@ -138,13 +140,21 @@ struct AddBackward : public AutoGradFunction {
              std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
     for (std::shared_ptr<Tensor> grad_input : grad_inputs) {
       for (size_t i = 0; i < grad_output.get()->grad_.size(); ++i) {
-        std::cout << grad_input.get()->grad_[i] << std::endl;
-        std::cout << grad_output.get()->grad_[i] << std::endl;
         grad_input.get()->grad_[i] += grad_output.get()->grad_[i];
       }
     }
   }
 };
+
+void Tensor::backward() {
+  grad_ = std::vector<float>(_product(size_), 1.0f);
+  grad_fn_.get()->apply(get_shared(), children_);
+  for (auto child : children_) {
+    if (child.get()->grad_fn_ != nullptr) {
+      child.get()->backward();
+    }
+  }
+}
 
 using T = std::shared_ptr<Tensor>;
 
