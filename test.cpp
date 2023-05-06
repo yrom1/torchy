@@ -11,18 +11,18 @@
 #include "torchy.hpp"  // NOLINT (build/include_subdir)
 
 TEST(Basic, Shared) {
-    ag::T foo = ag::tensor({1}, {42.0});
-    ag::T bar = foo->get_shared();
+  ag::T foo = ag::tensor({1}, {42.0});
+  ag::T bar = foo->get_shared();
 
-    EXPECT_EQ(foo, bar);
+  EXPECT_EQ(foo, bar);
 }
 
 TEST(Basic, Add) {
-    ag::T a = ag::tensor({1}, {42.0});
-    // ag::T b = ag::tensor({1}, {42.0});
-    // auto c = a + b;
+  ag::T a = ag::tensor({1}, {42.0});
+  ag::T b = ag::tensor({1}, {42.0});
+  auto c = a + b;
 
-    // EXPECT_EQ(c.get()->data_[0], 42.0);
+  EXPECT_EQ(c.get()->data_[0], 84.0);
 }
 
 int main(int argc, char** argv) {

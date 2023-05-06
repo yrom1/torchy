@@ -14,9 +14,19 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace ag {
+
+class Tensor;
+
+class AutoGradFunction {
+  virtual ~AutoGradFunction() {}
+
+  virtual void apply(Tensor grad_output,
+                     std::vector<std::shared_ptr<Tensor>> grad_inputs) = 0;
+};
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
  public:
@@ -31,14 +41,14 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         data_(data),
         grad_(_product(size), 0),
         children_(),
-        op_('?'){};
+        op_('?') {}
   Tensor(std::vector<int> size, std::vector<float> data,
          std::vector<std::shared_ptr<Tensor>> children, char op)
       : size_(size),
         data_(data),
         grad_(_product(size), 0),
         children_(children),
-        op_(op){};
+        op_(op) {}
 
   std::shared_ptr<Tensor> get_shared() { return this->shared_from_this(); }
 
@@ -55,13 +65,13 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
     for (auto x : children_) std::cout << x << std::endl;
   }
 
-void graph(int depth = 0) {
+  void graph(int depth = 0) {
     std::string tab(depth, ' ');
     std::cout << tab << get_shared() << " " << op_ << std::endl;
     for (auto c : children_) {
-        c.get()->graph(depth + 2);
+      c.get()->graph(depth + 2);
     }
-}
+  }
 
  private:
   int _product(std::vector<int> size) {
