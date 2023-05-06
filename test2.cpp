@@ -11,7 +11,7 @@
 #include "torchy.hpp"  // NOLINT (build/include_subdir)
 
 TEST(Basic, Shared) {
-    ag::T foo = ag::tensor(42);
+    ag::T foo = ag::tensor({1}, {42.0});
     ag::T bar = foo->get_shared();
 
     EXPECT_EQ(foo, bar);
