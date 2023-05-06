@@ -11,12 +11,15 @@ public:
         return shared_from_this();
     }
 };
+namespace t {
+    using Foo = std::shared_ptr<Foo>;
+}
 
 int main() {
-    std::shared_ptr<Foo> fooPtr = std::make_shared<Foo>(42);
-    std::shared_ptr<Foo> anotherPtr = fooPtr->getSharedFromThis();
-    std::cout << fooPtr->value_ << " " << fooPtr << std::endl;
-    std::cout << anotherPtr->value_ << " " << anotherPtr << std::endl;
+    t::Foo foo = std::make_shared<Foo>(42);
+    t::Foo afoo = foo->getSharedFromThis();
+    std::cout << foo->value_ << " " << foo << std::endl;
+    std::cout << afoo->value_ << " " << afoo << std::endl;
 }
 
 /*
