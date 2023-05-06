@@ -26,7 +26,7 @@ target_link_libraries(${PROJECT_NAME} gtest gtest_main ${TORCH_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -fsanitize=address)
 
 # Copy headers to build directory
-configure_file(torchy.h torchy.h COPYONLY)
+configure_file(torchy.hpp torchy.hpp COPYONLY)
 
 # Clang-format and cpplint custom targets
 find_program(CLANG_FORMAT NAMES clang-format)
