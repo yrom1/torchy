@@ -24,6 +24,7 @@ public:
         std::cout << "Node value: " << value_ << ", children: ";
         for (const auto& child : children_) {
             std::cout << child->value_ << " ";
+            std::cout << child.get() << " ";
         }
         std::cout << std::endl;
     }
