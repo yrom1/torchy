@@ -1,3 +1,8 @@
+// Copyright 2023 Ryan Moore
+
+#ifndef TORCHY_HPP_
+#define TORCHY_HPP_
+
 #include <iostream>
 #include <memory>
 
@@ -21,3 +26,5 @@ T tensor(float value) {
 }
 
 }
+
+#endif  // TORCHY_HPP_
