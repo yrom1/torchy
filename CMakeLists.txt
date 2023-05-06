@@ -35,7 +35,7 @@ find_program(CPPLINT NAMES cpplint)
 if(CLANG_FORMAT)
   add_custom_target(
     format
-    COMMAND ${CLANG_FORMAT} -i -style=Google ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/torchy.h
+    COMMAND ${CLANG_FORMAT} -i -style=Google ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/torchy.hpp
     COMMENT "Running clang-format on the source files"
   )
 endif()
@@ -43,7 +43,7 @@ endif()
 if(CPPLINT)
   add_custom_target(
     lint
-    COMMAND ${CPPLINT} ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/torchy.h
+    COMMAND ${CPPLINT} ${CMAKE_SOURCE_DIR}/test.cpp ${CMAKE_SOURCE_DIR}/torchy.hpp
     COMMENT "Running cpplint on the source files"
   )
 endif()
