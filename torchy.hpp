@@ -23,6 +23,7 @@ namespace ag {
 
 struct AutoGradFunction;
 struct AddBackward;
+using SumBackward = AddBackward;
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
  public:
@@ -36,7 +37,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   Tensor(std::initializer_list<int> size, std::initializer_list<float> data)
       : size_(size),
         data_(data),
-        grad_(_product(size), 0),
+        grad_(data.size(), 0),
         children_(),
         grad_fn_(),
         op_('?') {}
@@ -46,7 +47,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
          std::unique_ptr<AutoGradFunction> grad_fn, char op = '?')
       : size_(size),
         data_(data),
-        grad_(_product(size), 0),
+        grad_(data.size(), 0),
         children_(children),
         grad_fn_(std::move(grad_fn)),
         op_(op) {}
@@ -62,6 +63,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::shared_ptr<Tensor> get_shared() { return this->shared_from_this(); }
 
   void backward();
+  std::shared_ptr<Tensor> sum();
 
   void size() {
     for (auto x : size_) std::cout << x << std::endl;
@@ -111,6 +113,17 @@ std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
   return result;
 }
 
+std::shared_ptr<Tensor> Tensor::sum() {
+  std::vector<float> total(1, 0);
+  for (float x : data_) {
+    total[0] += x;
+  }
+  return std::make_shared<Tensor>(
+      std::vector<int>{1}, std::vector<float>{total},
+      std::vector<std::shared_ptr<Tensor>>{get_shared()},
+      std::make_unique<SumBackward>(), 's');
+}
+
 std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
                                std::initializer_list<float> data) {
   return std::make_shared<Tensor>(size, data);
@@ -139,8 +152,8 @@ struct AddBackward : public AutoGradFunction {
   void apply(std::shared_ptr<Tensor> grad_output,
              std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
     for (std::shared_ptr<Tensor> grad_input : grad_inputs) {
-      for (size_t i = 0; i < grad_output.get()->grad_.size(); ++i) {
-        grad_input.get()->grad_[i] += grad_output.get()->grad_[i];
+      for (size_t i = 0; i < grad_input.get()->grad_.size(); ++i) {
+        grad_input.get()->grad_[i] += grad_output.get()->grad_[0];
       }
     }
   }
