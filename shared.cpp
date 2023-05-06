@@ -5,19 +5,18 @@ class Foo : public std::enable_shared_from_this<Foo> {
 public:
     int value_;
 
+    using dtype = std::shared_ptr<Foo>;
+
     Foo(int value = 0) : value_(value) {}
 
     std::shared_ptr<Foo> getSharedFromThis() {
         return shared_from_this();
     }
 };
-namespace t {
-    using Foo = std::shared_ptr<Foo>;
-}
 
 int main() {
-    t::Foo foo = std::make_shared<Foo>(42);
-    t::Foo afoo = foo->getSharedFromThis();
+    Foo::dtype foo = std::make_shared<Foo>(42);
+    Foo::dtype afoo = foo->getSharedFromThis();
     std::cout << foo->value_ << " " << foo << std::endl;
     std::cout << afoo->value_ << " " << afoo << std::endl;
 }
