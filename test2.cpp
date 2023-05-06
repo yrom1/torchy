@@ -17,6 +17,14 @@ TEST(Basic, Shared) {
     EXPECT_EQ(foo, bar);
 }
 
+TEST(Basic, Add) {
+    ag::T a = ag::tensor({1}, {42.0});
+    // ag::T b = ag::tensor({1}, {42.0});
+    // auto c = a + b;
+
+    // EXPECT_EQ(c.get()->data_[0], 42.0);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
