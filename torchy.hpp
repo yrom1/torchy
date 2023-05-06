@@ -14,19 +14,15 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ag {
 
-class Tensor;
-
-class AutoGradFunction {
-  virtual ~AutoGradFunction() {}
-
-  virtual void apply(Tensor grad_output,
-                     std::vector<std::shared_ptr<Tensor>> grad_inputs) = 0;
-};
+struct AutoGradFunction;
+struct AddBackward;
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
  public:
@@ -34,6 +30,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::vector<float> data_;
   std::vector<float> grad_;
   std::vector<std::shared_ptr<Tensor>> children_;
+  std::unique_ptr<AutoGradFunction> grad_fn_ = nullptr;
   char op_;
 
   Tensor(std::initializer_list<int> size, std::initializer_list<float> data)
@@ -41,14 +38,26 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         data_(data),
         grad_(_product(size), 0),
         children_(),
+        grad_fn_(),
         op_('?') {}
+
   Tensor(std::vector<int> size, std::vector<float> data,
-         std::vector<std::shared_ptr<Tensor>> children, char op)
+         std::vector<std::shared_ptr<Tensor>> children,
+         std::unique_ptr<AutoGradFunction> grad_fn, char op = '?')
       : size_(size),
         data_(data),
         grad_(_product(size), 0),
         children_(children),
+        grad_fn_(std::move(grad_fn)),
         op_(op) {}
+
+  Tensor(Tensor&& other)
+      : size_(std::move(other.size_)),
+        data_(std::move(other.data_)),
+        grad_(std::move(other.grad_)),
+        children_(std::move(other.children_)),
+        grad_fn_(std::move(other.grad_fn_)),
+        op_(other.op_) {}
 
   std::shared_ptr<Tensor> get_shared() { return this->shared_from_this(); }
 
@@ -95,22 +104,47 @@ std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
     result_data[i] = lhs.get()->data_[i] + rhs.get()->data_[i];
   }
   auto result =
-      std::make_shared<Tensor>(lhs.get()->size_, result_data, children, '+');
+      std::make_shared<Tensor>(lhs.get()->size_, result_data, children,
+                               std::make_unique<AddBackward>(), '+');
   return result;
 }
 
 std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
                                std::initializer_list<float> data) {
-  Tensor t(size, data);
-  return std::make_shared<Tensor>(t);
+  return std::make_shared<Tensor>(size, data);
 }
 
 std::shared_ptr<Tensor> tensor(
     std::vector<int> size, std::vector<float> data,
-    std::vector<std::shared_ptr<Tensor>> children = {}, char op = '?') {
-  Tensor t(size, data, children, op);
-  return std::make_shared<Tensor>(t);
+    std::vector<std::shared_ptr<Tensor>> children = {},
+    std::unique_ptr<AutoGradFunction> grad_fn =
+        std::make_unique<AutoGradFunction>(),
+    char op = '?') {
+  return std::make_shared<Tensor>(size, data, children, std::move(grad_fn), op);
 }
+
+struct AutoGradFunction {
+  AutoGradFunction() = default;
+  virtual ~AutoGradFunction() = default;
+
+  virtual void apply(std::shared_ptr<Tensor> grad_output,
+                     std::vector<std::shared_ptr<Tensor>> grad_inputs) = 0;
+};
+
+struct AddBackward : public AutoGradFunction {
+  AddBackward() = default;
+
+  void apply(std::shared_ptr<Tensor> grad_output,
+             std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
+    for (std::shared_ptr<Tensor> grad_input : grad_inputs) {
+      for (size_t i = 0; i < grad_output.get()->grad_.size(); ++i) {
+        std::cout << grad_input.get()->grad_[i] << std::endl;
+        std::cout << grad_output.get()->grad_[i] << std::endl;
+        grad_input.get()->grad_[i] += grad_output.get()->grad_[i];
+      }
+    }
+  }
+};
 
 using T = std::shared_ptr<Tensor>;
 

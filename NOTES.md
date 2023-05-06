@@ -1,3 +1,14 @@
+# dont move from r values what is copy elipson?
+
+```cpp
+/Users/ryan/torchy/torchy.hpp:99:38: warning: moving a temporary object prevents copy elision [-Wpessimizing-move]
+      lhs.get()->size_, result_data, std::move(std::make_unique<AddBackward>()),
+                                     ^
+/Users/ryan/torchy/torchy.hpp:99:38: note: remove std::move call here
+      lhs.get()->size_, result_data, std::move(std::make_unique<AddBackward>()),
+                                     ^~~~~~~~~~
+```
+
 # shared_ptr minimal example
 
 ```cpp

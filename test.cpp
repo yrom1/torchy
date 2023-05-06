@@ -23,6 +23,8 @@ TEST(Basic, Add) {
   auto c = a + b;
 
   EXPECT_EQ(c.get()->data_[0], 84.0);
+  EXPECT_EQ(a.get()->grad_[0], 1.0);
+  EXPECT_EQ(b.get()->grad_[0], 1.0);
 }
 
 int main(int argc, char** argv) {
