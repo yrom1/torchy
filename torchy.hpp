@@ -19,14 +19,14 @@ namespace ag {
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
 public:
-    std::vector<size_t> size_;
+    std::vector<int> size_;
     std::vector<float> data_;
     std::vector<float> grad_;
     std::vector<std::shared_ptr<Tensor>> children_;
     char op_;
 
-    Tensor(std::initializer_list<size_t> size, std::initializer_list<float> data) : size_(size), data_(data), grad_(), children_(), op_() {};
-    Tensor(std::vector<size_t> size, std::vector<float> data) : size_(size), data_(data), grad_(), children_(), op_() {};
+    Tensor(std::initializer_list<int> size, std::initializer_list<float> data) : size_(size), data_(data), grad_(_product(size), 0), children_(), op_('?') {};
+    Tensor(std::vector<int> size, std::vector<float> data) : size_(size), data_(data), grad_(_product(size), 0), children_(), op_('?') {};
 
     std::shared_ptr<Tensor> get_shared() {
         return this->shared_from_this();
@@ -34,6 +34,15 @@ public:
 
     void data() { for (auto x : data_) std::cout << x << std::endl; }
     void grad() { for (auto x : grad_) std::cout << x << std::endl; }
+
+private:
+    int _product(std::vector<int> size) {
+        auto product = 1;
+        for (auto s : size) {
+            product *= s;
+        }
+        return product;
+    }
 };
 
 std::shared_ptr<Tensor> tensor() {
