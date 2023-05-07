@@ -33,6 +33,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::vector<std::shared_ptr<Tensor>> children_;
   std::shared_ptr<AutoGradFunction> grad_fn_ = nullptr;
   char op_;
+  int offset_;
+  std::vector<int> strides_;
 
   Tensor(std::initializer_list<int> size, std::initializer_list<float> data)
       : size_(size),
@@ -40,7 +42,11 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         grad_(data.size(), 0),
         children_(),
         grad_fn_(),
-        op_('?') {}
+        op_('?'),
+        offset_(0),
+        strides_(size.size(), 0) {
+          _computeStrides();
+        }
 
   Tensor(std::vector<int> size, std::vector<float> data,
          std::vector<std::shared_ptr<Tensor>> children,
@@ -50,7 +56,11 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         grad_(data.size(), 0),
         children_(children),
         grad_fn_(std::move(grad_fn)),
-        op_(op) {}
+        op_(op),
+        offset_(0), // TODO(yrom1) pass as variable
+        strides_(size.size(), 0) {
+          _computeStrides();
+        }
 
   Tensor(Tensor&& other)
       : size_(std::move(other.size_)),
@@ -58,7 +68,9 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         grad_(std::move(other.grad_)),
         children_(std::move(other.children_)),
         grad_fn_(std::move(other.grad_fn_)),
-        op_(other.op_) {}
+        op_(other.op_),
+        offset_(other.offset_),
+        strides_(std::move(other.strides_)) {}
 
   std::shared_ptr<Tensor> get_shared() { return this->shared_from_this(); }
 
@@ -91,6 +103,65 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
     }
   }
 
+  float &data(const std::vector<size_t> &indices) {
+    // checkIndicesBounds(indices);
+
+    size_t idx = offset_;
+    for (size_t i = 0; i < indices.size(); ++i) {
+      idx += indices[i] * strides_[i];
+    }
+    return get_shared().get()->data_[idx];
+  }
+
+  float &grad(const std::vector<size_t> &indices) {
+    // checkIndicesBounds(indices);
+
+    size_t idx = offset_;
+    for (size_t i = 0; i < indices.size(); ++i) {
+      idx += indices[i] * strides_[i];
+    }
+    return get_shared().get()->grad_[idx];
+  }
+
+  static void print(std::ostream &os, const std::shared_ptr<Tensor> &tensor,
+                    std::vector<size_t> indices, size_t depth, bool print_grad = false) {
+    if (depth == tensor.get()->size_.size() - 1) {
+      os << "[";
+      for (size_t i = 0; i < tensor.get()->size_[depth]; ++i) {
+        indices.push_back(i);
+        if (print_grad) {
+          os << tensor.get()->grad(indices);
+        } else {
+          os << tensor.get()->data(indices);
+        }
+        indices.pop_back();
+        if (i != tensor.get()->size_[depth] - 1) {
+          os << ", ";
+        }
+      }
+      os << "]";
+    } else {
+      os << "[";
+      for (size_t i = 0; i < tensor.get()->size_[depth]; ++i) {
+        indices.push_back(i);
+        print(os, tensor, indices, depth + 1, print_grad);
+        indices.pop_back();
+        if (i != tensor.get()->size_[depth] - 1) {
+          os << ",\n";
+          os << std::string(depth + 1, ' ');
+        }
+      }
+      os << "]";
+    }
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const std::shared_ptr<Tensor> &tensor) {
+    print(os, tensor, {}, 0);
+    os << std::endl;
+    print(os, tensor, {}, 0, true);
+    return os;
+  }
+
  private:
   int _product(std::vector<int> size) {
     int product = 1;
@@ -98,6 +169,15 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
       product *= s;
     }
     return product;
+  }
+
+  void _computeStrides() {
+    strides_.resize(size_.size());
+    size_t stride = 1;
+    for (int i = size_.size() - 1; i >= 0; i--) {
+      strides_[i] = stride;
+      stride *= size_[i];
+    }
   }
 };
 
