@@ -31,7 +31,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::vector<float> data_;
   std::vector<float> grad_;
   std::vector<std::shared_ptr<Tensor>> children_;
-  std::unique_ptr<AutoGradFunction> grad_fn_ = nullptr;
+  std::shared_ptr<AutoGradFunction> grad_fn_ = nullptr;
   char op_;
 
   Tensor(std::initializer_list<int> size, std::initializer_list<float> data)
@@ -44,7 +44,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 
   Tensor(std::vector<int> size, std::vector<float> data,
          std::vector<std::shared_ptr<Tensor>> children,
-         std::unique_ptr<AutoGradFunction> grad_fn, char op = '?')
+         std::shared_ptr<AutoGradFunction> grad_fn, char op = '?')
       : size_(size),
         data_(data),
         grad_(data.size(), 0),
@@ -109,7 +109,7 @@ std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
   }
   auto result =
       std::make_shared<Tensor>(lhs.get()->size_, result_data, children,
-                               std::make_unique<AddBackward>(), '+');
+                               std::make_shared<AddBackward>(), '+');
   return result;
 }
 
@@ -121,7 +121,7 @@ std::shared_ptr<Tensor> Tensor::sum() {
   return std::make_shared<Tensor>(
       std::vector<int>{1}, std::vector<float>{total},
       std::vector<std::shared_ptr<Tensor>>{get_shared()},
-      std::make_unique<SumBackward>(), 's');
+      std::make_shared<SumBackward>(), 's');
 }
 
 std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
@@ -132,8 +132,8 @@ std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
 std::shared_ptr<Tensor> tensor(
     std::vector<int> size, std::vector<float> data,
     std::vector<std::shared_ptr<Tensor>> children = {},
-    std::unique_ptr<AutoGradFunction> grad_fn =
-        std::make_unique<AutoGradFunction>(),
+    std::shared_ptr<AutoGradFunction> grad_fn =
+        std::make_shared<AutoGradFunction>(),
     char op = '?') {
   return std::make_shared<Tensor>(size, data, children, std::move(grad_fn), op);
 }
