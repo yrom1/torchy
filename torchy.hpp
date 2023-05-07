@@ -176,6 +176,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   }
 
  private:
+  void _backward();
+
   int _product(std::vector<int> size) {
     int product = 1;
     for (int s : size) {
@@ -428,12 +430,22 @@ struct MatMulBackward : public AutoGradBackward {
   }
 };
 
-void Tensor::backward() {
-  grad_ = std::vector<float>(_product(size_), 1.0f);
+void Tensor::_backward() {
   grad_fn_.get()->apply(get_shared(), children_);
   for (auto child : children_) {
     if (child.get()->grad_fn_ != nullptr) {
       child.get()->backward();
+    }
+  }
+}
+
+void Tensor::backward() {
+  assert(data_.size() == 1);
+  grad_ = std::vector<float>(_product(size_), 1.0f);
+  grad_fn_.get()->apply(get_shared(), children_);
+  for (auto child : children_) {
+    if (child.get()->grad_fn_ != nullptr) {
+      child.get()->_backward();
     }
   }
 }
