@@ -12,6 +12,7 @@
 #define TORCHY_HPP_
 
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -45,8 +46,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         op_('?'),
         offset_(0),
         strides_(size.size(), 0) {
-          _computeStrides();
-        }
+    _computeStrides();
+  }
 
   Tensor(std::vector<int> size, std::vector<float> data,
          std::vector<std::shared_ptr<Tensor>> children,
@@ -57,12 +58,12 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         children_(children),
         grad_fn_(std::move(grad_fn)),
         op_(op),
-        offset_(0), // TODO(yrom1) pass as variable
+        offset_(0),  // TODO(yrom1) pass as variable
         strides_(size.size(), 0) {
-          _computeStrides();
-        }
+    _computeStrides();
+  }
 
-  Tensor(Tensor&& other)
+  Tensor(Tensor &&other)
       : size_(std::move(other.size_)),
         data_(std::move(other.data_)),
         grad_(std::move(other.grad_)),
@@ -92,8 +93,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 
   void graph(int depth = 0) {
     auto print_if_not_leaf = [this](char c) {
-        if (c != '?') return c;
-        return ' ';
+      if (c != '?') return c;
+      return ' ';
     };
     std::string tab(depth, ' ');
     char displayed_op = print_if_not_leaf(op_);
@@ -124,7 +125,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   }
 
   static void print(std::ostream &os, const std::shared_ptr<Tensor> &tensor,
-                    std::vector<size_t> indices, size_t depth, bool print_grad = false) {
+                    std::vector<size_t> indices, size_t depth,
+                    bool print_grad = false) {
     if (depth == tensor.get()->size_.size() - 1) {
       os << "[";
       for (size_t i = 0; i < tensor.get()->size_[depth]; ++i) {
@@ -155,7 +157,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
     }
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const std::shared_ptr<Tensor> &tensor) {
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const std::shared_ptr<Tensor> &tensor) {
     print(os, tensor, {}, 0);
     os << std::endl;
     print(os, tensor, {}, 0, true);
@@ -181,21 +184,28 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   }
 };
 
-std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
-                                  std::shared_ptr<Tensor> rhs) {
+std::shared_ptr<Tensor> binaryOperator(std::shared_ptr<Tensor> lhs,
+                                       std::shared_ptr<Tensor> rhs,
+                                       std::function<float(float, float)> func,
+                                       char op) {
   std::vector<std::shared_ptr<Tensor>> children;
   children.push_back(lhs);
   children.push_back(rhs);
 
   assert(lhs.get()->data_.size() == rhs.get()->data_.size());
   std::vector<float> result_data(lhs.get()->data_.size());
-  for (size_t i = 0; i < lhs.get()->data_.size(); ++i) {
-    result_data[i] = lhs.get()->data_[i] + rhs.get()->data_[i];
+  for (int i = 0; i < lhs.get()->data_.size(); ++i) {
+    result_data[i] = func(lhs.get()->data_[i], rhs.get()->data_[i]);
   }
   auto result =
       std::make_shared<Tensor>(lhs.get()->size_, result_data, children,
-                               std::make_shared<AddBackward>(), '+');
+                               std::make_shared<AddBackward>(), op);
   return result;
+}
+
+std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
+                                  std::shared_ptr<Tensor> rhs) {
+  return std::move(binaryOperator(lhs, rhs, std::plus<float>(), '+'));
 }
 
 std::shared_ptr<Tensor> Tensor::sum() {
@@ -237,7 +247,7 @@ struct AddBackward : public AutoGradFunction {
   void apply(std::shared_ptr<Tensor> grad_output,
              std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
     for (std::shared_ptr<Tensor> grad_input : grad_inputs) {
-      for (size_t i = 0; i < grad_input.get()->grad_.size(); ++i) {
+      for (int i = 0; i < grad_input.get()->grad_.size(); ++i) {
         grad_input.get()->grad_[i] += grad_output.get()->grad_[0];
       }
     }
