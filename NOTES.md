@@ -1,3 +1,15 @@
+# forward declare of private class member and outside definition works
+
+```c++
+[cling]$ l.get()->_backward()
+input_line_19:2:11: error: '_backward' is a private member of 'ag::Tensor'
+ l.get()->_backward()
+          ^
+./torchy.hpp:179:8: note: declared private here
+  void _backward();
+       ^
+```
+
 # dont move from r values what is copy elipson?
 
 ```cpp
