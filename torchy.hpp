@@ -184,10 +184,11 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   }
 };
 
+template <typename T>
 std::shared_ptr<Tensor> binaryOperator(std::shared_ptr<Tensor> lhs,
                                        std::shared_ptr<Tensor> rhs,
                                        std::function<float(float, float)> func,
-                                       char op) {
+                                       char op, std::shared_ptr<T> backward) {
   std::vector<std::shared_ptr<Tensor>> children;
   children.push_back(lhs);
   children.push_back(rhs);
@@ -197,15 +198,14 @@ std::shared_ptr<Tensor> binaryOperator(std::shared_ptr<Tensor> lhs,
   for (int i = 0; i < lhs.get()->data_.size(); ++i) {
     result_data[i] = func(lhs.get()->data_[i], rhs.get()->data_[i]);
   }
-  auto result =
-      std::make_shared<Tensor>(lhs.get()->size_, result_data, children,
-                               std::make_shared<AddBackward>(), op);
-  return result;
+  return std::make_shared<Tensor>(lhs.get()->size_, result_data, children,
+                                  std::move(backward), op);
 }
 
 std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return std::move(binaryOperator(lhs, rhs, std::plus<float>(), '+'));
+  return binaryOperator<AddBackward>(lhs, rhs, std::plus<float>(), '+',
+                                     std::make_shared<AddBackward>());
 }
 
 std::shared_ptr<Tensor> Tensor::sum() {
