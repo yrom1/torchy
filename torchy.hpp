@@ -25,6 +25,7 @@ namespace ag {
 struct AutoGradFunction;
 struct AddBackward;
 struct SubBackward;
+struct MulBackward;
 using SumBackward = AddBackward;
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
@@ -215,11 +216,11 @@ std::shared_ptr<Tensor> operator-(std::shared_ptr<Tensor> lhs,
                                      std::make_shared<SubBackward>());
 }
 
-// std::shared_ptr<Tensor> operator*(std::shared_ptr<Tensor> lhs,
-//                                   std::shared_ptr<Tensor> rhs) {
-//   return binaryOperator<MulBackward>(lhs, rhs, std::multiplies<float>(), '*',
-//                                      std::make_shared<MulBackward>());
-// }
+std::shared_ptr<Tensor> operator*(std::shared_ptr<Tensor> lhs,
+                                  std::shared_ptr<Tensor> rhs) {
+  return binaryOperator<MulBackward>(lhs, rhs, std::multiplies<float>(), '*',
+                                     std::make_shared<MulBackward>());
+}
 
 // std::shared_ptr<Tensor> operator/(std::shared_ptr<Tensor> lhs,
 //                                   std::shared_ptr<Tensor> rhs) {
@@ -283,6 +284,22 @@ struct SubBackward : public AutoGradFunction {
     }
     for (int i = 0; i < grad_inputs[1].get()->grad_.size(); ++i) {
       grad_inputs[1].get()->grad_[i] -= grad_output.get()->grad_[0];
+    }
+  }
+};
+
+struct MulBackward : public AutoGradFunction {
+  MulBackward() = default;
+
+  void apply(std::shared_ptr<Tensor> grad_output,
+             std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
+    for (int i = 0; i < grad_inputs[0].get()->grad_.size(); ++i) {
+      grad_inputs[0].get()->grad_[i] +=
+          grad_output.get()->grad_[0] * grad_inputs[1].get()->data_[i];
+    }
+    for (int i = 0; i < grad_inputs[1].get()->grad_.size(); ++i) {
+      grad_inputs[1].get()->grad_[i] +=
+          grad_output.get()->grad_[0] * grad_inputs[0].get()->data_[i];
     }
   }
 };
