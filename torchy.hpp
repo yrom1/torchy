@@ -79,8 +79,13 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   }
 
   void graph(int depth = 0) {
+    auto print_if_not_leaf = [this](char c) {
+        if (c != '?') return c;
+        return ' ';
+    };
     std::string tab(depth, ' ');
-    std::cout << tab << get_shared() << " " << op_ << std::endl;
+    char displayed_op = print_if_not_leaf(op_);
+    std::cout << tab << get_shared() << " " << displayed_op << std::endl;
     for (auto c : children_) {
       c.get()->graph(depth + 2);
     }
