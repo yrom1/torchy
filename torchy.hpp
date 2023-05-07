@@ -22,12 +22,16 @@
 
 namespace ag {
 
-struct AutoGradFunction;
+struct AutoGradBackward;
 struct AddBackward;
 struct SubBackward;
 struct MulBackward;
 struct DivBackward;
 using SumBackward = AddBackward;
+struct MatMulBackward;
+
+struct AutoGradForward;
+struct MatMulForward;
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
  public:
@@ -35,7 +39,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::vector<float> data_;
   std::vector<float> grad_;
   std::vector<std::shared_ptr<Tensor>> children_;
-  std::shared_ptr<AutoGradFunction> grad_fn_ = nullptr;
+  std::shared_ptr<AutoGradBackward> grad_fn_ = nullptr;
   char op_;
   int offset_;
   std::vector<int> strides_;
@@ -55,7 +59,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 
   Tensor(std::vector<int> size, std::vector<float> data,
          std::vector<std::shared_ptr<Tensor>> children,
-         std::shared_ptr<AutoGradFunction> grad_fn, char op = '?')
+         std::shared_ptr<AutoGradBackward> grad_fn, char op = '?')
       : size_(size),
         data_(data),
         grad_(data.size(), 0),
@@ -81,6 +85,8 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 
   void backward();
   std::shared_ptr<Tensor> sum();
+  std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> lhs,
+                                  std::shared_ptr<Tensor> rhs);
 
   void size() {
     for (auto x : size_) std::cout << x << std::endl;
@@ -189,7 +195,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 };
 
 template <typename T>
-std::shared_ptr<Tensor> binaryOperator(std::shared_ptr<Tensor> lhs,
+std::shared_ptr<Tensor> binaryElementwiseOperator(std::shared_ptr<Tensor> lhs,
                                        std::shared_ptr<Tensor> rhs,
                                        std::function<float(float, float)> func,
                                        char op, std::shared_ptr<T> backward) {
@@ -208,26 +214,39 @@ std::shared_ptr<Tensor> binaryOperator(std::shared_ptr<Tensor> lhs,
 
 std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryOperator<AddBackward>(lhs, rhs, std::plus<float>(), '+',
+  return binaryElementwiseOperator<AddBackward>(lhs, rhs, std::plus<float>(), '+',
                                      std::make_shared<AddBackward>());
 }
 
 std::shared_ptr<Tensor> operator-(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryOperator<SubBackward>(lhs, rhs, std::minus<float>(), '-',
+  return binaryElementwiseOperator<SubBackward>(lhs, rhs, std::minus<float>(), '-',
                                      std::make_shared<SubBackward>());
 }
 
 std::shared_ptr<Tensor> operator*(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryOperator<MulBackward>(lhs, rhs, std::multiplies<float>(), '*',
+  return binaryElementwiseOperator<MulBackward>(lhs, rhs, std::multiplies<float>(), '*',
                                      std::make_shared<MulBackward>());
 }
 
 std::shared_ptr<Tensor> operator/(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryOperator<DivBackward>(lhs, rhs, std::divides<float>(), '/',
+  return binaryElementwiseOperator<DivBackward>(lhs, rhs, std::divides<float>(), '/',
                                      std::make_shared<DivBackward>());
+}
+
+template <typename T>
+std::shared_ptr<Tensor> binaryForwardOperator(std::shared_ptr<Tensor> lhs,
+                                       std::shared_ptr<Tensor> rhs,
+                                       T forward) {
+  return (*forward)(); // forward.get()();
+}
+
+std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> lhs,
+                                  std::shared_ptr<Tensor> rhs) {
+  std::shared_ptr<MatMulForward> f = std::make_shared<MatMulForward>(lhs, rhs);
+  return binaryForwardOperator<std::shared_ptr<MatMulForward>>(lhs, rhs, f);
 }
 
 std::shared_ptr<Tensor> Tensor::sum() {
@@ -249,21 +268,21 @@ std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
 std::shared_ptr<Tensor> tensor(
     std::vector<int> size, std::vector<float> data,
     std::vector<std::shared_ptr<Tensor>> children = {},
-    std::shared_ptr<AutoGradFunction> grad_fn =
-        std::make_shared<AutoGradFunction>(),
+    std::shared_ptr<AutoGradBackward> grad_fn =
+        std::make_shared<AutoGradBackward>(),
     char op = '?') {
   return std::make_shared<Tensor>(size, data, children, std::move(grad_fn), op);
 }
 
-struct AutoGradFunction {
-  AutoGradFunction() = default;
-  virtual ~AutoGradFunction() = default;
+struct AutoGradBackward {
+  AutoGradBackward() = default;
+  virtual ~AutoGradBackward() = default;
 
   virtual void apply(std::shared_ptr<Tensor> grad_output,
                      std::vector<std::shared_ptr<Tensor>> grad_inputs) = 0;
 };
 
-struct AddBackward : public AutoGradFunction {
+struct AddBackward : public AutoGradBackward {
   AddBackward() = default;
 
   void apply(std::shared_ptr<Tensor> grad_output,
@@ -276,7 +295,7 @@ struct AddBackward : public AutoGradFunction {
   }
 };
 
-struct SubBackward : public AutoGradFunction {
+struct SubBackward : public AutoGradBackward {
   SubBackward() = default;
 
   void apply(std::shared_ptr<Tensor> grad_output,
@@ -290,7 +309,7 @@ struct SubBackward : public AutoGradFunction {
   }
 };
 
-struct MulBackward : public AutoGradFunction {
+struct MulBackward : public AutoGradBackward {
   MulBackward() = default;
 
   void apply(std::shared_ptr<Tensor> grad_output,
@@ -306,7 +325,7 @@ struct MulBackward : public AutoGradFunction {
   }
 };
 
-struct DivBackward : public AutoGradFunction {
+struct DivBackward : public AutoGradBackward {
   DivBackward() = default;
 
   void apply(std::shared_ptr<Tensor> grad_output,
@@ -323,6 +342,65 @@ struct DivBackward : public AutoGradFunction {
           -(grad_inputs[0].get()->data_[i] /
             (grad_inputs[1].get()->data_[i] * grad_inputs[1].get()->data_[i]));
       grad_inputs[1].get()->grad_[i] += update;
+    }
+  }
+};
+
+struct AutoGradForward {
+  AutoGradForward() = default;
+  virtual ~AutoGradForward() = default;
+
+  virtual std::shared_ptr<Tensor> operator()()
+  // (const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>& rhs)
+  = 0;
+};
+
+struct MatMulForward : public AutoGradForward {
+    std::shared_ptr<Tensor> lhs_;
+    std::shared_ptr<Tensor> rhs_;
+
+    MatMulForward(const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>& rhs)
+        : lhs_(lhs), rhs_(rhs) {
+        if (lhs.get()->size_.size() != 2 || rhs.get()->size_.size() != 2 || lhs.get()->size_[1] != rhs.get()->size_[0]) {
+            throw std::runtime_error("Invalid dimensions for matrix multiplication.");
+        }
+    }
+
+    std::shared_ptr<Tensor> operator()()
+    // (const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>& rhs)
+    {
+        int m = lhs_.get()->size_[0];
+        int n = rhs_.get()->size_[1];
+        int k = lhs_.get()->size_[1];
+
+        std::vector<float> result_data(m * n, 0.0f);
+
+        for (int i = 0; i < m; ++i) {
+            for (int j = 0; j < n; ++j) {
+                for (int p = 0; p < k; ++p) {
+                    result_data[i * n + j] += lhs_.get()->data_[i * k + p] * rhs_.get()->data_[p * n + j];
+                }
+            }
+        }
+
+        std::vector<int> result_size = {m, n};
+        std::vector<std::shared_ptr<Tensor>> result_children = {lhs_, rhs_};
+        std::shared_ptr<MatMulBackward> result_grad_fn = nullptr;
+
+        return std::make_shared<Tensor>(result_size, result_data, std::move(result_children), std::move(result_grad_fn), '@');
+    }
+};
+
+struct MatMulBackward : public AutoGradBackward {
+  MatMulBackward() = default;
+
+  void apply(std::shared_ptr<Tensor> grad_output,
+             std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
+    for (int i = 0; i < grad_inputs[0].get()->grad_.size(); ++i) {
+      // TODO
+    }
+    for (int i = 0; i < grad_inputs[1].get()->grad_.size(); ++i) {
+      // TODO
     }
   }
 };
