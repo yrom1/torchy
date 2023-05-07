@@ -26,6 +26,7 @@ struct AutoGradFunction;
 struct AddBackward;
 struct SubBackward;
 struct MulBackward;
+struct DivBackward;
 using SumBackward = AddBackward;
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
@@ -48,6 +49,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
         op_('?'),
         offset_(0),
         strides_(size.size(), 0) {
+    assert(_product(size) == data_.size());
     _computeStrides();
   }
 
@@ -222,14 +224,14 @@ std::shared_ptr<Tensor> operator*(std::shared_ptr<Tensor> lhs,
                                      std::make_shared<MulBackward>());
 }
 
-// std::shared_ptr<Tensor> operator/(std::shared_ptr<Tensor> lhs,
-//                                   std::shared_ptr<Tensor> rhs) {
-//   return binaryOperator<DivBackward>(lhs, rhs, std::divides<float>(), '/',
-//                                      std::make_shared<DivBackward>());
-// }
+std::shared_ptr<Tensor> operator/(std::shared_ptr<Tensor> lhs,
+                                  std::shared_ptr<Tensor> rhs) {
+  return binaryOperator<DivBackward>(lhs, rhs, std::divides<float>(), '/',
+                                     std::make_shared<DivBackward>());
+}
 
 std::shared_ptr<Tensor> Tensor::sum() {
-  std::vector<float> total(1, 0);
+  std::vector<float> total(1, 0.0f);
   for (float x : data_) {
     total[0] += x;
   }
@@ -300,6 +302,27 @@ struct MulBackward : public AutoGradFunction {
     for (int i = 0; i < grad_inputs[1].get()->grad_.size(); ++i) {
       grad_inputs[1].get()->grad_[i] +=
           grad_output.get()->grad_[0] * grad_inputs[0].get()->data_[i];
+    }
+  }
+};
+
+struct DivBackward : public AutoGradFunction {
+  DivBackward() = default;
+
+  void apply(std::shared_ptr<Tensor> grad_output,
+             std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
+    for (int i = 0; i < grad_inputs[0].get()->grad_.size(); ++i) {
+      // pro tip: don't put 1 instead of 1.0f!
+      float update =
+          grad_output.get()->grad_[i] * (1.0f / grad_inputs[1].get()->data_[i]);
+      grad_inputs[0].get()->grad_[i] += update;
+    }
+    for (int i = 0; i < grad_inputs[1].get()->grad_.size(); ++i) {
+      float update =
+          grad_output.get()->grad_[i] *
+          -(grad_inputs[0].get()->data_[i] /
+            (grad_inputs[1].get()->data_[i] * grad_inputs[1].get()->data_[i]));
+      grad_inputs[1].get()->grad_[i] += update;
     }
   }
 };
