@@ -169,7 +169,7 @@ void Tensor::backward() {
   }
 }
 
-using T = std::shared_ptr<Tensor>;
+using t = std::shared_ptr<Tensor>;
 
 }  // namespace ag
 

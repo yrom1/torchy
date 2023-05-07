@@ -11,15 +11,15 @@
 #include "torchy.hpp"  // NOLINT (build/include_subdir)
 
 TEST(Basic, Shared) {
-  ag::T foo = ag::tensor({1}, {42.0});
-  ag::T bar = foo->get_shared();
+  ag::t foo = ag::tensor({1}, {42.0});
+  ag::t bar = foo->get_shared();
 
   EXPECT_EQ(foo, bar);
 }
 
 TEST(Basic, Add) {
-  ag::T a = ag::tensor({1}, {42.0});
-  ag::T b = ag::tensor({1}, {42.0});
+  ag::t a = ag::tensor({1}, {42.0});
+  ag::t b = ag::tensor({1}, {42.0});
   auto c = a + b;
   c.get()->backward();
 
@@ -39,7 +39,7 @@ TEST(Basic, Sum) {
   >>> a.grad
   tensor([1., 1., 1.])
   */
-  ag::T a = ag::tensor({1}, {42.0, 24.0, 12.0});
+  ag::t a = ag::tensor({1}, {42.0, 24.0, 12.0});
   auto l = a.get()->sum();
   l.get()->backward();
 
