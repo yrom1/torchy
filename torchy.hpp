@@ -86,7 +86,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   void backward();
   std::shared_ptr<Tensor> sum();
   std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> lhs,
-                                  std::shared_ptr<Tensor> rhs);
+                                 std::shared_ptr<Tensor> rhs);
 
   void size() {
     for (auto x : size_) std::cout << x << std::endl;
@@ -102,16 +102,16 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   }
 
   void graph(int depth = 0) {
-      auto print_if_not_leaf = [this](char c) -> const char {
-          if (c != '?') return c;
-          return ' ';
-      };
-      std::string tab(depth, ' ');
-      char displayed_op = print_if_not_leaf(op_);
-      std::cout << tab << this << " " << displayed_op << std::endl;
-      for (auto c : children_) {
-          c.get()->graph(depth + 2);
-      }
+    auto print_if_not_leaf = [this](char c) -> const char {
+      if (c != '?') return c;
+      return ' ';
+    };
+    std::string tab(depth, ' ');
+    char displayed_op = print_if_not_leaf(op_);
+    std::cout << tab << this << " " << displayed_op << std::endl;
+    for (auto c : children_) {
+      c.get()->graph(depth + 2);
+    }
   }
 
   float &data(const std::vector<size_t> &indices) {
@@ -195,10 +195,10 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 };
 
 template <typename T>
-std::shared_ptr<Tensor> binaryElementwiseOperator(std::shared_ptr<Tensor> lhs,
-                                       std::shared_ptr<Tensor> rhs,
-                                       std::function<float(float, float)> func,
-                                       char op, std::shared_ptr<T> backward) {
+std::shared_ptr<Tensor> binaryElementwiseOperator(
+    std::shared_ptr<Tensor> lhs, std::shared_ptr<Tensor> rhs,
+    std::function<float(float, float)> func, char op,
+    std::shared_ptr<T> backward) {
   std::vector<std::shared_ptr<Tensor>> children;
   children.push_back(lhs);
   children.push_back(rhs);
@@ -214,37 +214,37 @@ std::shared_ptr<Tensor> binaryElementwiseOperator(std::shared_ptr<Tensor> lhs,
 
 std::shared_ptr<Tensor> operator+(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryElementwiseOperator<AddBackward>(lhs, rhs, std::plus<float>(), '+',
-                                     std::make_shared<AddBackward>());
+  return binaryElementwiseOperator<AddBackward>(
+      lhs, rhs, std::plus<float>(), '+', std::make_shared<AddBackward>());
 }
 
 std::shared_ptr<Tensor> operator-(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryElementwiseOperator<SubBackward>(lhs, rhs, std::minus<float>(), '-',
-                                     std::make_shared<SubBackward>());
+  return binaryElementwiseOperator<SubBackward>(
+      lhs, rhs, std::minus<float>(), '-', std::make_shared<SubBackward>());
 }
 
 std::shared_ptr<Tensor> operator*(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryElementwiseOperator<MulBackward>(lhs, rhs, std::multiplies<float>(), '*',
-                                     std::make_shared<MulBackward>());
+  return binaryElementwiseOperator<MulBackward>(
+      lhs, rhs, std::multiplies<float>(), '*', std::make_shared<MulBackward>());
 }
 
 std::shared_ptr<Tensor> operator/(std::shared_ptr<Tensor> lhs,
                                   std::shared_ptr<Tensor> rhs) {
-  return binaryElementwiseOperator<DivBackward>(lhs, rhs, std::divides<float>(), '/',
-                                     std::make_shared<DivBackward>());
+  return binaryElementwiseOperator<DivBackward>(
+      lhs, rhs, std::divides<float>(), '/', std::make_shared<DivBackward>());
 }
 
 template <typename T>
 std::shared_ptr<Tensor> binaryForwardOperator(std::shared_ptr<Tensor> lhs,
-                                       std::shared_ptr<Tensor> rhs,
-                                       T forward) {
-  return (*forward)(); // forward.get()();
+                                              std::shared_ptr<Tensor> rhs,
+                                              T forward) {
+  return (*forward)();  // forward.get()();
 }
 
 std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> lhs,
-                                  std::shared_ptr<Tensor> rhs) {
+                               std::shared_ptr<Tensor> rhs) {
   std::shared_ptr<MatMulForward> f = std::make_shared<MatMulForward>(lhs, rhs);
   return binaryForwardOperator<std::shared_ptr<MatMulForward>>(lhs, rhs, f);
 }
@@ -351,47 +351,52 @@ struct AutoGradForward {
   virtual ~AutoGradForward() = default;
 
   virtual std::shared_ptr<Tensor> operator()()
-  // (const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>& rhs)
-  = 0;
+      // (const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>&
+      // rhs)
+      = 0;
 };
 
 struct MatMulForward : public AutoGradForward {
-    std::shared_ptr<Tensor> lhs_;
-    std::shared_ptr<Tensor> rhs_;
+  std::shared_ptr<Tensor> lhs_;
+  std::shared_ptr<Tensor> rhs_;
 
-    MatMulForward(const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>& rhs)
-        : lhs_(lhs), rhs_(rhs) {
-        if (lhs.get()->size_.size() != 2 || rhs.get()->size_.size() != 2 || lhs.get()->size_[1] != rhs.get()->size_[0]) {
-            throw std::runtime_error("Invalid dimensions for matrix multiplication.");
+  MatMulForward(const std::shared_ptr<Tensor> &lhs,
+                const std::shared_ptr<Tensor> &rhs)
+      : lhs_(lhs), rhs_(rhs) {
+    if (lhs.get()->size_.size() != 2 || rhs.get()->size_.size() != 2 ||
+        lhs.get()->size_[1] != rhs.get()->size_[0]) {
+      throw std::runtime_error("Invalid dimensions for matrix multiplication.");
+    }
+  }
+
+  std::shared_ptr<Tensor> operator()() {
+    int m = lhs_.get()->size_[0];
+    int n = rhs_.get()->size_[1];
+    int k = lhs_.get()->size_[1];
+
+    std::vector<float> result_data(m * n, 0.0f);
+
+    for (int i = 0; i < m; ++i) {
+      for (int j = 0; j < n; ++j) {
+        for (int p = 0; p < k; ++p) {
+          result_data[i * n + j] +=
+              lhs_.get()->data_[i * k + p] * rhs_.get()->data_[p * n + j];
         }
+      }
     }
 
-    std::shared_ptr<Tensor> operator()()
-    // (const std::shared_ptr<Tensor>& lhs, const std::shared_ptr<Tensor>& rhs)
-    {
-        int m = lhs_.get()->size_[0];
-        int n = rhs_.get()->size_[1];
-        int k = lhs_.get()->size_[1];
+    std::vector<int> result_size = {m, n};
+    std::vector<std::shared_ptr<Tensor>> result_children = {lhs_, rhs_};
+    std::shared_ptr<MatMulBackward> result_grad_fn = nullptr;
 
-        std::vector<float> result_data(m * n, 0.0f);
-
-        for (int i = 0; i < m; ++i) {
-            for (int j = 0; j < n; ++j) {
-                for (int p = 0; p < k; ++p) {
-                    result_data[i * n + j] += lhs_.get()->data_[i * k + p] * rhs_.get()->data_[p * n + j];
-                }
-            }
-        }
-
-        std::vector<int> result_size = {m, n};
-        std::vector<std::shared_ptr<Tensor>> result_children = {lhs_, rhs_};
-        std::shared_ptr<MatMulBackward> result_grad_fn = nullptr;
-
-        return std::make_shared<Tensor>(result_size, result_data, std::move(result_children), std::move(result_grad_fn), '@');
-    }
+    return std::make_shared<Tensor>(result_size, result_data,
+                                    std::move(result_children),
+                                    std::move(result_grad_fn), '@');
+  }
 };
 
-std::shared_ptr<Tensor> transpose(std::shared_ptr<Tensor>& input) {
+std::shared_ptr<Tensor> transpose(
+    std::shared_ptr<Tensor> &input) {  // NOLINT (runtime/reference)
   auto size = input.get()->size_;
   std::vector<int> new_size = {size[1], size[0]};
   std::vector<float> new_data(new_size[0] * new_size[1]);
