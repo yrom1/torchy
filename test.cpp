@@ -190,7 +190,7 @@ TEST(Basic, MatMul) {
   */
   ag::t a = ag::tensor({2, 2}, {5.0, 4.0, 3.0, 2.0});
   ag::t b = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
-  ag::t c = a / b;
+  ag::t c = ag::matmul(a, b);
   auto l = c.get()->sum();
   l.get()->backward();
 
