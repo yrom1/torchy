@@ -360,6 +360,27 @@ struct AutoGradForward {
       = 0;
 };
 
+std::vector<float> _matmul(const std::vector<int> &lhs_size,
+                           const std::vector<float> &lhs_data,
+                           const std::vector<int> &rhs_size,
+                           const std::vector<float> &rhs_data) {
+  int m = lhs_size[0];
+  int n = rhs_size[1];
+  int k = lhs_size[1];
+
+  std::vector<float> result_data(m * n, 0.0f);
+
+  for (int i = 0; i < m; ++i) {
+    for (int j = 0; j < n; ++j) {
+      for (int p = 0; p < k; ++p) {
+        result_data[i * n + j] += lhs_data[i * k + p] * rhs_data[p * n + j];
+      }
+    }
+  }
+
+  return result_data;
+}
+
 struct MatMulForward : public AutoGradForward {
   std::shared_ptr<Tensor> lhs_;
   std::shared_ptr<Tensor> rhs_;
@@ -374,24 +395,14 @@ struct MatMulForward : public AutoGradForward {
   }
 
   std::shared_ptr<Tensor> operator()() {
-    int m = lhs_.get()->size_[0];
-    int n = rhs_.get()->size_[1];
-    int k = lhs_.get()->size_[1];
+    std::vector<float> result_data =
+        _matmul(lhs_.get()->size_, lhs_.get()->data_, rhs_.get()->size_,
+                rhs_.get()->data_);
 
-    std::vector<float> result_data(m * n, 0.0f);
-
-    for (int i = 0; i < m; ++i) {
-      for (int j = 0; j < n; ++j) {
-        for (int p = 0; p < k; ++p) {
-          result_data[i * n + j] +=
-              lhs_.get()->data_[i * k + p] * rhs_.get()->data_[p * n + j];
-        }
-      }
-    }
-
-    std::vector<int> result_size = {m, n};
+    std::vector<int> result_size = {lhs_.get()->size_[0], rhs_.get()->size_[1]};
     std::vector<std::shared_ptr<Tensor>> result_children = {lhs_, rhs_};
-    std::shared_ptr<MatMulBackward> result_grad_fn = std::make_shared<MatMulBackward>();// nullptr;
+    std::shared_ptr<MatMulBackward> result_grad_fn =
+        std::make_shared<MatMulBackward>();
 
     return std::make_shared<Tensor>(result_size, result_data,
                                     std::move(result_children),
@@ -404,6 +415,7 @@ std::shared_ptr<Tensor> transpose(
   auto size = input.get()->size_;
   std::vector<int> new_size = {size[1], size[0]};
   std::vector<float> new_data(new_size[0] * new_size[1]);
+  // std::vector<float> new_grad(new_size[0] * new_size[1]);
 
   for (int i = 0; i < size[0]; ++i) {
     for (int j = 0; j < size[1]; ++j) {
@@ -411,9 +423,32 @@ std::shared_ptr<Tensor> transpose(
     }
   }
 
+  // actually this is not needed for matmulbackward
+  // for (int i = 0; i < size[0]; ++i) {
+  //   for (int j = 0; j < size[1]; ++j) {
+  //     new_grad[j * size[0] + i] = input.get()->grad_[i * size[1] + j];
+  //   }
+  // }
+
   input.get()->size_ = new_size;
   input.get()->data_ = new_data;
+  // input.get()->grad_ = new_grad;
   return input;
+}
+
+std::vector<float> transpose(const std::vector<int> &size,
+                             const std::vector<float> &data) {
+  int rows = size[0];
+  int cols = size[1];
+  std::vector<float> transposed_data(cols * rows, 0.0f);
+
+  for (int i = 0; i < rows; ++i) {
+    for (int j = 0; j < cols; ++j) {
+      transposed_data[j * rows + i] = data[i * cols + j];
+    }
+  }
+
+  return transposed_data;
 }
 
 struct MatMulBackward : public AutoGradBackward {
@@ -421,27 +456,41 @@ struct MatMulBackward : public AutoGradBackward {
 
   void apply(std::shared_ptr<Tensor> grad_output,
              std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
-    std::cout << "huh" << std::endl;
+    std::cout << "calling mmb" << std::endl;
     auto a = grad_inputs[0];
     auto b = grad_inputs[1];
 
-    auto grad_a = matmul(grad_output, transpose(b));
-    auto grad_b = matmul(transpose(a), grad_output);
+    auto b_transposed_size =
+        std::vector<int>{b.get()->size_[1], b.get()->size_[0]};
+    auto b_transposed_data = transpose(b.get()->size_, b.get()->data_);
 
-    std::cout << "a before" << a.get()->grad_[0] << std::endl;
-    a.get()->grad_ = grad_a.get()->data_;
-    std::cout << "a after" << a.get()->grad_[0] << std::endl;
-    b.get()->grad_ = grad_b.get()->data_;
+    auto a_transposed_size =
+        std::vector<int>{a.get()->size_[1], a.get()->size_[0]};
+    auto a_transposed_data = transpose(a.get()->size_, a.get()->data_);
+
+    for (auto x : grad_output.get()->grad_) std::cout << x << std::endl;
+    for (auto x : b_transposed_data) std::cout << x << std::endl;
+
+    auto grad_a_data =
+        _matmul(grad_output.get()->size_, grad_output.get()->grad_,
+                b_transposed_size, b_transposed_data);
+    auto grad_b_data =
+        _matmul(a_transposed_size, a_transposed_data, grad_output.get()->size_,
+                grad_output.get()->grad_);
+
+    for (auto x : grad_a_data) std::cout << x << std::endl;
+    a.get()->grad_ = grad_a_data;
+    b.get()->grad_ = grad_b_data;
   }
 };
 
 void Tensor::_backward() {
   grad_fn_.get()->apply(get_shared(), children_);
-    std::cout << 5 << std::endl;
+  std::cout << 5 << std::endl;
   for (auto child : children_) {
-  std::cout << 6 << std::endl;
+    std::cout << 6 << std::endl;
     if (child.get()->grad_fn_ != nullptr) {
-        std::cout << 7 << std::endl;
+      std::cout << 7 << std::endl;
 
       child.get()->backward();
     }
@@ -455,10 +504,10 @@ void Tensor::backward() {
   grad_fn_.get()->apply(get_shared(), children_);
   std::cout << 2 << std::endl;
   for (auto child : children_) {
-      std::cout << 3 << std::endl;
+    std::cout << 3 << std::endl;
     if (child.get()->grad_fn_ != nullptr) {
       assert(child.get()->op_ != '?');
-    std::cout << 4 << std::endl;
+      std::cout << 4 << std::endl;
       child.get()->_backward();
     }
   }
