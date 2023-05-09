@@ -1,3 +1,37 @@
+# static vs dynamic autodiff
+
+![](https://raw.githubusercontent.com/pytorch/pytorch/main/docs/source/_static/img/dynamic_graph.gif)
+
+> Dynamic Neural Networks: Tape-Based Autograd
+> PyTorch has a unique way of building neural networks: using and replaying a tape recorder.
+>
+> Most frameworks such as TensorFlow, Theano, Caffe, and CNTK have a static view of the world. One has to build a neural network and reuse the same structure again and again. Changing the way the network behaves means that one has to start from scratch.
+>
+> With PyTorch, we use a technique called reverse-mode auto-differentiation, which allows you to change the way your network behaves arbitrarily with zero lag or overhead. Our inspiration comes from several research papers on this topic, as well as current and past work such as torch-autograd, autograd, Chainer, etc.
+>
+> While this technique is not unique to PyTorch, it's one of the fastest implementations of it to date. You get the best of speed and flexibility for your crazy research.
+>
+[PyTorch REAMDE](https://github.com/yrom1/pytorch#dynamic-neural-networks-tape-based-autograd)
+
+I understand how pytorch is tape based, making the graph on the fly. but does that mean tensorflow or other neural network librarys make the graphs statically? how exactly does that work, how would you implement autodiff in such a way you *couldnt* create the expression graph on demand?
+
+---
+
+ChatGPT
+In some machine learning frameworks like TensorFlow (prior to version 2.0), Theano, and CNTK, computational graphs are defined statically before execution. That means, the structure of the graph, which includes the operations and the relationships between them, must be fully specified and compiled before any actual computation or data flow happens.
+
+Here's a basic example to illustrate the static approach. Let's say you're building a simple neural network with one hidden layer. In a static graph framework, you'd specify the entire structure upfront: the input layer, the weights, the hidden layer, its activation function, the output layer, the loss function, etc. Only after you've defined this entire structure, you can feed in the input data.
+
+If you want to change the structure of the network - say, add another hidden layer - you'd need to define a new graph from scratch. This can be more efficient for certain types of large-scale computations, because the system can optimize the entire computation ahead of time, but it's less flexible and less intuitive, particularly for research and development where you're often experimenting with different architectures.
+
+In contrast, frameworks like PyTorch use dynamic computation graphs, also known as define-by-run approach. The graph structure can be modified as the computations are being performed. Each operation is added to the graph as you go along. This makes it more flexible and intuitive to work with, particularly for complex architectures that have control flow structures like loops and conditional statements.
+
+Automatic differentiation (autodiff) works with both static and dynamic graphs, but the implementation details differ. In a static graph, the graph's structure is known ahead of time, so it's possible to compute the derivatives for the entire graph in one go. This is done by applying the chain rule of calculus to each operation in the graph, going backwards from the output to the input (hence "reverse-mode autodiff").
+
+In a dynamic graph, the derivatives are computed on-the-fly as operations are added to the graph. Each operation has a forward pass (computing the output) and a backward pass (computing the derivative). This allows PyTorch's autograd system to compute gradients dynamically as you're building the graph.
+
+It's worth noting that TensorFlow 2.0 and later introduced eager execution, which allows dynamic computation graphs similar to PyTorch. This was a move to make TensorFlow more user-friendly and flexible, while still allowing the option to use static graphs for performance-critical applications.
+
 # forward declare of private class member and outside definition works
 
 ```c++
