@@ -261,6 +261,36 @@ TEST(Basic, ChainedMM) {
   EXPECT_NEAR(b.get()->grad_[3], 108.0, 0.1);
 }
 
+TEST(Basic, ScalarComplexAB) {
+  /*
+  >>> import torch
+  >>> a = torch.tensor((2.0), requires_grad=True)
+  >>> b = torch.tensor((43.0), requires_grad=True)
+  >>> c = (a * b) - ((b / a) + b)
+  >>> c.backward()
+  >>> c
+  tensor(21.5000, grad_fn=<SubBackward0>)
+  >>> a.grad
+  tensor(53.7500)
+  >>> b.grad
+  tensor(0.5000)
+  */
+  ag::t a = ag::tensor({1}, {2.0});
+  ag::t b = ag::tensor({1}, {43.0});
+  auto l = (a * b) - ((b / a) + b);  // NOTE im calling this l not c lazy
+  l.get()->backward();
+
+  EXPECT_NEAR(l.get()->data_[0], 21.5, 0.1);
+  EXPECT_EQ(l.get()->grad_.size(), 1);
+
+  EXPECT_EQ(a.get()->grad_.size(), 1);
+  EXPECT_EQ(b.get()->grad_.size(), 1);
+
+  EXPECT_NEAR(a.get()->grad_[0], 53.7500, 0.1);
+
+  EXPECT_NEAR(b.get()->grad_[0], 0.5000, 0.1);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
