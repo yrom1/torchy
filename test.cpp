@@ -211,6 +211,56 @@ TEST(Basic, MatMul) {
   EXPECT_NEAR(b.get()->grad_[3], 6.0, 0.1);
 }
 
+TEST(Basic, ChainedMM) {
+  /*
+  >>> import torch
+  >>> a = torch.tensor(((5.0, 4.0), (3.0, 2.0)), requires_grad=True)
+  >>> b = torch.tensor(((2.0, 3.0), (4.0, 5.0)), requires_grad=True)
+  >>> c = a.matmul(b)
+  >>> d = c.matmul(b)
+  >>> l = d.sum()
+  >>> l
+  tensor(686., grad_fn=<SumBackward0>)
+  >>> l.backward()
+  >>> l
+  tensor(686., grad_fn=<SumBackward0>)
+  >>> d
+  tensor([[192., 253.],
+          [104., 137.]], grad_fn=<MmBackward0>)
+  >>> c
+  tensor([[26., 35.],
+          [14., 19.]], grad_fn=<MmBackward0>)
+  >>> a.grad
+  tensor([[37., 65.],
+          [37., 65.]])
+  >>> b.grad
+  tensor([[ 80., 112.],
+          [ 84., 108.]])
+  */
+  ag::t a = ag::tensor({2, 2}, {5.0, 4.0, 3.0, 2.0});
+  ag::t b = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
+  ag::t c = ag::matmul(a, b);
+  ag::t d = ag::matmul(c, b);
+  ag::t l = d.get()->sum();
+  l.get()->backward();
+
+  EXPECT_NEAR(l.get()->data_[0], 686.0, 0.1);
+  EXPECT_EQ(l.get()->grad_.size(), 1);
+
+  EXPECT_EQ(a.get()->grad_.size(), 4);
+  EXPECT_EQ(b.get()->grad_.size(), 4);
+
+  EXPECT_NEAR(a.get()->grad_[0], 37.0, 0.1);
+  EXPECT_NEAR(a.get()->grad_[1], 65.0, 0.1);
+  EXPECT_NEAR(a.get()->grad_[2], 37.0, 0.1);
+  EXPECT_NEAR(a.get()->grad_[3], 65.0, 0.1);
+
+  EXPECT_NEAR(b.get()->grad_[0], 80.0, 0.1);
+  EXPECT_NEAR(b.get()->grad_[1], 112.0, 0.1);
+  EXPECT_NEAR(b.get()->grad_[2], 84.0, 0.1);
+  EXPECT_NEAR(b.get()->grad_[3], 108.0, 0.1);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -492,12 +492,13 @@ void Tensor::_backward() {
     if (child.get()->grad_fn_ != nullptr) {
       std::cout << 7 << std::endl;
 
-      child.get()->backward();
+      child.get()->_backward();
     }
   }
 }
 
 void Tensor::backward() {
+  for (auto x : data_) std::cout << x << std::endl;
   assert(data_.size() == 1);
   grad_ = std::vector<float>(_product(size_), 1.0f);
   std::cout << 1 << std::endl;
