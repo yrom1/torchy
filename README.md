@@ -16,6 +16,15 @@ A small tensor-valued autograd engine, inspired by PyTorch and micrograd
 (std::vector<float> &) { 143.000f, 187.000f, 143.000f, 187.000f }
 [cling]$ b.get()->grad_
 (std::vector<float> &) { 66.0000f, 66.0000f, 88.0000f, 88.0000f }
+[cling]$ f.get()->graph()
+0x600003070618 s
+  0x600003070498 *
+    0x6000030700d8 +
+      0x600003070198 @
+        0x600003050858
+        0x600003070018
+      0x600003070258
+    0x600003070318
 ```
 
 ```py
