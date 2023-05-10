@@ -1,56 +1,47 @@
 # torchy🔥
 
-A small tensor-valued autograd engine, inspired by PyTorch and micrograd.
+A small tensor-valued autograd engine, inspired by PyTorch and micrograd
 
-## Hello torchy
-
-The main abstraction torchy provides is a `Tensor` class:
-
-```c++
-#include <iostream>
-
-#include "torchy.h"
-
-int main() {
-  Tensor<int> t({1}, {42}); // Tensor of 1 element holding 42
-  std::cout << t << std::endl; // [42]
-}
+```cpp
+[cling]$ ag::t a = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
+[cling]$ ag::t b = ag::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
+[cling]$ ag::t c = ag::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
+[cling]$ ag::t d = ag::tensor({2, 2}, {11.0, 11.0, 11.0, 11.0});
+[cling]$ ag::t e = (ag::matmul(a, b) + c) * d;
+[cling]$ ag::t f = e.get()->sum();
+[cling]$ f.get()->backward();
+[cling]$ f.get()->data_
+(std::vector<float> &) { 2794.00f }
+[cling]$ a.get()->grad_
+(std::vector<float> &) { 143.000f, 187.000f, 143.000f, 187.000f }
+[cling]$ b.get()->grad_
+(std::vector<float> &) { 66.0000f, 66.0000f, 88.0000f, 88.0000f }
 ```
 
-The next example uses a C++ interpreter called [cling](https://github.com/root-project/cling):
-
-```c++
-[cling]$ #include "torchy.h"
-[cling]$ Tensor<std::string> t({2,2}, {"one", "two", "three", "four"});
-[cling]$ std::cout << t << std::endl; // Row-major order
-[[one, two],
- [three, four]]
+```py
+>>> import torch
+>>> a = torch.tensor(((2.0, 3.0), (4.0, 5.0)), requires_grad=True)
+>>> b = torch.tensor(((6.0, 7.0), (8.0, 9.0)), requires_grad=True)
+>>> c = torch.tensor(((10.0, 10.0), (10.0, 10.0)), requires_grad=True)
+>>> d = torch.tensor(((11.0, 11.0), (11.0, 11.0)), requires_grad=True)
+>>> e = (a.matmul(b) + c) * d
+>>> f = e.sum()
+>>> f.backward()
+>>> f
+tensor(2794., grad_fn=<SumBackward0>)
+>>> a.grad
+tensor([[143., 187.],
+        [143., 187.]])
+>>> b.grad
+tensor([[66., 66.],
+        [88., 88.]])
 ```
-
-## Autograd
-
-Passing `true` as the third parameter sets `requires_grad_` to `true` and allows a `Tensor` to start tracking the expression graph, and allows gradients to be set during back-propagation.
-
-```c++
-[cling]$ Tensor<float> a({1}, {42.0}, true);
-[cling]$ float b = 2.0;
-[cling]$ auto c = a + b;
-[cling]$ c.backward()
-[cling]$ c.graph()
-Tensor@0x10594c770 (+)
-  Tensor@0x60000160d198
-  Tensor@0x60000160d318
-[cling]$ c.storage_.get()->data_
-(std::vector<float> &) { 44.0000f }
-[cling]$ a.autograd_meta_.get()->grad_.storage_.get()->data_
-(std::vector<float> &) { 1.00000f }
-```
-
-Setting `requires_grad_` to `true` is only allowed for `Tensor`s that are a C++ built-in floating point type (`float`, `double`, or `long double`).
 
 ## Design
 
-The plan is to be similar to PyTorch's internals, particularily the [Variable/Tensor Merge Proposal](https://github.com/pytorch/pytorch/issues/13638) design.
+~~The plan is to be similar to PyTorch's internals, particularily the [Variable/Tensor Merge Proposal](https://github.com/pytorch/pytorch/issues/13638) design.~~ The design is a mix of PyTorch and micrograd, with micrograd like members and PyTorch like backward classes with an `apply()` interface.
+
+For simplicity, many features PyTorch has torchy does not, like broadcasting and views. All operations are defined only on `std::shared_ptr<Tensor>`, for now at least.
 
 ## Goals
 
