@@ -479,8 +479,13 @@ struct MatMulBackward : public AutoGradBackward {
                 grad_output.get()->grad_);
 
     for (auto x : grad_a_data) std::cout << x << std::endl;
-    a.get()->grad_ = grad_a_data;
-    b.get()->grad_ = grad_b_data;
+    for (int i = 0; i < a.get()->grad_.size(); ++i) {
+      a.get()->grad_[i] += grad_a_data[i];
+    }
+
+    for (int i = 0; i < b.get()->grad_.size(); ++i) {
+      b.get()->grad_[i] += grad_b_data[i];
+    }
   }
 };
 
