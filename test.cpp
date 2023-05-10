@@ -392,6 +392,36 @@ TEST(Basic, ReLU) {
   EXPECT_EQ(a.get()->grad_[3], 1.0);
 }
 
+template <typename T>
+std::vector<T> tensorToVector(const torch::Tensor& tensor) {
+  size_t num_elements = tensor.numel();
+  std::vector<T> result(num_elements);
+  std::memcpy(result.data(), tensor.data_ptr<T>(), num_elements * sizeof(T));
+  return result;
+}
+
+TEST(Torch, Neuron) {
+  ag::t x = ag::tensor({3, 2}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
+  ag::t w = ag::tensor({2, 4}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
+  ag::t b = ag::tensor({1, 4}, {1.0, 2.0, 3.0, 4.0});
+  ag::t result = ag::matmul(x, w) + b;
+  auto result_v = result.get()->data_;
+
+  std::vector<float> data1 = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+  std::vector<float> data2 = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+  at::Tensor x_aten = at::from_blob(data1.data(), {3, 2}, at::kFloat);
+  at::Tensor w_aten = at::from_blob(data2.data(), {2, 4}, at::kFloat);
+  at::Tensor b_aten = at::tensor({1.0, 2.0, 3.0, 4.0}).unsqueeze(0);
+  at::Tensor result_aten = x_aten.matmul(w_aten) + b_aten;
+  std::vector<int> result_aten_v = tensorToVector<int>(result_aten);
+
+  for (auto x : result_v) {
+    for (auto x_aten : result_aten_v) {
+      EXPECT_NEAR(x, x_aten, 0.1);
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
