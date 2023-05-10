@@ -355,6 +355,43 @@ TEST(Basic, ChainedComplexOperations) {
   EXPECT_NEAR(d.get()->grad_[3], 83.0, 0.1);
 }
 
+TEST(Basic, ReLU) {
+  /*
+  >>> import torch
+  >>> a = torch.tensor(((-1.0, -2.0), (1.0, 2.0)), requires_grad=True)
+  >>> b = a.relu()
+  >>> b
+  tensor([[0., 0.],
+          [1., 2.]], grad_fn=<ReluBackward0>)
+  >>> l = b.sum()
+  >>> l.backward()
+  >>> l
+  tensor(3., grad_fn=<SumBackward0>)
+  >>> a.grad
+  tensor([[0., 0.],
+          [1., 1.]])
+  */
+  ag::t a = ag::tensor({2, 2}, {-1.0, -2.0, 1.0, 2.0});
+  ag::t b = ag::relu(a);
+  auto l = b.get()->sum();
+  l.get()->backward();
+
+  EXPECT_EQ(l.get()->data_[0], 3.0);
+  EXPECT_EQ(l.get()->grad_.size(), 1);
+
+  EXPECT_EQ(b.get()->data_.size(), 4);
+  EXPECT_EQ(b.get()->data_[0], 0.0);
+  EXPECT_EQ(b.get()->data_[1], 0.0);
+  EXPECT_EQ(b.get()->data_[2], 1.0);
+  EXPECT_EQ(b.get()->data_[3], 2.0);
+
+  EXPECT_EQ(a.get()->grad_.size(), 4);
+  EXPECT_EQ(a.get()->grad_[0], 0.0);
+  EXPECT_EQ(a.get()->grad_[1], 0.0);
+  EXPECT_EQ(a.get()->grad_[2], 1.0);
+  EXPECT_EQ(a.get()->grad_[3], 1.0);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

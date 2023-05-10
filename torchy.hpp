@@ -11,6 +11,7 @@
 #ifndef TORCHY_HPP_
 #define TORCHY_HPP_
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <iostream>
@@ -28,6 +29,7 @@ struct SubBackward;
 struct MulBackward;
 struct DivBackward;
 using SumBackward = AddBackward;
+struct ReluBackward;
 struct MatMulBackward;
 
 struct AutoGradForward;
@@ -262,6 +264,17 @@ std::shared_ptr<Tensor> Tensor::sum() {
       std::make_shared<SumBackward>(), 's');
 }
 
+std::shared_ptr<Tensor> relu(std::shared_ptr<Tensor> input) {
+  std::vector<float> result_data(input.get()->data_.size());
+  for (int i = 0; i < input.get()->data_.size(); ++i) {
+    result_data[i] = std::max(0.0f, input.get()->data_[i]);
+  }
+  return std::make_shared<Tensor>(
+      input.get()->size_, result_data,
+      std::vector<std::shared_ptr<Tensor>>{input.get()->get_shared()},
+      std::make_shared<ReluBackward>(), 'r');
+}
+
 std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
                                std::initializer_list<float> data) {
   return std::make_shared<Tensor>(size, data);
@@ -344,6 +357,20 @@ struct DivBackward : public AutoGradBackward {
           -(grad_inputs[0].get()->data_[i] /
             (grad_inputs[1].get()->data_[i] * grad_inputs[1].get()->data_[i]));
       grad_inputs[1].get()->grad_[i] += update;
+    }
+  }
+};
+
+struct ReluBackward : public AutoGradBackward {
+  ReluBackward() = default;
+
+  void apply(std::shared_ptr<Tensor> grad_output,
+             std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
+    assert(grad_inputs.size() == 1);
+    std::shared_ptr<Tensor> input = grad_inputs[0];
+    for (int i = 0; i < input.get()->grad_.size(); ++i) {
+      input.get()->grad_[i] +=
+          grad_output.get()->grad_[i] * (input.get()->data_[i] > 0 ? 1 : 0);
     }
   }
 };
