@@ -291,6 +291,70 @@ TEST(Basic, ScalarComplexAB) {
   EXPECT_NEAR(b.get()->grad_[0], 0.5000, 0.1);
 }
 
+TEST(Basic, ChainedComplexOperations) {
+  /*
+  >>> import torch
+  >>> a = torch.tensor(((2.0, 3.0), (4.0, 5.0)), requires_grad=True)
+  >>> b = torch.tensor(((6.0, 7.0), (8.0, 9.0)), requires_grad=True)
+  >>> c = torch.tensor(((10.0, 10.0), (10.0, 10.0)), requires_grad=True)
+  >>> d = torch.tensor(((11.0, 11.0), (11.0, 11.0)), requires_grad=True)
+  >>> e = (a.matmul(b) + c) * d
+  >>> f = e.sum()
+  >>> f.backward()
+  >>> a.grad
+  tensor([[143., 187.],
+          [143., 187.]])
+  >>> b.grad
+  tensor([[66., 66.],
+          [88., 88.]])
+  >>> c.grad
+  tensor([[11., 11.],
+          [11., 11.]])
+  >>> d.grad
+  tensor([[46., 51.],
+          [74., 83.]])
+>>> f
+tensor(2794., grad_fn=<SumBackward0>)
+  >>> f
+  tensor(2794., grad_fn=<SumBackward0>)
+  */
+  ag::t a = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
+  ag::t b = ag::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
+  ag::t c = ag::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
+  ag::t d = ag::tensor({2, 2}, {11.0, 11.0, 11.0, 11.0});
+  ag::t e = (ag::matmul(a, b) + c) * d;
+  ag::t f = e.get()->sum();
+  f.get()->backward();
+
+  EXPECT_NEAR(f.get()->data_[0], 2794.0, 0.1);
+  EXPECT_EQ(f.get()->grad_.size(), 1);
+
+  EXPECT_EQ(a.get()->grad_.size(), 4);
+  EXPECT_EQ(b.get()->grad_.size(), 4);
+  EXPECT_EQ(c.get()->grad_.size(), 4);
+  EXPECT_EQ(d.get()->grad_.size(), 4);
+
+  EXPECT_NEAR(a.get()->grad_[0], 143.0, 0.1);
+  EXPECT_NEAR(a.get()->grad_[1], 187.0, 0.1);
+  EXPECT_NEAR(a.get()->grad_[2], 143.0, 0.1);
+  EXPECT_NEAR(a.get()->grad_[3], 187.0, 0.1);
+
+  EXPECT_NEAR(b.get()->grad_[0], 66.0, 0.1);
+  EXPECT_NEAR(b.get()->grad_[1], 66.0, 0.1);
+  EXPECT_NEAR(b.get()->grad_[2], 88.0, 0.1);
+  EXPECT_NEAR(b.get()->grad_[3], 88.0, 0.1);
+
+  EXPECT_NEAR(c.get()->grad_[0], 11.0, 0.1);
+  EXPECT_NEAR(c.get()->grad_[1], 11.0, 0.1);
+  EXPECT_NEAR(c.get()->grad_[2], 11.0, 0.1);
+  EXPECT_NEAR(c.get()->grad_[3], 11.0, 0.1);
+
+  EXPECT_NEAR(d.get()->grad_[0], 46.0, 0.1);
+  EXPECT_NEAR(d.get()->grad_[1], 51.0, 0.1);
+  EXPECT_NEAR(d.get()->grad_[2], 74.0, 0.1);
+  EXPECT_NEAR(d.get()->grad_[3], 83.0, 0.1);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
