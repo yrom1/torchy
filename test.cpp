@@ -400,12 +400,27 @@ std::vector<T> tensorToVector(const torch::Tensor& tensor) {
   return result;
 }
 
+template <typename T>
+std::vector<T> tensorGradToVector(const torch::Tensor& tensor) {
+  torch::Tensor grad = tensor.grad();
+  if (!grad.defined()) {
+    throw std::runtime_error("No gradient available for the input tensor");
+  }
+  size_t num_elements = grad.numel();
+  std::vector<T> result(num_elements);
+  std::memcpy(result.data(), grad.data_ptr<T>(), num_elements * sizeof(T));
+  return result;
+}
+
 TEST(Torch, Neuron) {
   ag::t x = ag::tensor({3, 2}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
   ag::t w = ag::tensor({2, 4}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
   ag::t b = ag::tensor({1, 4}, {1.0, 2.0, 3.0, 4.0});
   ag::t result = ag::matmul(x, w) + b;
   auto result_v = result.get()->data_;
+  result.get()->backward();
+  auto w_g = w.get()->grad_;
+  auto b_g = b.get()->grad_;
 
   std::vector<float> data1 = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
   std::vector<float> data2 = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
@@ -413,11 +428,26 @@ TEST(Torch, Neuron) {
   at::Tensor w_aten = at::from_blob(data2.data(), {2, 4}, at::kFloat);
   at::Tensor b_aten = at::tensor({1.0, 2.0, 3.0, 4.0}).unsqueeze(0);
   at::Tensor result_aten = x_aten.matmul(w_aten) + b_aten;
-  std::vector<int> result_aten_v = tensorToVector<int>(result_aten);
+  result_aten.backward();
+  std::vector<float> result_aten_v = tensorToVector<float>(result_aten);
+  std::vector<float> w_aten_g = tensorGradToVector<float>(w_aten);
+  std::vector<float> b_aten_g = tensorGradToVector<float>(b_aten);
 
-  for (auto x : result_v) {
-    for (auto x_aten : result_aten_v) {
-      EXPECT_NEAR(x, x_aten, 0.1);
+  for (auto r_torchy : result_v) {
+    for (auto r_torch : result_aten_v) {
+      EXPECT_NEAR(r_torchy, r_torch, 0.1);
+    }
+  }
+
+  for (auto w_torchy : w_g) {
+    for (auto w_torch : w_aten_g) {
+      EXPECT_NEAR(w_torchy, w_torch, 0.1);
+    }
+  }
+
+  for (auto b_torchy : b_g) {
+    for (auto b_torch : b_aten_g) {
+      EXPECT_NEAR(b_torchy, b_torch, 0.1);
     }
   }
 }
