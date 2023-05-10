@@ -408,32 +408,6 @@ struct MatMulForward : public AutoGradForward {
   }
 };
 
-std::shared_ptr<Tensor> transpose(
-    std::shared_ptr<Tensor> &input) {  // NOLINT (runtime/reference)
-  auto size = input.get()->size_;
-  std::vector<int> new_size = {size[1], size[0]};
-  std::vector<float> new_data(new_size[0] * new_size[1]);
-  // std::vector<float> new_grad(new_size[0] * new_size[1]);
-
-  for (int i = 0; i < size[0]; ++i) {
-    for (int j = 0; j < size[1]; ++j) {
-      new_data[j * size[0] + i] = input.get()->data_[i * size[1] + j];
-    }
-  }
-
-  // actually this is not needed for matmulbackward
-  // for (int i = 0; i < size[0]; ++i) {
-  //   for (int j = 0; j < size[1]; ++j) {
-  //     new_grad[j * size[0] + i] = input.get()->grad_[i * size[1] + j];
-  //   }
-  // }
-
-  input.get()->size_ = new_size;
-  input.get()->data_ = new_data;
-  // input.get()->grad_ = new_grad;
-  return input;
-}
-
 std::vector<float> transpose(const std::vector<int> &size,
                              const std::vector<float> &data) {
   int rows = size[0];
