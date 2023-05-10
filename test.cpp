@@ -313,8 +313,8 @@ TEST(Basic, ChainedComplexOperations) {
   >>> d.grad
   tensor([[46., 51.],
           [74., 83.]])
->>> f
-tensor(2794., grad_fn=<SumBackward0>)
+  >>> f
+  tensor(2794., grad_fn=<SumBackward0>)
   >>> f
   tensor(2794., grad_fn=<SumBackward0>)
   */
