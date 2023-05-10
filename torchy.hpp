@@ -242,14 +242,12 @@ template <typename T>
 std::shared_ptr<Tensor> binaryForwardOperator(std::shared_ptr<Tensor> lhs,
                                               std::shared_ptr<Tensor> rhs,
                                               T forward) {
-  std::cout << "paslkdakljfdjkfjkl work please" << std::endl;
   return (*forward)();  // forward.get()();
 }
 
 std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> lhs,
                                std::shared_ptr<Tensor> rhs) {
   std::shared_ptr<MatMulForward> f = std::make_shared<MatMulForward>(lhs, rhs);
-  std::cout << "paslkdakljfdjkfjkl work please 2" << std::endl;
   return binaryForwardOperator<std::shared_ptr<MatMulForward>>(lhs, rhs, f);
 }
 
@@ -456,7 +454,6 @@ struct MatMulBackward : public AutoGradBackward {
 
   void apply(std::shared_ptr<Tensor> grad_output,
              std::vector<std::shared_ptr<Tensor>> grad_inputs) override {
-    std::cout << "calling mmb" << std::endl;
     auto a = grad_inputs[0];
     auto b = grad_inputs[1];
 
@@ -468,9 +465,6 @@ struct MatMulBackward : public AutoGradBackward {
         std::vector<int>{a.get()->size_[1], a.get()->size_[0]};
     auto a_transposed_data = transpose(a.get()->size_, a.get()->data_);
 
-    for (auto x : grad_output.get()->grad_) std::cout << x << std::endl;
-    for (auto x : b_transposed_data) std::cout << x << std::endl;
-
     auto grad_a_data =
         _matmul(grad_output.get()->size_, grad_output.get()->grad_,
                 b_transposed_size, b_transposed_data);
@@ -478,7 +472,6 @@ struct MatMulBackward : public AutoGradBackward {
         _matmul(a_transposed_size, a_transposed_data, grad_output.get()->size_,
                 grad_output.get()->grad_);
 
-    for (auto x : grad_a_data) std::cout << x << std::endl;
     for (int i = 0; i < a.get()->grad_.size(); ++i) {
       a.get()->grad_[i] += grad_a_data[i];
     }
@@ -491,29 +484,20 @@ struct MatMulBackward : public AutoGradBackward {
 
 void Tensor::_backward() {
   grad_fn_.get()->apply(get_shared(), children_);
-  std::cout << 5 << std::endl;
   for (auto child : children_) {
-    std::cout << 6 << std::endl;
     if (child.get()->grad_fn_ != nullptr) {
-      std::cout << 7 << std::endl;
-
       child.get()->_backward();
     }
   }
 }
 
 void Tensor::backward() {
-  for (auto x : data_) std::cout << x << std::endl;
   assert(data_.size() == 1);
   grad_ = std::vector<float>(_product(size_), 1.0f);
-  std::cout << 1 << std::endl;
   grad_fn_.get()->apply(get_shared(), children_);
-  std::cout << 2 << std::endl;
   for (auto child : children_) {
-    std::cout << 3 << std::endl;
     if (child.get()->grad_fn_ != nullptr) {
       assert(child.get()->op_ != '?');
-      std::cout << 4 << std::endl;
       child.get()->_backward();
     }
   }
