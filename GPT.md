@@ -1,3 +1,180 @@
+# input @ weights + bias ordering and visualized
+
+```cpp
+  ag::t forward(ag::t input) {
+        // z = Wx + b
+        ag::t z = ag::matmul(input, weights_) + bias_; // order right?
+        return ag::relu(z);
+```
+
+does it usually go matmul(input, weights) or matmul weights, input in nn libraries like pytorch
+
+---
+
+ChatGPT
+In neural network libraries like PyTorch, the order of operands for the matmul operation is typically input, weights.
+
+The matmul function performs a matrix multiplication operation between two tensors. The order of the arguments matters because matrix multiplication is not commutative, meaning that matmul(A, B) is not the same as matmul(B, A).
+
+In the context of neural networks, the input tensor usually represents the input data or the outputs from a previous layer, and the weights tensor represents the learned parameters of the current layer. Given this, matmul(input, weights) is the conventional order. This operation corresponds to each neuron in the layer computing a weighted sum of its inputs, where the weights are the parameters of the neuron.
+
+The code you provided is correct and follows standard practice. The input tensor and weights_ tensor are multiplied, and then the bias_ tensor is added to the result. The output is then passed through the ReLU activation function.
+
+---
+
+User
+so every row in the input is the input data, and every column in weights is the weights is that right
+
+---
+
+ChatGPT
+Yes, you're correct. In the context of a fully connected layer in a neural network:
+
+Each row in the input tensor corresponds to a data sample (or a batch of samples if you're using batch processing). The columns correspond to the features of the data.
+
+Each column in the weights tensor corresponds to the weights of a single neuron in the layer. The rows correspond to the input features.
+
+So, when you perform the operation matmul(input, weights), you're effectively computing the weighted sum for each neuron over all input features, for each data sample in the batch.
+
+Finally, the bias tensor is added. It has the same size as the number of neurons in the layer (which is the same as the number of columns in weights). It is added to each neuron's output to offset the result.
+
+Then, the resulting values are passed through the activation function (ReLU in your case). The purpose of the activation function is to introduce non-linearities into the model, which allows it to learn more complex patterns.
+
+In summary, the fully connected layer operation can be summarized as follows:
+
+Multiply the input data by the weights (using matrix multiplication).
+Add the bias to the result.
+Apply the activation function to the result.
+
+---
+
+User
+how big is the bias in reference to the rows and coloumns of the input and weights
+
+---
+
+ChatGPT
+The bias tensor in a fully connected layer of a neural network is a 1-dimensional tensor that has the same size as the number of neurons in that layer.
+
+If we refer to the weights tensor, its shape is typically (input_features, output_features), where input_features is the number of features in the input data, and output_features is the number of neurons in the layer (i.e., the number of outputs this layer should produce).
+
+So, the bias tensor shape should be (output_features,).
+
+In other words, there is one bias term for each neuron in the layer, regardless of the number of input features or the number of samples in your batch. The bias term gets added to the weighted sum of inputs for each neuron, effectively shifting the result by a constant amount. This allows the model to fit data better by adjusting not just the slope (controlled by weights) but also the intercept (controlled by biases) of the fitting function.
+
+---
+
+User
+visualize these three matrixes in three difference code boxes with labels of what the columns or rows mean
+
+---
+
+ChatGPT
+Here's a visual representation of these matrices (or tensors) using pseudo code:
+
+Input Tensor:
+
+```python
+input = [
+    [x11, x12, x13, ..., x1n],  # Features of Sample 1
+    [x21, x22, x23, ..., x2n],  # Features of Sample 2
+    ...
+    [xm1, xm2, xm3, ..., xmn],  # Features of Sample m
+]
+```
+Here m is the number of samples in the batch, and n is the number of input features.
+
+Weights Tensor:
+
+```python
+weights = [
+    [w11, w12, w13, ..., w1k],  # Weights from all input features to Neuron 1
+    [w21, w22, w23, ..., w2k],  # Weights from all input features to Neuron 2
+    ...
+    [wn1, wn2, wn3, ..., wnk],  # Weights from all input features to Neuron n
+]
+```
+Here n is the number of input features, and k is the number of output features (or neurons in the layer).
+
+Bias Tensor:
+
+```python
+bias = [b1, b2, b3, ..., bk]
+```
+
+Here k is the number of output features (or neurons in the layer). Each neuron has a single bias term.
+
+After the matrix multiplication of the input and weights (i.e., input @ weights), the result is a tensor of shape (m, k). Each element of the bias tensor is then added to the corresponding column in the result. Finally, the activation function is applied element-wise.
+
+---
+
+User
+why is bias a vector, does this imply broadcasting or is inputs.matmul(weights) a vector output size
+
+---
+
+ChatGPT
+Yes, the bias being a vector indeed implies broadcasting. Broadcasting is a powerful mechanism that allows numpy and other libraries (like PyTorch or TensorFlow) to work with arrays of different shapes when performing arithmetic operations.
+
+In the context of a neural network layer, the result of inputs.matmul(weights) is a matrix, not a vector. Its shape is (batch_size, output_features), where batch_size is the number of samples in the batch and output_features is the number of neurons in the layer.
+
+The bias vector, with a shape of (output_features,), is added to this matrix. Broadcasting rules allow this addition to happen, effectively adding each bias term to the corresponding output of each neuron for all samples.
+
+In other words, each bias value in the bias vector is added to all the results from the corresponding neuron. This is equivalent to shifting the activation function of each neuron by a constant amount. This mechanism allows the model to fit the data better by giving it more flexibility.
+
+---
+
+User
+can you visualize the bias, is it the same along rows or columsn and what are they doing
+
+---
+
+ChatGPT
+Sure, let's visualize the bias vector and its interaction with the result of the inputs.matmul(weights) operation.
+
+Assume you have an output from the inputs.matmul(weights) operation like this (let's name it Z):
+
+```python
+Z = [
+    [z11, z12, z13, ..., z1k],  # Output for Sample 1
+    [z21, z22, z23, ..., z2k],  # Output for Sample 2
+    ...
+    [zm1, zm2, zm3, ..., zmk],  # Output for Sample m
+]
+```
+
+Here m is the number of samples in the batch, and k is the number of output features or neurons in the layer.
+
+The bias vector looks like this:
+
+```python
+bias = [b1, b2, b3, ..., bk]
+```
+
+Here k is the number of output features or neurons in the layer. Each neuron has a single bias term.
+
+When you add the bias vector to the Z matrix, the bias vector is broadcasted across the rows of the Z matrix. The result will be a matrix of the same size as Z, but with the bias vector added to every row:
+
+```python
+Z + bias = [
+    [z11 + b1, z12 + b2, z13 + b3, ..., z1k + bk],  # Output for Sample 1 with biases added
+    [z21 + b1, z22 + b2, z23 + b3, ..., z2k + bk],  # Output for Sample 2 with biases added
+    ...
+    [zm1 + b1, zm2 + b2, zm3 + b3, ..., zmk + bk],  # Output for Sample m with biases added
+]
+```
+In other words, each bias term is added to all the outputs of the corresponding neuron across all samples. This effectively shifts the output of each neuron by a constant amount, giving the model more flexibility to fit the data.
+
+---
+
+User
+each output for each example is added a bias, is that correctly worded by me
+
+---
+
+ChatGPT
+Yes, you've worded it correctly. In the context of neural networks, each output for each example (or sample) in a batch is added a bias. Specifically, the output of each neuron for each example is added a bias term that is specific to that neuron. This operation effectively shifts the activation of each neuron by a constant amount.
+
 # std::enable_shared_from_this
 
 an you show me how to use c++ shared from this standard template and what that does with the printed address output i want to have the shared pointer be the same in multiple places
