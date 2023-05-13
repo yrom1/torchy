@@ -16,6 +16,8 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <numeric>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -35,6 +37,17 @@ struct MatMulBackward;
 struct AutoGradForward;
 struct MatMulForward;
 
+class Tensor;
+
+std::shared_ptr<Tensor> tensor(std::initializer_list<int>,
+                               std::initializer_list<float>);
+
+std::shared_ptr<Tensor> tensor(std::vector<int>, std::vector<float>);
+
+std::shared_ptr<Tensor> tensor(std::vector<int>, std::vector<float>,
+                               std::vector<std::shared_ptr<Tensor>>,
+                               std::shared_ptr<AutoGradBackward>, char);
+
 class Tensor : public std::enable_shared_from_this<Tensor> {
  public:
   std::vector<int> size_;
@@ -47,6 +60,19 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::vector<int> strides_;
 
   Tensor(std::initializer_list<int> size, std::initializer_list<float> data)
+      : size_(size),
+        data_(data),
+        grad_(data.size(), 0),
+        children_(),
+        grad_fn_(),
+        op_('?'),
+        offset_(0),
+        strides_(size.size(), 0) {
+    assert(_product(size) == data_.size());
+    _computeStrides();
+  }
+
+  Tensor(std::vector<int> size, std::vector<float> data)
       : size_(size),
         data_(data),
         grad_(data.size(), 0),
@@ -134,6 +160,43 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
       idx += indices[i] * strides_[i];
     }
     return get_shared().get()->grad_[idx];
+  }
+
+  static std::shared_ptr<Tensor> ones(const std::vector<int> &shape) {
+    std::vector<float> data(
+        std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>()),
+        1.0f);
+    return tensor(shape, data);
+  }
+
+  static std::shared_ptr<Tensor> zeros(const std::vector<int> &shape) {
+    std::vector<float> data(
+        std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>()),
+        0.0f);
+    return tensor(shape, data);
+  }
+
+  static std::shared_ptr<Tensor> explode(const std::vector<int> &shape,
+                                         float value) {
+    std::vector<float> data(
+        std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>()),
+        value);
+    return tensor(shape, data);
+  }
+
+  static std::shared_ptr<Tensor> rand(const std::vector<int> &shape) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    int total_size =
+        std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+    std::vector<float> data(total_size);
+    for (int i = 0; i < total_size; ++i) {
+      data[i] = dis(gen);
+    }
+
+    return tensor(shape, data);
   }
 
   static void print(std::ostream &os, const std::shared_ptr<Tensor> &tensor,
@@ -277,6 +340,10 @@ std::shared_ptr<Tensor> relu(std::shared_ptr<Tensor> input) {
 
 std::shared_ptr<Tensor> tensor(std::initializer_list<int> size,
                                std::initializer_list<float> data) {
+  return std::make_shared<Tensor>(size, data);
+}
+
+std::shared_ptr<Tensor> tensor(std::vector<int> size, std::vector<float> data) {
   return std::make_shared<Tensor>(size, data);
 }
 
@@ -505,6 +572,54 @@ void Tensor::backward() {
 }
 
 using t = std::shared_ptr<Tensor>;
+
+// namespace nn {
+
+// class Layer {
+//  public:
+//   ag::t weights_;
+//   ag::t bias_;
+
+//   Layer(ag::t weights, ag::t bias) {
+//     weights_ = weights;
+//     bias_ = bias;
+//   }
+
+//   ag::t forward(ag::t input) {
+//     // z = Wx + b
+//     ag::t z = ag::matmul(input, weights_) + bias_;  // order right?
+//     return ag::relu(z);
+//   }
+// };
+
+// class MLP {
+//  public:
+//   std::vector<Layer> layers_;
+
+//   explicit MLP(const std::vector<int> &neurons_per_layer) {
+//     // Initialize layers
+//     for (size_t i = 0; i < neurons_per_layer.size() - 1; i++) {
+//       // Get number of inputs and outputs for this layer
+//       int inputs = neurons_per_layer[i];
+//       int outputs = neurons_per_layer[i + 1];
+
+//       // Initialize weights and biases
+//       ag::t weights = ag::Tensor::ones({inputs, outputs});
+//       ag::t bias = ag::Tensor::zeros({outputs});
+
+//       // Add layer to MLP
+//       layers_.emplace_back(weights, bias);
+//     }
+//   }
+
+//   ag::t forward(ag::t input) {
+//     for (auto &layer : layers_) {
+//       input = layer.forward(input);
+//     }
+//     return input;
+//   }
+// };
+// }  // namespace nn
 
 }  // namespace ag
 

@@ -89,6 +89,9 @@
         "algorithm": "cpp",
         "utility": "cpp",
         "__memory": "cpp",
-        "filesystem": "cpp"
-    }
+        "filesystem": "cpp",
+        "numeric": "cpp",
+        "random": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
