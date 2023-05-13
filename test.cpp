@@ -412,43 +412,41 @@ std::vector<T> tensorGradToVector(const torch::Tensor& tensor) {
   return result;
 }
 
-TEST(Torch, Neuron) {
+TEST(Torch, LayerManual) {
   ag::t x = ag::tensor({3, 2}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
   ag::t w = ag::tensor({2, 4}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
-  ag::t b = ag::tensor({1, 4}, {1.0, 2.0, 3.0, 4.0});
+  ag::t b = ag::tensor(
+      {3, 4}, {1.0, 2.0, 3.0, 4.0, 1.0, 2.0, 3.0, 4.0, 1.0, 2.0, 3.0, 4.0});
   ag::t result = ag::matmul(x, w) + b;
-  auto result_v = result.get()->data_;
-  result.get()->backward();
+  ag::t l = result.get()->sum();
+  l.get()->backward();
   auto w_g = w.get()->grad_;
   auto b_g = b.get()->grad_;
 
   std::vector<float> data1 = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
   std::vector<float> data2 = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
-  at::Tensor x_aten = at::from_blob(data1.data(), {3, 2}, at::kFloat);
-  at::Tensor w_aten = at::from_blob(data2.data(), {2, 4}, at::kFloat);
-  at::Tensor b_aten = at::tensor({1.0, 2.0, 3.0, 4.0}).unsqueeze(0);
+  std::vector<float> data3 = {1.0, 2.0, 3.0, 4.0, 1.0, 2.0,
+                              3.0, 4.0, 1.0, 2.0, 3.0, 4.0};
+  at::Tensor x_aten =
+      at::from_blob(data1.data(), {3, 2}, at::kFloat).requires_grad_(true);
+  at::Tensor w_aten =
+      at::from_blob(data2.data(), {2, 4}, at::kFloat).requires_grad_(true);
+  at::Tensor b_aten =
+      at::from_blob(data3.data(), {3, 4}, at::kFloat).requires_grad_(true);
   at::Tensor result_aten = x_aten.matmul(w_aten) + b_aten;
-  result_aten.backward();
-  std::vector<float> result_aten_v = tensorToVector<float>(result_aten);
+  at::Tensor l_aten = result_aten.sum();
+  l_aten.backward();
   std::vector<float> w_aten_g = tensorGradToVector<float>(w_aten);
   std::vector<float> b_aten_g = tensorGradToVector<float>(b_aten);
 
-  for (auto r_torchy : result_v) {
-    for (auto r_torch : result_aten_v) {
-      EXPECT_NEAR(r_torchy, r_torch, 0.1);
-    }
+  ASSERT_EQ(w_g.size(), w_aten_g.size());
+  for (size_t i = 0; i < w_g.size(); i++) {
+    EXPECT_NEAR(w_g[i], w_aten_g[i], 0.1);
   }
 
-  for (auto w_torchy : w_g) {
-    for (auto w_torch : w_aten_g) {
-      EXPECT_NEAR(w_torchy, w_torch, 0.1);
-    }
-  }
-
-  for (auto b_torchy : b_g) {
-    for (auto b_torch : b_aten_g) {
-      EXPECT_NEAR(b_torchy, b_torch, 0.1);
-    }
+  ASSERT_EQ(b_g.size(), b_aten_g.size());
+  for (size_t i = 0; i < b_g.size(); i++) {
+    EXPECT_NEAR(b_g[i], b_aten_g[i], 0.1);
   }
 }
 
