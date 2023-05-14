@@ -609,16 +609,16 @@ class Neuron {
   }
 
   std::shared_ptr<Tensor> operator()(std::vector<std::shared_ptr<Tensor>> inputs) {
-    assert(input.size() == weights_.size());
+    if (inputs.size() != weights_.size()) {
+      throw std::runtime_error("Neuron inputs length weights length mismatch!");
+    }
     std::shared_ptr<Tensor> ans = nullptr;
-    for (auto weight : weights_) {
-      for (auto input : inputs ) {
-        if (ans == nullptr) {
-          ans = (weight * input);
-        }
-        else {
-          ans = ans + (weight * input);
-        }
+    for (int i = 0; i < weights_.size(); ++i) {
+      if (ans == nullptr) {
+        ans = (weights_[i] * inputs[i]);
+      }
+      else {
+        ans = ans + (weights_[i] * inputs[i]);
       }
     }
     ans = ans + bias_;
