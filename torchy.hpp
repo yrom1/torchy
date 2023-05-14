@@ -599,8 +599,9 @@ class Neuron {
  public:
   std::vector<std::shared_ptr<Tensor>> weights_;
   std::shared_ptr<Tensor> bias_;
+  float rate_;
 
-  Neuron(int nin) {
+  Neuron(int nin, float rate) : rate_(rate) {
     for (int i = 0; i < nin; ++i) {
       weights_.push_back(Tensor::rand({1}));
     }
@@ -623,6 +624,17 @@ class Neuron {
     }
     ans = ans + bias_;
     return relu(ans);
+  }
+
+  void train() {
+    for (int i = 0; i < weights_.size(); ++i) {
+      std::cout << "weight before: " << weights_[i].get()->data_[0] << std::endl;
+      weights_[i].get()->data_[0] = weights_[i].get()->data_[0] + ((-rate_) * weights_[i].get()->grad_[0]);
+      std::cout << "weight after: " << weights_[i].get()->data_[0] << std::endl;
+    }
+    std::cout << "bias before: " << bias_.get()->data_[0] << std::endl;
+    bias_.get()->data_[0] = bias_.get()->data_[0] + ((-rate_) * bias_.get()->grad_[0]);
+    std::cout << "bias after: " << bias_.get()->data_[0] << std::endl;
   }
   // TODO(yrom1) parameters, how do i make this like std iterator?
 };
