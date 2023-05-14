@@ -112,6 +112,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
   std::shared_ptr<Tensor> get_shared() { return this->shared_from_this(); }
 
   void backward();
+  void zero_grad();
   std::shared_ptr<Tensor> sum();
   std::shared_ptr<Tensor> matmul(std::shared_ptr<Tensor> lhs,
                                  std::shared_ptr<Tensor> rhs);
@@ -571,6 +572,15 @@ void Tensor::backward() {
   }
 }
 
+void Tensor::zero_grad() {
+  grad_ = std::vector<float>(_product(size_), 0.0f);
+  for (auto child : children_) {
+    if (child.get()->children_.size() != 0) {
+      child.get()->zero_grad();
+    }
+  }
+}
+
 using t = std::shared_ptr<Tensor>;
 
 namespace nn {
@@ -628,13 +638,13 @@ class Neuron {
 
   void train() {
     for (int i = 0; i < weights_.size(); ++i) {
-      std::cout << "weight before: " << weights_[i].get()->data_[0] << std::endl;
+      // std::cout << "weight before: " << weights_[i].get()->data_[0] << std::endl;
       weights_[i].get()->data_[0] = weights_[i].get()->data_[0] + ((-rate_) * weights_[i].get()->grad_[0]);
-      std::cout << "weight after: " << weights_[i].get()->data_[0] << std::endl;
+      // std::cout << "weight after: " << weights_[i].get()->data_[0] << std::endl;
     }
-    std::cout << "bias before: " << bias_.get()->data_[0] << std::endl;
+    // std::cout << "bias before: " << bias_.get()->data_[0] << std::endl;
     bias_.get()->data_[0] = bias_.get()->data_[0] + ((-rate_) * bias_.get()->grad_[0]);
-    std::cout << "bias after: " << bias_.get()->data_[0] << std::endl;
+    // std::cout << "bias after: " << bias_.get()->data_[0] << std::endl;
   }
   // TODO(yrom1) parameters, how do i make this like std iterator?
 };
