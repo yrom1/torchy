@@ -573,53 +573,61 @@ void Tensor::backward() {
 
 using t = std::shared_ptr<Tensor>;
 
-// namespace nn {
+namespace nn {
 
-// class Layer {
-//  public:
-//   ag::t weights_;
-//   ag::t bias_;
+/*
+class Neuron(Module):
+    def __init__(self, nin: int, nonlin: bool = True):
+        self.w = [Value(random.uniform(-1, 1)) for _ in range(nin)]
+        self.b = Value(0)
+        self.nonlin = nonlin
 
-//   Layer(ag::t weights, ag::t bias) {
-//     weights_ = weights;
-//     bias_ = bias;
-//   }
+    def __call__(self, x: Union[List[float], List[Value]]) -> Value:
+        act = sum((wi * xi for wi, xi in zip(self.w, x)), self.b)
+        return act.relu() if self.nonlin else act
 
-//   ag::t forward(ag::t input) {
-//     // z = Wx + b
-//     ag::t z = ag::matmul(input, weights_) + bias_;  // order right?
-//     return ag::relu(z);
-//   }
-// };
+    def parameters(self) -> List[Value]:
+        return self.w + [self.b]
 
-// class MLP {
-//  public:
-//   std::vector<Layer> layers_;
+    def __repr__(self) -> str:
+        return f"{'ReLU' if self.nonlin else 'Linear'}Neuron({len(self.w)})"
+*/
 
-//   explicit MLP(const std::vector<int> &neurons_per_layer) {
-//     // Initialize layers
-//     for (size_t i = 0; i < neurons_per_layer.size() - 1; i++) {
-//       // Get number of inputs and outputs for this layer
-//       int inputs = neurons_per_layer[i];
-//       int outputs = neurons_per_layer[i + 1];
 
-//       // Initialize weights and biases
-//       ag::t weights = ag::Tensor::ones({inputs, outputs});
-//       ag::t bias = ag::Tensor::zeros({outputs});
+// keep it simple to start
+class Neuron {
+ public:
+  std::vector<std::shared_ptr<Tensor>> weights_;
+  std::shared_ptr<Tensor> bias_;
 
-//       // Add layer to MLP
-//       layers_.emplace_back(weights, bias);
-//     }
-//   }
+  Neuron(int nin) {
+    for (int i = 0; i < nin; ++i) {
+      weights_.push_back(Tensor::rand({1}));
+    }
+    assert(weights_.size() == nin);
+    bias_ = Tensor::rand({1});
+  }
 
-//   ag::t forward(ag::t input) {
-//     for (auto &layer : layers_) {
-//       input = layer.forward(input);
-//     }
-//     return input;
-//   }
-// };
-// }  // namespace nn
+  std::shared_ptr<Tensor> operator()(std::vector<std::shared_ptr<Tensor>> inputs) {
+    assert(input.size() == weights_.size());
+    std::shared_ptr<Tensor> ans = nullptr;
+    for (auto weight : weights_) {
+      for (auto input : inputs ) {
+        if (ans == nullptr) {
+          ans = (weight * input);
+        }
+        else {
+          ans = ans + (weight * input);
+        }
+      }
+    }
+    ans = ans + bias_;
+    return relu(ans);
+  }
+  // TODO(yrom1) parameters, how do i make this like std iterator?
+};
+
+}  // namespace nn
 
 }  // namespace ag
 
