@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace ag {
+namespace cg {
 
 struct AutoGradBackward;
 struct AddBackward;
@@ -654,6 +654,6 @@ class Neuron {
 
 }  // namespace nn
 
-}  // namespace ag
+}  // namespace cg
 
 #endif  // CUDAGRAD_HPP_

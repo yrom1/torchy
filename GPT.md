@@ -1,10 +1,10 @@
 # input @ weights + bias ordering and visualized
 
 ```cpp
-  ag::t forward(ag::t input) {
+  cg::t forward(cg::t input) {
         // z = Wx + b
-        ag::t z = ag::matmul(input, weights_) + bias_; // order right?
-        return ag::relu(z);
+        cg::t z = cg::matmul(input, weights_) + bias_; // order right?
+        return cg::relu(z);
 ```
 
 does it usually go matmul(input, weights) or matmul weights, input in nn libraries like pytorch

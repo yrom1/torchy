@@ -8,18 +8,18 @@ int main() {
   std::vector<float> b = {0.0f, 1.0f, 0.0f, 1.0f};
   std::vector<float> ans = {0.0f, 1.0f, 1.0f, 1.0f}; // OR function
 
-  auto n = ag::nn::Neuron(2, 0.025); // Lower the learning rate
+  auto n = cg::nn::Neuron(2, 0.025); // Lower the learning rate
   for (int epoch = 0; epoch < 301; ++epoch) {
-    auto sum = ag::tensor({1}, {0.0f});
+    auto sum = cg::tensor({1}, {0.0f});
     for (int i = 0; i < a.size(); ++i) {
-      std::vector<std::shared_ptr<ag::Tensor>> inputs = {
-        ag::tensor({1}, {a[i]}), ag::tensor({1}, {b[i]})
+      std::vector<std::shared_ptr<cg::Tensor>> inputs = {
+        cg::tensor({1}, {a[i]}), cg::tensor({1}, {b[i]})
       };
 
       auto response = n(inputs);
-      sum = sum + ((ag::tensor({1}, {ans[i]}) - response) * (ag::tensor({1}, {ans[i]}) - response));
+      sum = sum + ((cg::tensor({1}, {ans[i]}) - response) * (cg::tensor({1}, {ans[i]}) - response));
     }
-    auto loss = sum / ag::tensor({1}, {static_cast<float>(a.size())});
+    auto loss = sum / cg::tensor({1}, {static_cast<float>(a.size())});
 
     loss.get()->zero_grad();
     loss.get()->backward();
@@ -30,8 +30,8 @@ int main() {
       std::cout << "EPOCH: " << epoch << " LOSS: " << loss.get()->data_[0] << std::endl;
 
       for (int i = 0; i < a.size(); ++i) {
-        std::vector<std::shared_ptr<ag::Tensor>> inputs = {
-          ag::tensor({1}, {a[i]}), ag::tensor({1}, {b[i]})
+        std::vector<std::shared_ptr<cg::Tensor>> inputs = {
+          cg::tensor({1}, {a[i]}), cg::tensor({1}, {b[i]})
         };
         auto response = n(inputs);
         if (round(response.get()->data_[0]) == ans[i]) {

@@ -36,7 +36,7 @@ It's worth noting that TensorFlow 2.0 and later introduced eager execution, whic
 
 ```c++
 [cling]$ l.get()->_backward()
-input_line_19:2:11: error: '_backward' is a private member of 'ag::Tensor'
+input_line_19:2:11: error: '_backward' is a private member of 'cg::Tensor'
  l.get()->_backward()
           ^
 ./torchy.hpp:179:8: note: declared private here
