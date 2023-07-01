@@ -603,7 +603,6 @@ class Neuron(Module):
         return f"{'ReLU' if self.nonlin else 'Linear'}Neuron({len(self.w)})"
 */
 
-
 // keep it simple to start
 class Neuron {
  public:
@@ -619,7 +618,8 @@ class Neuron {
     bias_ = Tensor::rand({1});
   }
 
-  std::shared_ptr<Tensor> operator()(std::vector<std::shared_ptr<Tensor>> inputs) {
+  std::shared_ptr<Tensor> operator()(
+      std::vector<std::shared_ptr<Tensor>> inputs) {
     if (inputs.size() != weights_.size()) {
       throw std::runtime_error("Neuron inputs length weights length mismatch!");
     }
@@ -627,8 +627,7 @@ class Neuron {
     for (int i = 0; i < weights_.size(); ++i) {
       if (ans == nullptr) {
         ans = (weights_[i] * inputs[i]);
-      }
-      else {
+      } else {
         ans = ans + (weights_[i] * inputs[i]);
       }
     }
@@ -638,12 +637,16 @@ class Neuron {
 
   void train() {
     for (int i = 0; i < weights_.size(); ++i) {
-      // std::cout << "weight before: " << weights_[i].get()->data_[0] << std::endl;
-      weights_[i].get()->data_[0] = weights_[i].get()->data_[0] + ((-rate_) * weights_[i].get()->grad_[0]);
-      // std::cout << "weight after: " << weights_[i].get()->data_[0] << std::endl;
+      // std::cout << "weight before: " << weights_[i].get()->data_[0] <<
+      // std::endl;
+      weights_[i].get()->data_[0] = weights_[i].get()->data_[0] +
+                                    ((-rate_) * weights_[i].get()->grad_[0]);
+      // std::cout << "weight after: " << weights_[i].get()->data_[0] <<
+      // std::endl;
     }
     // std::cout << "bias before: " << bias_.get()->data_[0] << std::endl;
-    bias_.get()->data_[0] = bias_.get()->data_[0] + ((-rate_) * bias_.get()->grad_[0]);
+    bias_.get()->data_[0] =
+        bias_.get()->data_[0] + ((-rate_) * bias_.get()->grad_[0]);
     // std::cout << "bias after: " << bias_.get()->data_[0] << std::endl;
   }
   // TODO(yrom1) parameters, how do i make this like std iterator?

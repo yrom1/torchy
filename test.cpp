@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "torchy.hpp"  // NOLINT (build/include_subdir)
+#include "cudagrad.hpp"  // NOLINT (build/include_subdir)
 
 TEST(Basic, Shared) {
   ag::t foo = ag::tensor({1}, {42.0});

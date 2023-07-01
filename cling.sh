@@ -1,1 +1,1 @@
-cling --nologo -l "torchy.hpp"
+cling --nologo -l "cudagrad.hpp"
