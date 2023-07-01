@@ -8,8 +8,8 @@
 //
 // — Alexander Stepanov
 
-#ifndef TORCHY_HPP_
-#define TORCHY_HPP_
+#ifndef CUDAGRAD_HPP_
+#define CUDAGRAD_HPP_
 
 #include <algorithm>
 #include <cassert>
@@ -653,4 +653,4 @@ class Neuron {
 
 }  // namespace ag
 
-#endif  // TORCHY_HPP_
+#endif  // CUDAGRAD_HPP_

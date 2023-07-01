@@ -1,6 +1,6 @@
-# torchy🔥
+# cudagrad
 
-A small tensor-valued autograd engine, inspired by PyTorch and micrograd
+A small autograd engine, inspired by PyTorch and micrograd
 
 ```cpp
 [cling]$ ag::t a = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
@@ -54,7 +54,7 @@ For simplicity, many features PyTorch has torchy does not, like broadcasting and
 
 ## Goals
 
-The goal of this project is to learn more about PyTorch's internals, neural networks, and C++.
+The goal of this project is to learn more about PyTorch's internals, neural networks, and C++. And some CUDA too!
 
 To do this, I'll gradually add support to torchy for the mathematical operations required to create the expression graph of various neural networks. The long term goals are to implement a Multilayer perceptron by the summer of 2023, and a Transformer by end of the year.
 
