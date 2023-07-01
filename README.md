@@ -4,12 +4,12 @@ A small autograd engine, inspired by PyTorch and micrograd
 
 ```cpp
 [cling]$ #include "cudagrad.hpp"
-[cling]$ ag::t a = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
-[cling]$ ag::t b = ag::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
-[cling]$ ag::t c = ag::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
-[cling]$ ag::t d = ag::tensor({2, 2}, {11.0, 11.0, 11.0, 11.0});
-[cling]$ ag::t e = (ag::matmul(a, b) + c) * d;
-[cling]$ ag::t f = e.get()->sum();
+[cling]$ auto a = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
+[cling]$ auto b = ag::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
+[cling]$ auto c = ag::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
+[cling]$ auto d = ag::tensor({2, 2}, {11.0, 11.0, 11.0, 11.0});
+[cling]$ auto e = (ag::matmul(a, b) + c) * d;
+[cling]$ auto f = e.get()->sum();
 [cling]$ f.get()->backward();
 [cling]$ f.get()->data_
 (std::vector<float> &) { 2794.00f }
