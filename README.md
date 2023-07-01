@@ -3,6 +3,7 @@
 A small autograd engine, inspired by PyTorch and micrograd
 
 ```cpp
+[cling]$ #include "cudagrad.hpp"
 [cling]$ ag::t a = ag::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
 [cling]$ ag::t b = ag::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
 [cling]$ ag::t c = ag::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
@@ -50,13 +51,13 @@ tensor([[66., 66.],
 
 ~~The plan is to be similar to PyTorch's internals, particularily the [Variable/Tensor Merge Proposal](https://github.com/pytorch/pytorch/issues/13638) design.~~ The design is a mix of PyTorch and micrograd, with micrograd like members and PyTorch like backward classes with an `apply()` interface.
 
-For simplicity, many features PyTorch has torchy does not, like broadcasting and views. All operations are defined only on `std::shared_ptr<Tensor>`, for now at least.
+For simplicity, many features PyTorch has cudagrad does not, like broadcasting and views. All operations are defined only on `std::shared_ptr<Tensor>`, for now at least. In fact, I plan to make it matrix only in the future.
 
 ## Goals
 
 The goal of this project is to learn more about PyTorch's internals, neural networks, and C++. And some CUDA too!
 
-To do this, I'll gradually add support to torchy for the mathematical operations required to create the expression graph of various neural networks. The long term goals are to implement a Multilayer perceptron by the summer of 2023, and a Transformer by end of the year.
+To do this, I'll gradually add support to cudagrad for the mathematical operations required to create the expression graph of various neural networks. The long term goals are to implement a Multilayer perceptron by the summer of 2023, and a Transformer by end of the year.
 
 > "Maybe it's a bad idea to have really big ambitions initially. Because the bigger your ambitions, the longer they're going to take to realize, and the longer you're projecting into the future, the more likely you're going to be wrong."
 >
