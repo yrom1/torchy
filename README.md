@@ -1,6 +1,17 @@
-# cudagrad
+<p align="center">
+  <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+      <rect width="200" height="75" style="fill:#f84c7c;" />
+      <text x="18" y="50" font-family="Verdana" font-size="35" fill="white">cudagrad</text>
+  </svg>
+</p>
 
-A small autograd engine, inspired by PyTorch and micrograd
+<p align="center">
+  <it>A small autograd engine, inspired by PyTorch and micrograd</it>
+</p>
+
+---
+
+## Example
 
 ```cpp
 [cling]$ #include "cudagrad.hpp"
