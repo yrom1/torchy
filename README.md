@@ -1,35 +1,35 @@
-# cudagrad
-
-<it>A small autograd engine, inspired by PyTorch and micrograd</it>
+<p align="center" style="font-size:2em;">
+  <it><b>cudagrad</b></it>
+</p>
+<p align="center">
+  <img src="logo2.jpg">
+</p>
+<p align="center">
+  <it>A small autograd engine, inspired by PyTorch and micrograd</it>
+</p>
 
 ---
 
 ## Example
 
 ```cpp
-[cling]$ #include "cudagrad.hpp"
-[cling]$ auto a = cg::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
-[cling]$ auto b = cg::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
-[cling]$ auto c = cg::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
-[cling]$ auto d = cg::tensor({2, 2}, {11.0, 11.0, 11.0, 11.0});
-[cling]$ auto e = (cg::matmul(a, b) + c) * d;
-[cling]$ auto f = e.get()->sum();
-[cling]$ f.get()->backward();
-[cling]$ f.get()->data_
-(std::vector<float> &) { 2794.00f }
-[cling]$ a.get()->grad_
-(std::vector<float> &) { 143.000f, 187.000f, 143.000f, 187.000f }
-[cling]$ b.get()->grad_
-(std::vector<float> &) { 66.0000f, 66.0000f, 88.0000f, 88.0000f }
-[cling]$ f.get()->graph()
-0x600003070618 s
-  0x600003070498 *
-    0x6000030700d8 +
-      0x600003070198 @
-        0x600003050858
-        0x600003070018
-      0x600003070258
-    0x600003070318
+#include "cudagrad.hpp"
+int main() {
+  auto a = cg::tensor({2, 2}, {2.0, 3.0, 4.0, 5.0});
+  auto b = cg::tensor({2, 2}, {6.0, 7.0, 8.0, 9.0});
+  auto c = cg::tensor({2, 2}, {10.0, 10.0, 10.0, 10.0});
+  auto d = cg::tensor({2, 2}, {11.0, 11.0, 11.0, 11.0});
+  auto e = (cg::matmul(a, b) + c) * d;
+  auto f = e.get()->sum();
+  f.get()->backward();
+
+  // (std::vector<float> &) { 2794.00f }
+  f.get()->data_;
+  // (std::vector<float> &) { 143.000f, 187.000f, 143.000f, 187.000f }
+  a.get()->grad_;
+  // (std::vector<float> &) { 66.0000f, 66.0000f, 88.0000f, 88.0000f }
+  b.get()->grad_;
+}
 ```
 
 ```py
@@ -55,7 +55,7 @@ tensor([[66., 66.],
 
 ~~The plan is to be similar to PyTorch's internals, particularily the [Variable/Tensor Merge Proposal](https://github.com/pytorch/pytorch/issues/13638) design.~~ The design is a mix of PyTorch and micrograd, with micrograd like members and PyTorch like backward classes with an `apply()` interface.
 
-For simplicity, many features PyTorch has cudagrad does not, like broadcasting and views. All operations are defined only on `std::shared_ptr<Tensor>`, for now at least. In fact, I plan to make it matrix only in the future.
+For simplicity, many features PyTorch has cudagrad does not, like broadcasting and views. All operations are defined only on `std::shared_ptr<Tensor>`, for now at least.
 
 ## Goals
 
