@@ -11,6 +11,9 @@ def check_program(program):
 
 
 def main():
+    # sudo apt install clang-format
+    # python -m pip install cpplint
+    # TODO cmake...
     programs = ["clang-format", "cpplint", "cmake"]
     for program in programs:
         check_program(program)
