@@ -1,8 +1,5 @@
-<p align="center" style="font-size:2em;">
-  <it><b>cudagrad</b></it>
-</p>
 <p align="center">
-  <img src="logo2.jpg">
+  <img src="logo.jpg">
 </p>
 <p align="center">
   <it>A small autograd engine, inspired by PyTorch and micrograd</it>
